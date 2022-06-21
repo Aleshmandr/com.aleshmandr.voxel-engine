@@ -1,0 +1,14 @@
+{
+  "name": "com.aleshmandr.voxel-engine",
+  "displayName": "Voxel Engine",
+  "version": "0.0.1",
+  "unity": "2019.1",
+  "author": "Alexander Papchikhin",
+  "description": "Simple Voxel Engine for Unity",
+  "dependencies": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aleshmandr/com.aleshmandr.voxel-engine.git"
+  }
+}
