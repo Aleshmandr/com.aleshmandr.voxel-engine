@@ -103,7 +103,7 @@ namespace VoxelEngine.Editor
                 return;
             }
 
-            var voxelsContainer = new VoxelsContainer(maxX, maxY, maxZ);
+            var voxelsContainer = new VoxelsContainer(maxX, maxZ, maxY);
             for(int i = 0; i < voxelData.Length; i++) {
                 int voxelColor = colors?[voxelData[i].color - 1] ?? DefaultPalette[voxelData[i].color - 1];
                 voxelsContainer.Blocks[voxelData[i].x, voxelData[i].z, voxelData[i].y] = voxelColor;
