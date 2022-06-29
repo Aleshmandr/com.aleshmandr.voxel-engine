@@ -36,78 +36,79 @@ namespace VoxelEngine
                 }
             }
 
-            for(int y = container.fromY; y < container.toY; y++) {
-                for(int x = container.fromX; x < container.toX; x++) {
+            for(int x = container.fromX; x < container.toX; x++) {
+                for(int y = container.fromY; y < container.toY; y++) {
                     for(int z = container.fromZ; z < container.toZ; z++) {
                         if((blocks[x, y, z] >> 8) == 0) {
                             continue; // Skip empty blocks
                         }
 
                         // Check if hidden
-                        int left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
-                        if(z > 0) {
+                        bool left = false, right = false, above = false, front = false, back = false, below = false;
+                        if(z > container.fromZ) {
                             if(blocks[x, y, z - 1] != 0) {
-                                back = 1;
-                                blocks[x, y, z] |= 0x10;
+                                back = true;
+                                //blocks[x, y, z] |= 0x10;
                             }
                         }
-                        if(x > 0) {
-                            if(blocks[x - 1, y, z] != 0) {
-                                left = 1;
-                                blocks[x, y, z] |= 0x8;
+                        if(z < container.toZ - 1) {
+                            if(blocks[x, y, z + 1] != 0) {
+                                front = true;
+                                //blocks[x, y, z] |= 0x1;
                             }
                         }
 
-                        if(y > container.toY) {
-                            if(blocks[x, y - 1, z] != 0) {
-                                below = 1;
-                                //blocks[x, y - 1, z] = blocks[x, y, z] | 0x80;
-                                blocks[x, y, z] |= 0x80;
+                        if(x > container.fromX) {
+                            if(blocks[x - 1, y, z] != 0) {
+                                left = true;
+                                //blocks[x, y, z] |= 0x8;
                             }
                         }
                         if(x < container.toX - 1) {
                             if(blocks[x + 1, y, z] != 0) {
-                                right = 1;
-                                blocks[x, y, z] |= 0x4;
+                                right = true;
+                                //blocks[x, y, z] |= 0x4;
                             }
                         }
 
+                        if(y > container.fromY) {
+                            
+                            if(blocks[x, y - 1, z] != 0) {
+                                below = true;
+                                //blocks[x, y, z] |= 0x20;
+                            }
+                        }
                         if(y < container.toY - 1) {
                             if(blocks[x, y + 1, z] != 0) {
-                                above = 1;
-                                blocks[x, y, z] |= 0x2;
+                                above = true;
+                                //blocks[x, y, z] |= 0x2;
                             }
                         }
 
-                        if(z < container.toZ - 1) {
-                            if(blocks[x, y, z + 1] != 0) {
-                                front = 1;
-                                blocks[x, y, z] |= 0x1;
-                            }
-                        }
 
-                        if(front == 1 && left == 1 && right == 1 && above == 1 && back == 1 && below == 1) {
+                        if(front && left && right && above && back && below) {
                             // If we are building a standalone mesh, remove invisible
                             blocks[x, y, z] = 0;
                             continue; // Block is hidden
                         }
 
                         // Draw block
-                        if(below == 0) {
-                            if((blocks[x, y, z] & 0x80) == 0) {
+                        //not
+                        if(!below) {
+                            if((blocks[x, y, z] & 0x20) == 0) {
                                 int maxX = 0;
                                 int maxZ = 0;
 
                                 for(int xi = x; xi < container.toX; xi++) {
                                     // Check not drawn + same color
-                                    if((blocks[xi, y, z] & 0x80) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
+                                    if((blocks[xi, y, z] & 0x20) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     int tmpZ = 0;
                                     for(int zi = z; zi < container.toZ; zi++) {
-                                        if((blocks[xi, y, zi] & 0x80) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
+                                        if((blocks[xi, y, zi] & 0x20) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -117,9 +118,10 @@ namespace VoxelEngine
                                         maxZ = tmpZ;
                                     }
                                 }
+
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int zi = z; zi < z + maxZ; zi++) {
-                                        blocks[xi, y, zi] |= 0x80;
+                                        blocks[xi, y, zi] = blocks[xi, y, zi] | 0x20;
                                     }
                                 }
                                 maxX--;
@@ -156,7 +158,8 @@ namespace VoxelEngine
                             }
                         }
 
-                        if(above == 0) {
+                        //correct
+                        if(!above) {
                             // Get above (0010)
                             if((blocks[x, y, z] & 0x2) == 0) {
                                 int maxX = 0;
@@ -220,7 +223,9 @@ namespace VoxelEngine
                                 }
                             }
                         }
-                        if(back == 0) {
+
+                        //not
+                        if(!back) {
                             // back  10000
                             if((blocks[x, y, z] & 0x10) == 0) {
                                 int maxX = 0;
@@ -283,7 +288,9 @@ namespace VoxelEngine
                                 }
                             }
                         }
-                        if(front == 0) {
+
+                        //correct
+                        if(!front) {
                             // front 0001
                             if((blocks[x, y, z] & 0x1) == 0) {
                                 int maxX = 0;
@@ -345,7 +352,9 @@ namespace VoxelEngine
                                 }
                             }
                         }
-                        if(left == 0) {
+
+                        //not
+                        if(!left) {
                             if((blocks[x, y, z] & 0x8) == 0) {
                                 int maxZ = 0;
                                 int maxY = 0;
@@ -407,7 +416,9 @@ namespace VoxelEngine
                                 }
                             }
                         }
-                        if(right == 0) {
+
+                        //correct
+                        if(!right) {
                             if((blocks[x, y, z] & 0x4) == 0) {
                                 int maxZ = 0;
                                 int maxY = 0;
@@ -471,8 +482,7 @@ namespace VoxelEngine
                 }
             }
 
-            
-            
+
             var mesh = new Mesh {
                 indexFormat = vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
                 vertices = vertices.ToArray(),
