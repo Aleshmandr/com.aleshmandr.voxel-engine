@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -6,6 +7,7 @@ namespace VoxelEngine
 {
     public class Utilities
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool SameColor(int block1, int block2) {
             return ((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0;
         }
@@ -17,8 +19,8 @@ namespace VoxelEngine
             int[,,] blocks = container.Blocks;
 
             // Block structure
-            // BLOCK: [R-color][G-color][B-color][0][00][back_left_right_above_front]
-            //           8bit    8bit     8it    1bit(below-face)  2bit(floodfill)     5bit(faces)
+            // BLOCK: [R-color][G-color][B-color][00][below_back_left_right_above_front]
+            //           8bit    8bit     8it  2bit(floodfill)   6bit(faces)
 
             // Reset faces
             for(int y = container.fromY; y < container.toY; y++) {
@@ -30,7 +32,7 @@ namespace VoxelEngine
                             blocks[x, y, z] &= ~(1 << 2);
                             blocks[x, y, z] &= ~(1 << 3);
                             blocks[x, y, z] &= ~(1 << 4);
-                            blocks[x, y, z] &= ~(1 << 7);
+                            blocks[x, y, z] &= ~(1 << 5);
                         }
                     }
                 }
@@ -39,7 +41,7 @@ namespace VoxelEngine
             for(int x = container.fromX; x < container.toX; x++) {
                 for(int y = container.fromY; y < container.toY; y++) {
                     for(int z = container.fromZ; z < container.toZ; z++) {
-                        if((blocks[x, y, z] >> 8) == 0) {
+                        if(blocks[x, y, z] == 0) {
                             continue; // Skip empty blocks
                         }
 
@@ -48,26 +50,26 @@ namespace VoxelEngine
                         if(z > container.fromZ) {
                             if(blocks[x, y, z - 1] != 0) {
                                 back = true;
-                                //blocks[x, y, z] |= 0x10;
+                                blocks[x, y, z] |= 0x10;
                             }
                         }
                         if(z < container.toZ - 1) {
                             if(blocks[x, y, z + 1] != 0) {
                                 front = true;
-                                //blocks[x, y, z] |= 0x1;
+                                blocks[x, y, z] |= 0x1;
                             }
                         }
 
                         if(x > container.fromX) {
                             if(blocks[x - 1, y, z] != 0) {
                                 left = true;
-                                //blocks[x, y, z] |= 0x8;
+                                blocks[x, y, z] |= 0x8;
                             }
                         }
                         if(x < container.toX - 1) {
                             if(blocks[x + 1, y, z] != 0) {
                                 right = true;
-                                //blocks[x, y, z] |= 0x4;
+                                blocks[x, y, z] |= 0x4;
                             }
                         }
 
@@ -75,20 +77,18 @@ namespace VoxelEngine
                             
                             if(blocks[x, y - 1, z] != 0) {
                                 below = true;
-                                //blocks[x, y, z] |= 0x20;
+                                blocks[x, y, z] |= 0x20;
                             }
                         }
                         if(y < container.toY - 1) {
                             if(blocks[x, y + 1, z] != 0) {
                                 above = true;
-                                //blocks[x, y, z] |= 0x2;
+                                blocks[x, y, z] |= 0x2;
                             }
                         }
 
 
                         if(front && left && right && above && back && below) {
-                            // If we are building a standalone mesh, remove invisible
-                            blocks[x, y, z] = 0;
                             continue; // Block is hidden
                         }
 
@@ -121,7 +121,7 @@ namespace VoxelEngine
 
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int zi = z; zi < z + maxZ; zi++) {
-                                        blocks[xi, y, zi] = blocks[xi, y, zi] | 0x20;
+                                        blocks[xi, y, zi] |= 0x20;
                                     }
                                 }
                                 maxX--;
