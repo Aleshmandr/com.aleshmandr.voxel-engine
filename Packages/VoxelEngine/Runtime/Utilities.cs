@@ -1,31 +1,34 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace VoxelEngine
 {
-    public class Utilities
+    public static class Utilities
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool SameColor(int block1, int block2) {
+        private static bool SameColor(int block1, int block2) {
             return ((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0;
         }
 
-        public static Mesh GenerateMesh(VoxelsContainer container) {
+        public static Mesh GenerateMesh(VoxelsData data) {
             List<Vector3> vertices = new List<Vector3>();
             List<Color32> colors = new List<Color32>();
             List<int> triangles = new List<int>();
-            int[,,] blocks = container.Blocks;
+            int[,,] blocks = data.Blocks;
 
             // Block structure
             // BLOCK: [R-color][G-color][B-color][00][below_back_left_right_above_front]
             //           8bit    8bit     8it  2bit(floodfill)   6bit(faces)
 
             // Reset faces
-            for(int y = container.fromY; y < container.toY; y++) {
-                for(int x = container.fromX; x < container.toX; x++) {
-                    for(int z = container.fromZ; z < container.toZ; z++) {
+            for(int y = data.fromY; y < data.toY; y++) {
+                for(int x = data.fromX; x < data.toX; x++) {
+                    for(int z = data.fromZ; z < data.toZ; z++) {
                         if(blocks[x, y, z] != 0) {
                             blocks[x, y, z] &= ~(1 << 0);
                             blocks[x, y, z] &= ~(1 << 1);
@@ -38,49 +41,49 @@ namespace VoxelEngine
                 }
             }
 
-            for(int x = container.fromX; x < container.toX; x++) {
-                for(int y = container.fromY; y < container.toY; y++) {
-                    for(int z = container.fromZ; z < container.toZ; z++) {
+            for(int x = data.fromX; x < data.toX; x++) {
+                for(int y = data.fromY; y < data.toY; y++) {
+                    for(int z = data.fromZ; z < data.toZ; z++) {
                         if(blocks[x, y, z] == 0) {
                             continue; // Skip empty blocks
                         }
 
                         // Check if hidden
                         bool left = false, right = false, above = false, front = false, back = false, below = false;
-                        if(z > container.fromZ) {
+                        if(z > data.fromZ) {
                             if(blocks[x, y, z - 1] != 0) {
                                 back = true;
                                 blocks[x, y, z] |= 0x10;
                             }
                         }
-                        if(z < container.toZ - 1) {
+                        if(z < data.toZ - 1) {
                             if(blocks[x, y, z + 1] != 0) {
                                 front = true;
                                 blocks[x, y, z] |= 0x1;
                             }
                         }
 
-                        if(x > container.fromX) {
+                        if(x > data.fromX) {
                             if(blocks[x - 1, y, z] != 0) {
                                 left = true;
                                 blocks[x, y, z] |= 0x8;
                             }
                         }
-                        if(x < container.toX - 1) {
+                        if(x < data.toX - 1) {
                             if(blocks[x + 1, y, z] != 0) {
                                 right = true;
                                 blocks[x, y, z] |= 0x4;
                             }
                         }
 
-                        if(y > container.fromY) {
+                        if(y > data.fromY) {
                             
                             if(blocks[x, y - 1, z] != 0) {
                                 below = true;
                                 blocks[x, y, z] |= 0x20;
                             }
                         }
-                        if(y < container.toY - 1) {
+                        if(y < data.toY - 1) {
                             if(blocks[x, y + 1, z] != 0) {
                                 above = true;
                                 blocks[x, y, z] |= 0x2;
@@ -99,7 +102,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxZ = 0;
 
-                                for(int xi = x; xi < container.toX; xi++) {
+                                for(int xi = x; xi < data.toX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x20) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -107,7 +110,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpZ = 0;
-                                    for(int zi = z; zi < container.toZ; zi++) {
+                                    for(int zi = z; zi < data.toZ; zi++) {
                                         if((blocks[xi, y, zi] & 0x20) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
                                             tmpZ++;
                                         } else {
@@ -165,7 +168,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxZ = 0;
 
-                                for(int xi = x; xi < container.toX; xi++) {
+                                for(int xi = x; xi < data.toX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x2) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -173,7 +176,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpZ = 0;
-                                    for(int zi = z; zi < container.toZ; zi++) {
+                                    for(int zi = z; zi < data.toZ; zi++) {
                                         if((blocks[xi, y, zi] & 0x2) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
                                             tmpZ++;
                                         } else {
@@ -231,7 +234,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxY = 0;
 
-                                for(int xi = x; xi < container.toX; xi++) {
+                                for(int xi = x; xi < data.toX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x10) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -239,7 +242,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < container.toY; yi++) {
+                                    for(int yi = y; yi < data.toY; yi++) {
                                         if((blocks[xi, yi, z] & 0x10) == 0 && SameColor(blocks[xi, yi, z], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -296,7 +299,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxY = 0;
 
-                                for(int xi = x; xi < container.toX; xi++) {
+                                for(int xi = x; xi < data.toX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x1) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -304,7 +307,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < container.toY; yi++) {
+                                    for(int yi = y; yi < data.toY; yi++) {
                                         if((blocks[xi, yi, z] & 0x1) == 0 && SameColor(blocks[xi, yi, z], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -359,7 +362,7 @@ namespace VoxelEngine
                                 int maxZ = 0;
                                 int maxY = 0;
 
-                                for(int zi = z; zi < container.toZ; zi++) {
+                                for(int zi = z; zi < data.toZ; zi++) {
                                     // Check not drawn + same color
                                     if((blocks[x, y, zi] & 0x8) == 0 && SameColor(blocks[x, y, zi], blocks[x, y, z])) {
                                         maxZ++;
@@ -367,7 +370,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < container.toY; yi++) {
+                                    for(int yi = y; yi < data.toY; yi++) {
                                         if((blocks[x, yi, zi] & 0x8) == 0 && SameColor(blocks[x, yi, zi], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -423,7 +426,7 @@ namespace VoxelEngine
                                 int maxZ = 0;
                                 int maxY = 0;
 
-                                for(int zi = z; zi < container.toZ; zi++) {
+                                for(int zi = z; zi < data.toZ; zi++) {
                                     // Check not drawn + same color
                                     if((blocks[x, y, zi] & 0x4) == 0 && SameColor(blocks[x, y, zi], blocks[x, y, z])) {
                                         maxZ++;
@@ -431,7 +434,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < container.toY; yi++) {
+                                    for(int yi = y; yi < data.toY; yi++) {
                                         if((blocks[x, yi, zi] & 0x4) == 0 && SameColor(blocks[x, yi, zi], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -492,6 +495,28 @@ namespace VoxelEngine
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;
+        }
+        
+        public static byte[] ZipObject(object obj) {
+            if(obj == null) {
+                return null;
+            }
+
+            using (var memoryStream = new MemoryStream()) {
+                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress)) {
+                    var binaryFormatter = new BinaryFormatter();
+                    binaryFormatter.Serialize(gZipStream, obj);
+                }
+                return memoryStream.ToArray();
+            }
+        }
+        
+        public static T UnzipObject<T>(byte[] bytes) {
+            var memoryStream = new MemoryStream(bytes);
+            using (var decompressor = new GZipStream(memoryStream, CompressionMode.Decompress))
+            {
+                return (T)new BinaryFormatter().Deserialize(decompressor);
+            }
         }
     }
 }

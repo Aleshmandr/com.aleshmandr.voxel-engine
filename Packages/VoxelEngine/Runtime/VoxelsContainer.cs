@@ -1,24 +1,31 @@
-﻿namespace VoxelEngine
+﻿using UnityEngine;
+
+namespace VoxelEngine
 {
-    public class VoxelsContainer
+    [ExecuteAlways][RequireComponent(typeof(MeshFilter))][RequireComponent(typeof(MeshRenderer))]
+    public class VoxelsContainer : MonoBehaviour
     {
-        public readonly int fromX;
-        public readonly int fromZ;
-        public readonly int fromY;
-        public readonly int toX;
-        public readonly int toZ;
-        public readonly int toY;
+        [SerializeField] private TextAsset asset;
+        private VoxelsData data;
+        private MeshFilter meshFilter;
 
-        public readonly int[,,] Blocks;
+        private MeshFilter MeshFilter {
+            get {
+                if(meshFilter == null) {
+                    meshFilter = GetComponent<MeshFilter>();
+                }
+                return meshFilter;
+            }
+        }
 
-        public VoxelsContainer(int x, int y, int z) {
-            Blocks = new int[x + 1, y + 1, z + 1];
-            fromX = 0;
-            fromY = 0;
-            fromZ = 0;
-            toX = x;
-            toY = y;
-            toZ = z;
+        private void Start() {
+            Initialize();
+        }
+
+        [ContextMenu("Initialize")]
+        private void Initialize() {
+            data = Utilities.UnzipObject<VoxelsData>(asset.bytes);
+            MeshFilter.mesh = Utilities.GenerateMesh(data);
         }
     }
 }

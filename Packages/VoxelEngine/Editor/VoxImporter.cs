@@ -1,4 +1,7 @@
 ﻿using System.IO;
+using System.IO.Compression;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -96,25 +99,33 @@ namespace VoxelEngine.Editor
                         break;
                 }
             }
-            
+
             stream.Close();
 
             if(voxelData == null || voxelData.Length == 0) {
                 return;
             }
 
-            var voxelsContainer = new VoxelsContainer(maxX, maxZ, maxY);
+            var data = new VoxelsData(maxX, maxZ, maxY);
             for(int i = 0; i < voxelData.Length; i++) {
                 int voxelColor = colors?[voxelData[i].color - 1] ?? DefaultPalette[voxelData[i].color - 1];
-                voxelsContainer.Blocks[voxelData[i].x, voxelData[i].z, voxelData[i].y] = voxelColor;
+                data.Blocks[voxelData[i].x, voxelData[i].z, voxelData[i].y] = voxelColor;
             }
-                
-            var generatedMesh = Utilities.GenerateMesh(voxelsContainer);
+
+            var generatedMesh = Utilities.GenerateMesh(data);
 
             var fileName = Path.GetFileNameWithoutExtension(filePath);
-            
+
+            var bytes = Utilities.ZipObject(data);
+
+            File.WriteAllBytes(Application.dataPath + $"/{fileName}.bytes", bytes);
+
             AssetDatabase.CreateAsset(generatedMesh, $"Assets/{fileName}.asset");
+
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
+
+        
     }
 }
