@@ -1,13 +1,9 @@
 ﻿using System.IO;
-using System.IO.Compression;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 
 namespace VoxelEngine.Editor
 {
-
     public class VoxImporter : EditorWindow
     {
         private static ushort[] DefaultPalette = {
@@ -25,6 +21,8 @@ namespace VoxelEngine.Editor
             16384, 14336, 10240, 8192, 4096, 2048, 29596, 27482, 23254, 21140, 16912, 14798, 10570, 8456, 4228, 2114, 1
         };
 
+        private bool compress = true;
+
         [MenuItem("Tools/VoxelEngine/Magica Voxel Importer (.vox)", false)]
         public static void ShowWindow() {
             EditorWindow.GetWindow(typeof(VoxImporter));
@@ -34,6 +32,7 @@ namespace VoxelEngine.Editor
             titleContent.text = "Magica Voxel Importer";
             EditorGUILayout.BeginVertical("Box");
 
+            compress = EditorGUILayout.Toggle("Compress", compress);
             EditorGUILayout.LabelField("Import .vox file");
             if(GUILayout.Button("Import")) {
                 string filePath = EditorUtility.OpenFilePanel("Import file", "", "vox");
@@ -116,7 +115,7 @@ namespace VoxelEngine.Editor
 
             var fileName = Path.GetFileNameWithoutExtension(filePath);
 
-            var bytes = Utilities.ZipObject(data);
+            var bytes = Utilities.SerializeObject(data, compress);
 
             File.WriteAllBytes(Application.dataPath + $"/{fileName}.bytes", bytes);
 
@@ -125,7 +124,5 @@ namespace VoxelEngine.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
-
-        
     }
 }

@@ -10,6 +10,8 @@ namespace VoxelEngine
 {
     public static class Utilities
     {
+        private const int MaxMeshSizeUInt16 = 65535;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool SameColor(int block1, int block2) {
             return ((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0;
@@ -23,7 +25,7 @@ namespace VoxelEngine
 
             // Block structure
             // BLOCK: [R-color][G-color][B-color][00][below_back_left_right_above_front]
-            //           8bit    8bit     8it  2bit(floodfill)   6bit(faces)
+            //           8bit    8bit     8it  2bit(not used)   6bit(faces)
 
             // Reset faces
             for(int y = data.fromY; y < data.toY; y++) {
@@ -77,7 +79,7 @@ namespace VoxelEngine
                         }
 
                         if(y > data.fromY) {
-                            
+
                             if(blocks[x, y - 1, z] != 0) {
                                 below = true;
                                 blocks[x, y, z] |= 0x20;
@@ -96,7 +98,6 @@ namespace VoxelEngine
                         }
 
                         // Draw block
-                        //not
                         if(!below) {
                             if((blocks[x, y, z] & 0x20) == 0) {
                                 int maxX = 0;
@@ -161,7 +162,6 @@ namespace VoxelEngine
                             }
                         }
 
-                        //correct
                         if(!above) {
                             // Get above (0010)
                             if((blocks[x, y, z] & 0x2) == 0) {
@@ -227,7 +227,6 @@ namespace VoxelEngine
                             }
                         }
 
-                        //not
                         if(!back) {
                             // back  10000
                             if((blocks[x, y, z] & 0x10) == 0) {
@@ -292,7 +291,6 @@ namespace VoxelEngine
                             }
                         }
 
-                        //correct
                         if(!front) {
                             // front 0001
                             if((blocks[x, y, z] & 0x1) == 0) {
@@ -341,7 +339,7 @@ namespace VoxelEngine
                                 vertices.Add(new Vector3(x - 1, y - 1, z));
                                 vertices.Add(new Vector3(x + maxX, y - 1, z));
 
-                                // Add triangle indeces
+                                // Add triangle indices
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
@@ -356,7 +354,6 @@ namespace VoxelEngine
                             }
                         }
 
-                        //not
                         if(!left) {
                             if((blocks[x, y, z] & 0x8) == 0) {
                                 int maxZ = 0;
@@ -420,7 +417,6 @@ namespace VoxelEngine
                             }
                         }
 
-                        //correct
                         if(!right) {
                             if((blocks[x, y, z] & 0x4) == 0) {
                                 int maxZ = 0;
@@ -485,9 +481,8 @@ namespace VoxelEngine
                 }
             }
 
-
             var mesh = new Mesh {
-                indexFormat = vertices.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
+                indexFormat = vertices.Count > MaxMeshSizeUInt16 ? IndexFormat.UInt32 : IndexFormat.UInt16,
                 vertices = vertices.ToArray(),
                 triangles = triangles.ToArray(),
                 colors32 = colors.ToArray(),
@@ -496,27 +491,43 @@ namespace VoxelEngine
             mesh.RecalculateBounds();
             return mesh;
         }
-        
-        public static byte[] ZipObject(object obj) {
+
+        public static byte[] SerializeObject(object obj, bool zip) {
             if(obj == null) {
                 return null;
             }
 
+            //Write 1 to the first byte in case of compression, otherwise write 0
             using (var memoryStream = new MemoryStream()) {
-                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress)) {
+                if(zip) {
+                    memoryStream.WriteByte(1);
+                    using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress)) {
+                        var binaryFormatter = new BinaryFormatter();
+                        binaryFormatter.Serialize(gZipStream, obj);
+                    }
+                } else {
                     var binaryFormatter = new BinaryFormatter();
-                    binaryFormatter.Serialize(gZipStream, obj);
+                    memoryStream.WriteByte(0);
+                    binaryFormatter.Serialize(memoryStream, obj);
                 }
                 return memoryStream.ToArray();
             }
         }
-        
-        public static T UnzipObject<T>(byte[] bytes) {
-            var memoryStream = new MemoryStream(bytes);
-            using (var decompressor = new GZipStream(memoryStream, CompressionMode.Decompress))
-            {
-                return (T)new BinaryFormatter().Deserialize(decompressor);
+
+        public static T DeserializeObject<T>(byte[] bytes) {
+            if(bytes == null || bytes.Length == 0) {
+                return default;
             }
+            var memoryStream = new MemoryStream(bytes);
+
+            //Check if file compressed
+            bool unzip = memoryStream.ReadByte() == 1;
+            if(unzip) {
+                using (var decompressor = new GZipStream(memoryStream, CompressionMode.Decompress)) {
+                    return (T)new BinaryFormatter().Deserialize(decompressor);
+                }
+            }
+            return (T)new BinaryFormatter().Deserialize(memoryStream);
         }
     }
 }

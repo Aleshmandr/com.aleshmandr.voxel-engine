@@ -24,7 +24,7 @@ namespace VoxelEngine
 
         [ContextMenu("Initialize")]
         private void Initialize() {
-            data = Utilities.UnzipObject<VoxelsData>(asset.bytes);
+            data = Utilities.DeserializeObject<VoxelsData>(asset.bytes);
             MeshFilter.mesh = Utilities.GenerateMesh(data);
         }
     }
