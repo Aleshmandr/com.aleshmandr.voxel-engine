@@ -9,6 +9,7 @@ namespace VoxelEngine
         [SerializeField] private bool loadOnStart;
         private VoxelsData data;
         private MeshFilter meshFilter;
+        private MeshCollider meshCollider;
 
         public VoxelsData Data => data;
 
@@ -27,14 +28,23 @@ namespace VoxelEngine
             }
         }
 
+        [ContextMenu("RebuildMesh")]
+        public void RebuildMesh() {
+            MeshFilter.mesh = Utilities.GenerateMesh(data);
+        }
+
+        [ContextMenu("UpdateCollider")]
+        public void UpdateCollider() {
+            if(meshCollider == null && !TryGetComponent(out meshCollider)) {
+                meshCollider = gameObject.AddComponent<MeshCollider>();
+            }
+            meshCollider.sharedMesh = MeshFilter.mesh;
+        }
+        
         [ContextMenu("LoadAsset")]
         private void LoadAsset() {
             data = Utilities.DeserializeObject<VoxelsData>(Asset.bytes);
             RebuildMesh();
-        }
-
-        public void RebuildMesh() {
-            MeshFilter.mesh = Utilities.GenerateMesh(data);
         }
     }
 }

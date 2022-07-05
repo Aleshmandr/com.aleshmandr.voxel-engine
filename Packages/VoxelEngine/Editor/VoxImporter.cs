@@ -197,6 +197,7 @@ namespace VoxelEngine.Editor
                 gameObject.transform.SetParent(parent);
             }
             gameObject.AddComponent<MeshFilter>().mesh = assetsData.MeshAsset;
+            gameObject.AddComponent<MeshCollider>().sharedMesh = assetsData.MeshAsset;
             var container = gameObject.AddComponent<VoxelsContainer>();
             container.Asset = assetsData.DataAsset;
         }
