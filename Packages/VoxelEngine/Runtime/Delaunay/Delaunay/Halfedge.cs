@@ -5,71 +5,71 @@ namespace VoxelEngine.Delaunay {
 	public class Halfedge {
 
 		#region Pool
-		private static Queue<Halfedge> pool = new Queue<Halfedge>();
+		private static readonly Queue<Halfedge> Pool = new Queue<Halfedge>();
 
-		public static Halfedge Create(Edge edge, LR lr) {
-			if (pool.Count > 0) {
-				return pool.Dequeue().Init(edge,lr);
+		public static Halfedge Create(Edge edge, OrientationType lr) {
+			if (Pool.Count > 0) {
+				return Pool.Dequeue().Init(edge,lr);
 			}
 			return new Halfedge(edge,lr);
 		}
 		public static Halfedge CreateDummy() {
-			return Create(null, null);
+			return Create(null, OrientationType.None);
 		}
 		#endregion
 
 		#region Object
-		public Halfedge edgeListLeftNeighbor;
-		public Halfedge edgeListRightNeighbor;
-		public Halfedge nextInPriorityQueue;
+		public Halfedge EdgeListLeftNeighbor;
+		public Halfedge EdgeListRightNeighbor;
+		public Halfedge NextInPriorityQueue;
 
-		public Edge edge;
-		public LR leftRight;
-		public Vertex vertex;
+		public Edge Edge;
+		public OrientationType Orientation;
+		public Vertex Vertex;
 
 		// The vertex's y-coordinate in the transformed Voronoi space V
 		public float ystar;
 
-		public Halfedge(Edge edge, LR lr) {
-			Init(edge, lr);
+		public Halfedge(Edge edge, OrientationType orientation) {
+			Init(edge, orientation);
 		}
 
-		private Halfedge Init(Edge edge, LR lr) {
-			this.edge = edge;
-			leftRight = lr;
-			nextInPriorityQueue = null;
-			vertex = null;
+		private Halfedge Init(Edge edge, OrientationType orientation) {
+			Edge = edge;
+			Orientation = orientation;
+			NextInPriorityQueue = null;
+			Vertex = null;
 
 			return this;
 		}
 
 		public override string ToString() {
-			return "Halfedge (LeftRight: " + leftRight + "; vertex: " + vertex + ")";
+			return "Halfedge (LeftRight: " + Orientation + "; vertex: " + Vertex + ")";
 		}
 
 		public void Dispose() {
-			if (edgeListLeftNeighbor != null || edgeListRightNeighbor != null) {
+			if (EdgeListLeftNeighbor != null || EdgeListRightNeighbor != null) {
 				// still in EdgeList
 				return;
 			}
-			if (nextInPriorityQueue != null) {
+			if (NextInPriorityQueue != null) {
 				// still in PriorityQueue
 				return;
 			}
-			edge = null;
-			leftRight = null;
-			vertex = null;
-			pool.Enqueue(this);
+			Edge = null;
+			Orientation = OrientationType.None;
+			Vertex = null;
+			Pool.Enqueue(this);
 		}
 
 		public void ReallyDispose() {
-			edgeListLeftNeighbor = null;
-			edgeListRightNeighbor = null;
-			nextInPriorityQueue = null;
-			edge = null;
-			leftRight = null;
-			vertex = null;
-			pool.Enqueue(this);
+			EdgeListLeftNeighbor = null;
+			EdgeListRightNeighbor = null;
+			NextInPriorityQueue = null;
+			Edge = null;
+			Orientation = OrientationType.None;
+			Vertex = null;
+			Pool.Enqueue(this);
 		}
 
 		public bool IsLeftOf(Vector2f p) {
@@ -77,25 +77,25 @@ namespace VoxelEngine.Delaunay {
 			bool rightOfSite, above, fast;
 			float dxp, dyp, dxs, t1, t2, t3, y1;
 
-			topSite = edge.RightSite;
+			topSite = Edge.RightSite;
 			rightOfSite = p.x > topSite.x;
-			if (rightOfSite && this.leftRight == LR.LEFT) {
+			if (rightOfSite && this.Orientation == OrientationType.Left) {
 				return true;
 			}
-			if (!rightOfSite && this.leftRight == LR.RIGHT) {
+			if (!rightOfSite && this.Orientation == OrientationType.Right) {
 				return false;
 			}
 
-			if (edge.a == 1) {
+			if (Edge.a == 1) {
 				dyp = p.y - topSite.y;
 				dxp = p.x - topSite.x;
 				fast = false;
-				if ((!rightOfSite && edge.b < 0) || (rightOfSite && edge.b >= 0)) {
-					above = dyp >= edge.b * dxp;
+				if ((!rightOfSite && Edge.b < 0) || (rightOfSite && Edge.b >= 0)) {
+					above = dyp >= Edge.b * dxp;
 					fast = above;
 				} else {
-					above = p.x + p.y * edge.b > edge.c;
-					if (edge.b < 0) {
+					above = p.x + p.y * Edge.b > Edge.c;
+					if (Edge.b < 0) {
 						above = !above;
 					} 
 					if (!above) {
@@ -103,20 +103,20 @@ namespace VoxelEngine.Delaunay {
 					}
 				}
 				if (!fast) {
-					dxs = topSite.x - edge.LeftSite.x;
-					above = edge.b * (dxp * dxp - dyp * dyp) < dxs * dyp * (1+2 * dxp/dxs + edge.b * edge.b);
-					if (edge.b < 0) {
+					dxs = topSite.x - Edge.LeftSite.x;
+					above = Edge.b * (dxp * dxp - dyp * dyp) < dxs * dyp * (1+2 * dxp/dxs + Edge.b * Edge.b);
+					if (Edge.b < 0) {
 						above = !above;
 					}
 				}
 			} else {
-				y1 = edge.c - edge.a * p.x;
+				y1 = Edge.c - Edge.a * p.x;
 				t1 = p.y - y1;
 				t2 = p.x - topSite.x;
 				t3 = y1 - topSite.y;
 				above = t1 * t1 > t2 * t2 + t3 * t3;
 			}
-			return this.leftRight == LR.LEFT ? above : !above;
+			return this.Orientation == OrientationType.Left ? above : !above;
 		}
 		#endregion
 	}

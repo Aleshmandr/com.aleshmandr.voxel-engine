@@ -5,7 +5,7 @@ namespace VoxelEngine.Delaunay {
 
 	public class SiteList {
 
-		private List<Site> sites;
+		private readonly List<Site> sites;
 		private int currentIndex;
 
 		private bool sorted;

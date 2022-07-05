@@ -131,10 +131,10 @@ namespace VoxelEngine.Delaunay {
 
 			EdgeReorderer reorderer = new EdgeReorderer(hullEdges, typeof(Site));
 			hullEdges = reorderer.Edges;
-			List<LR> orientations = reorderer.EdgeOrientations;
+			List<OrientationType> orientations = reorderer.EdgeOrientations;
 			reorderer.Dispose();
 
-			LR orientation;
+			OrientationType orientation;
 			for (int i = 0; i < hullEdges.Count; i++) {
 				Edge edge = hullEdges[i];
 				orientation = orientations[i];
@@ -155,7 +155,7 @@ namespace VoxelEngine.Delaunay {
 			Site newSite, bottomSite, topSite, tempSite;
 			Vertex v, vertex;
 			Vector2f newIntStar = Vector2f.zero;
-			LR leftRight;
+			OrientationType leftRight;
 			Halfedge lbnd, rbnd, llbnd, rrbnd, bisector;
 			Edge edge;
 
@@ -183,7 +183,7 @@ namespace VoxelEngine.Delaunay {
 					// Step 8:
 					lbnd = edgeList.EdgeListLeftNeighbor(newSite.Coord);	// The halfedge just to the left of newSite
 					//UnityEngine.Debug.Log("lbnd: " + lbnd);
-					rbnd = lbnd.edgeListRightNeighbor;		// The halfedge just to the right
+					rbnd = lbnd.EdgeListRightNeighbor;		// The halfedge just to the right
 					//UnityEngine.Debug.Log("rbnd: " + rbnd);
 					bottomSite = RightRegion(lbnd, bottomMostSite);			// This is the same as leftRegion(rbnd)
 					// This Site determines the region containing the new site
@@ -194,7 +194,7 @@ namespace VoxelEngine.Delaunay {
 					//UnityEngine.Debug.Log("new edge: " + edge);
 					edges.Add(edge);
 
-					bisector = Halfedge.Create(edge, LR.LEFT);
+					bisector = Halfedge.Create(edge, OrientationType.Left);
 					halfEdges.Add(bisector);
 					// Inserting two halfedges into edgelist constitutes Step 10:
 					// Insert bisector to the right of lbnd:
@@ -204,13 +204,13 @@ namespace VoxelEngine.Delaunay {
 					if ((vertex = Vertex.Intersect(lbnd, bisector)) != null) {
 						vertices.Add(vertex);
 						heap.Remove(lbnd);
-						lbnd.vertex = vertex;
+						lbnd.Vertex = vertex;
 						lbnd.ystar = vertex.y + newSite.Dist(vertex);
 						heap.Insert(lbnd);
 					}
 
 					lbnd = bisector;
-					bisector = Halfedge.Create(edge, LR.RIGHT);
+					bisector = Halfedge.Create(edge, OrientationType.Right);
 					halfEdges.Add(bisector);
 					// Second halfedge for Step 10::
 					// Insert bisector to the right of lbnd:
@@ -219,7 +219,7 @@ namespace VoxelEngine.Delaunay {
 					// Second half of Step 11:
 					if ((vertex = Vertex.Intersect(bisector, rbnd)) != null) {
 						vertices.Add(vertex);
-						bisector.vertex = vertex;
+						bisector.Vertex = vertex;
 						bisector.ystar = vertex.y + newSite.Dist(vertex);
 						heap.Insert(bisector);
 					}
@@ -228,45 +228,45 @@ namespace VoxelEngine.Delaunay {
 				} else if (!heap.Empty()) {
 					// Intersection is smallest
 					lbnd = heap.ExtractMin();
-					llbnd = lbnd.edgeListLeftNeighbor;
-					rbnd = lbnd.edgeListRightNeighbor;
-					rrbnd = rbnd.edgeListRightNeighbor;
+					llbnd = lbnd.EdgeListLeftNeighbor;
+					rbnd = lbnd.EdgeListRightNeighbor;
+					rrbnd = rbnd.EdgeListRightNeighbor;
 					bottomSite = LeftRegion(lbnd, bottomMostSite);
 					topSite = RightRegion(rbnd, bottomMostSite);
 					// These three sites define a Delaunay triangle
 					// (not actually using these for anything...)
 					// triangles.Add(new Triangle(bottomSite, topSite, RightRegion(lbnd, bottomMostSite)));
 
-					v = lbnd.vertex;
+					v = lbnd.Vertex;
 					v.SetIndex();
-					lbnd.edge.SetVertex(lbnd.leftRight, v);
-					rbnd.edge.SetVertex(rbnd.leftRight, v);
+					lbnd.Edge.SetVertex(lbnd.Orientation, v);
+					rbnd.Edge.SetVertex(rbnd.Orientation, v);
 					edgeList.Remove(lbnd);
 					heap.Remove(rbnd);
 					edgeList.Remove(rbnd);
-					leftRight = LR.LEFT;
+					leftRight = OrientationType.Left;
 					if (bottomSite.y > topSite.y) {
 						tempSite = bottomSite;
 						bottomSite = topSite;
 						topSite = tempSite;
-						leftRight = LR.RIGHT;
+						leftRight = OrientationType.Right;
 					}
 					edge = Edge.CreateBisectingEdge(bottomSite, topSite);
 					edges.Add(edge);
 					bisector = Halfedge.Create(edge, leftRight);
 					halfEdges.Add(bisector);
 					edgeList.Insert(llbnd, bisector);
-					edge.SetVertex(LR.Other(leftRight), v);
+					edge.SetVertex(leftRight.Opposite(), v);
 					if ((vertex = Vertex.Intersect(llbnd, bisector)) != null) {
 						vertices.Add(vertex);
 						heap.Remove(llbnd);
-						llbnd.vertex = vertex;
+						llbnd.Vertex = vertex;
 						llbnd.ystar = vertex.y + bottomSite.Dist(vertex);
 						heap.Insert(llbnd);
 					}
 					if ((vertex = Vertex.Intersect(bisector, rrbnd)) != null) {
 						vertices.Add(vertex);
-						bisector.vertex = vertex;
+						bisector.Vertex = vertex;
 						bisector.ystar = vertex.y + bottomSite.Dist(vertex);
 						heap.Insert(bisector);
 					}
@@ -356,19 +356,19 @@ namespace VoxelEngine.Delaunay {
 		}
 
 		private Site LeftRegion(Halfedge he, Site bottomMostSite) {
-			Edge edge = he.edge;
+			Edge edge = he.Edge;
 			if (edge == null) {
 				return bottomMostSite;
 			}
-			return edge.Site(he.leftRight);
+			return edge.Site(he.Orientation);
 		}
 		
 		private Site RightRegion(Halfedge he, Site bottomMostSite) {
-			Edge edge = he.edge;
+			Edge edge = he.Edge;
 			if (edge == null) {
 				return bottomMostSite;
 			}
-			return edge.Site(LR.Other(he.leftRight));
+			return edge.Site(he.Orientation.Opposite());
 		}
 
 		public static int CompareByYThenX(Site s1, Site s2) {

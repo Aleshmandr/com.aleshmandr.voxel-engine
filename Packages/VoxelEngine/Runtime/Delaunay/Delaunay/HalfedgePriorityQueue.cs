@@ -33,7 +33,7 @@
 			// Dummy Halfedge at the top of each hash
 			for (int i = 0; i < hashSize; i++) {
 				hash[i] = Halfedge.CreateDummy();
-				hash[i].nextInPriorityQueue = null;
+				hash[i].NextInPriorityQueue = null;
 			}
 		}
 
@@ -45,12 +45,12 @@
 				minBucked = insertionBucket;
 			}
 			previous = hash[insertionBucket];
-			while ((next = previous.nextInPriorityQueue) != null &&
-			       (halfedge.ystar > next.ystar || (halfedge.ystar == next.ystar && halfedge.vertex.x > next.vertex.x))) {
+			while ((next = previous.NextInPriorityQueue) != null &&
+			       (halfedge.ystar > next.ystar || (halfedge.ystar == next.ystar && halfedge.Vertex.x > next.Vertex.x))) {
 				previous = next;
 			}
-			halfedge.nextInPriorityQueue = previous.nextInPriorityQueue;
-			previous.nextInPriorityQueue = halfedge;
+			halfedge.NextInPriorityQueue = previous.NextInPriorityQueue;
+			previous.NextInPriorityQueue = halfedge;
 			count++;
 		}
 
@@ -58,15 +58,15 @@
 			Halfedge previous;
 			int removalBucket = Bucket(halfedge);
 
-			if (halfedge.vertex != null) {
+			if (halfedge.Vertex != null) {
 				previous = hash[removalBucket];
-				while (previous.nextInPriorityQueue != halfedge) {
-					previous = previous.nextInPriorityQueue;
+				while (previous.NextInPriorityQueue != halfedge) {
+					previous = previous.NextInPriorityQueue;
 				}
-				previous.nextInPriorityQueue = halfedge.nextInPriorityQueue;
+				previous.NextInPriorityQueue = halfedge.NextInPriorityQueue;
 				count--;
-				halfedge.vertex = null;
-				halfedge.nextInPriorityQueue = null;
+				halfedge.Vertex = null;
+				halfedge.NextInPriorityQueue = null;
 				halfedge.Dispose();
 			}
 		}
@@ -79,7 +79,7 @@
 		}
 
 		private bool IsEmpty(int bucket) {
-			return (hash[bucket].nextInPriorityQueue == null);
+			return (hash[bucket].NextInPriorityQueue == null);
 		}
 
 		/*
@@ -100,8 +100,8 @@
 		 */
 		public Vector2f Min() {
 			AdjustMinBucket();
-			Halfedge answer = hash[minBucked].nextInPriorityQueue;
-			return new Vector2f(answer.vertex.x, answer.ystar);
+			Halfedge answer = hash[minBucked].NextInPriorityQueue;
+			return new Vector2f(answer.Vertex.x, answer.ystar);
 		}
 
 		/*
@@ -111,11 +111,11 @@
 			Halfedge answer;
 
 			// Get the first real Halfedge in minBucket
-			answer = hash[minBucked].nextInPriorityQueue;
+			answer = hash[minBucked].NextInPriorityQueue;
 
-			hash[minBucked].nextInPriorityQueue = answer.nextInPriorityQueue;
+			hash[minBucked].NextInPriorityQueue = answer.NextInPriorityQueue;
 			count--;
-			answer.nextInPriorityQueue = null;
+			answer.NextInPriorityQueue = null;
 
 			return answer;
 		}

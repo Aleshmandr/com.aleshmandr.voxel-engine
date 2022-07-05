@@ -9,8 +9,8 @@ namespace VoxelEngine.Delaunay {
 
 			foreach (Edge edge in edges) {
 				if (edge.Visible()) {
-					Vector2f p1 = edge.ClippedEnds[LR.LEFT];
-					Vector2f p2 = edge.ClippedEnds[LR.RIGHT];
+					Vector2f p1 = edge.ClippedEnds[OrientationType.Left];
+					Vector2f p2 = edge.ClippedEnds[OrientationType.Right];
 					segments.Add(new LineSegment(p1,p2));
 				}
 			}

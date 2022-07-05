@@ -81,7 +81,7 @@ namespace VoxelEngine.Delaunay {
 		private List<Edge> edges;
 		public List<Edge> Edges {get{return edges;}}
 		// which end of each edge hooks up with the previous edge in edges:
-		private List<LR> edgeOrientations;
+		private List<OrientationType> edgeOrientations;
 		// ordered list of points that define the region clipped to bounds:
 		private List<Vector2f> region;
 
@@ -197,9 +197,9 @@ namespace VoxelEngine.Delaunay {
 				return new List<Vector2f>();
 			}
 			edge = edges[i];
-			LR orientation = edgeOrientations[i];
+			OrientationType orientation = edgeOrientations[i];
 			points.Add(edge.ClippedEnds[orientation]);
-			points.Add(edge.ClippedEnds[LR.Other(orientation)]);
+			points.Add(edge.ClippedEnds[orientation.Opposite()]);
 
 			for (int j = i + 1; j < n; j++) {
 				edge = edges[j];
@@ -217,7 +217,7 @@ namespace VoxelEngine.Delaunay {
 		private void Connect(ref List<Vector2f> points, int j, Rectf bounds, bool closingUp = false) {
 			Vector2f rightPoint = points[points.Count-1];
 			Edge newEdge = edges[j];
-			LR newOrientation = edgeOrientations[j];
+			OrientationType newOrientation = edgeOrientations[j];
 
 			// The point that must be conected to rightPoint:
 			Vector2f newPoint = newEdge.ClippedEnds[newOrientation];
@@ -322,7 +322,7 @@ namespace VoxelEngine.Delaunay {
 				}
 				points.Add(newPoint);
 			}
-			Vector2f newRightPoint = newEdge.ClippedEnds[LR.Other(newOrientation)];
+			Vector2f newRightPoint = newEdge.ClippedEnds[newOrientation.Opposite()];
 			if (!CloseEnough(points[0], newRightPoint)) {
 				points.Add(newRightPoint);
 			}

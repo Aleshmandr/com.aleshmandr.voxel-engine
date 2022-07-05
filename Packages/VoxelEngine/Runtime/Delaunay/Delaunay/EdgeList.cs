@@ -8,16 +8,17 @@
         private int hashSize;
         private Halfedge[] hash;
         private Halfedge leftEnd;
-        public Halfedge LeftEnd { get { return leftEnd; } }
         private Halfedge rightEnd;
-        public Halfedge RightEnd { get { return rightEnd; } }
+        
+        public Halfedge LeftEnd => leftEnd;
+        public Halfedge RightEnd => rightEnd;
 
         public void Dispose() {
             Halfedge halfedge = leftEnd;
             Halfedge prevHe;
             while(halfedge != rightEnd) {
                 prevHe = halfedge;
-                halfedge = halfedge.edgeListRightNeighbor;
+                halfedge = halfedge.EdgeListRightNeighbor;
                 prevHe.Dispose();
             }
             leftEnd = null;
@@ -37,10 +38,10 @@
             // Two dummy Halfedges:
             leftEnd = Halfedge.CreateDummy();
             rightEnd = Halfedge.CreateDummy();
-            leftEnd.edgeListLeftNeighbor = null;
-            leftEnd.edgeListRightNeighbor = rightEnd;
-            rightEnd.edgeListLeftNeighbor = leftEnd;
-            rightEnd.edgeListRightNeighbor = null;
+            leftEnd.EdgeListLeftNeighbor = null;
+            leftEnd.EdgeListRightNeighbor = rightEnd;
+            rightEnd.EdgeListLeftNeighbor = leftEnd;
+            rightEnd.EdgeListRightNeighbor = null;
             hash[0] = leftEnd;
             hash[hashSize - 1] = rightEnd;
         }
@@ -51,10 +52,10 @@
          * @param newHalfedge
          */
         public void Insert(Halfedge lb, Halfedge newHalfedge) {
-            newHalfedge.edgeListLeftNeighbor = lb;
-            newHalfedge.edgeListRightNeighbor = lb.edgeListRightNeighbor;
-            lb.edgeListRightNeighbor.edgeListLeftNeighbor = newHalfedge;
-            lb.edgeListRightNeighbor = newHalfedge;
+            newHalfedge.EdgeListLeftNeighbor = lb;
+            newHalfedge.EdgeListRightNeighbor = lb.EdgeListRightNeighbor;
+            lb.EdgeListRightNeighbor.EdgeListLeftNeighbor = newHalfedge;
+            lb.EdgeListRightNeighbor = newHalfedge;
         }
 
         /*
@@ -63,10 +64,10 @@
          * @param halfEdge
          */
         public void Remove(Halfedge halfedge) {
-            halfedge.edgeListLeftNeighbor.edgeListRightNeighbor = halfedge.edgeListRightNeighbor;
-            halfedge.edgeListRightNeighbor.edgeListLeftNeighbor = halfedge.edgeListLeftNeighbor;
-            halfedge.edge = Edge.DELETED;
-            halfedge.edgeListLeftNeighbor = halfedge.edgeListRightNeighbor = null;
+            halfedge.EdgeListLeftNeighbor.EdgeListRightNeighbor = halfedge.EdgeListRightNeighbor;
+            halfedge.EdgeListRightNeighbor.EdgeListLeftNeighbor = halfedge.EdgeListLeftNeighbor;
+            halfedge.Edge = Edge.DELETED;
+            halfedge.EdgeListLeftNeighbor = halfedge.EdgeListRightNeighbor = null;
         }
 
         /*
@@ -97,13 +98,13 @@
             // Now search linear list of haledges for the correct one
             if(halfedge == leftEnd || (halfedge != rightEnd && halfedge.IsLeftOf(p))) {
                 do {
-                    halfedge = halfedge.edgeListRightNeighbor;
+                    halfedge = halfedge.EdgeListRightNeighbor;
                 } while(halfedge != rightEnd && halfedge.IsLeftOf(p));
-                halfedge = halfedge.edgeListLeftNeighbor;
+                halfedge = halfedge.EdgeListLeftNeighbor;
 
             } else {
                 do {
-                    halfedge = halfedge.edgeListLeftNeighbor;
+                    halfedge = halfedge.EdgeListLeftNeighbor;
                 } while(halfedge != leftEnd && !halfedge.IsLeftOf(p));
             }
 
@@ -119,17 +120,16 @@
             if(b < 0 || b >= hashSize) {
                 return null;
             }
-            
+
             var halfedge = hash[b];
-            if(halfedge != null && halfedge.edge == Edge.DELETED) {
+            if(halfedge != null && halfedge.Edge == Edge.DELETED) {
                 // Hash table points to deleted halfedge. Patch as necessary
                 hash[b] = null;
 
                 // Still can't dispose halfedge yet!
                 return null;
-            } else {
-                return halfedge;
             }
+            return halfedge;
         }
     }
 }

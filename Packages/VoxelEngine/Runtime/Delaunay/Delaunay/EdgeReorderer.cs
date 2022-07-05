@@ -6,14 +6,14 @@ namespace VoxelEngine.Delaunay {
 	public class EdgeReorderer {
 
 		private List<Edge> edges;
-		private List<LR> edgeOrientations;
+		private List<OrientationType> edgeOrientations;
 
-		public List<Edge> Edges {get{return edges;}}
-		public List<LR> EdgeOrientations {get{return edgeOrientations;}}
+		public List<Edge> Edges => edges;
+		public List<OrientationType> EdgeOrientations => edgeOrientations;
 
 		public EdgeReorderer(List<Edge> origEdges, Type criterion) {
 			edges = new List<Edge>();
-			edgeOrientations = new List<LR>();
+			edgeOrientations = new List<OrientationType>();
 			if (origEdges.Count > 0) {
 				edges = ReorderEdges(origEdges, criterion);
 			}
@@ -37,7 +37,7 @@ namespace VoxelEngine.Delaunay {
 			i = 0;
 			edge = origEdges[i];
 			newEdges.Add(edge);
-			edgeOrientations.Add(LR.LEFT);
+			edgeOrientations.Add(OrientationType.Left);
 			ICoord firstPoint; 
 			ICoord lastPoint;
 			if (criterion == typeof(Vertex)) {
@@ -75,22 +75,22 @@ namespace VoxelEngine.Delaunay {
 					}
 					if (leftPoint == lastPoint) {
 						lastPoint = rightPoint;
-						edgeOrientations.Add(LR.LEFT);
+						edgeOrientations.Add(OrientationType.Left);
 						newEdges.Add(edge);
 						done[i] = true;
 					} else if (rightPoint == firstPoint) {
 						firstPoint = leftPoint;
-						edgeOrientations.Insert(0, LR.LEFT);
+						edgeOrientations.Insert(0, OrientationType.Left);
 						newEdges.Insert(0, edge);
 						done[i] = true;
 					} else if (leftPoint == firstPoint) {
 						firstPoint = rightPoint;
-						edgeOrientations.Insert(0, LR.RIGHT);
+						edgeOrientations.Insert(0, OrientationType.Right);
 						newEdges.Insert(0, edge);
 						done[i] = true;
 					} else if (rightPoint == lastPoint) {
 						lastPoint = leftPoint;
-						edgeOrientations.Add(LR.RIGHT);
+						edgeOrientations.Add(OrientationType.Right);
 						newEdges.Add(edge);
 						done[i] = true;
 					}

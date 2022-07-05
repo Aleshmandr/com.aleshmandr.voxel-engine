@@ -12,7 +12,7 @@ namespace VoxelEngine.Delaunay
 
 		#region Pool
 
-        private static Queue<Edge> pool = new Queue<Edge>();
+        private static readonly Queue<Edge> Pool = new Queue<Edge>();
 
         private static int nEdges = 0;
         /*
@@ -58,8 +58,8 @@ namespace VoxelEngine.Delaunay
 
         private static Edge Create() {
             Edge edge;
-            if(pool.Count > 0) {
-                edge = pool.Dequeue();
+            if(Pool.Count > 0) {
+                edge = Pool.Dequeue();
                 edge.Init();
             } else {
                 edge = new Edge();
@@ -97,12 +97,12 @@ namespace VoxelEngine.Delaunay
         private Vertex rightVertex;
         public Vertex RightVertex { get { return rightVertex; } }
 
-        public Vertex Vertex(LR leftRight) {
-            return leftRight == LR.LEFT ? leftVertex : rightVertex;
+        public Vertex Vertex(OrientationType leftRight) {
+            return leftRight == OrientationType.Left ? leftVertex : rightVertex;
         }
 
-        public void SetVertex(LR leftRight, Vertex v) {
-            if(leftRight == LR.LEFT) {
+        public void SetVertex(OrientationType leftRight, Vertex v) {
+            if(leftRight == OrientationType.Left) {
                 leftVertex = v;
             } else {
                 rightVertex = v;
@@ -135,8 +135,8 @@ namespace VoxelEngine.Delaunay
 
         // Once clipVertices() is called, this Disctinary will hold two Points
         // representing the clipped coordinates of the left and the right ends...
-        private Dictionary<LR, Vector2f> clippedVertices;
-        public Dictionary<LR, Vector2f> ClippedEnds { get { return clippedVertices; } }
+        private Dictionary<OrientationType, Vector2f> clippedVertices;
+        public Dictionary<OrientationType, Vector2f> ClippedEnds { get { return clippedVertices; } }
 
         // Unless the entire Edge is outside the bounds.
         // In that case visible will be false:
@@ -145,11 +145,11 @@ namespace VoxelEngine.Delaunay
         }
 
         // The two input Sites for which this Edge is a bisector:
-        private Dictionary<LR, Site> sites;
-        public Site LeftSite { get { return sites[LR.LEFT]; } set { sites[LR.LEFT] = value; } }
-        public Site RightSite { get { return sites[LR.RIGHT]; } set { sites[LR.RIGHT] = value; } }
+        private Dictionary<OrientationType, Site> sites;
+        public Site LeftSite { get { return sites[OrientationType.Left]; } set { sites[OrientationType.Left] = value; } }
+        public Site RightSite { get { return sites[OrientationType.Right]; } set { sites[OrientationType.Right] = value; } }
 
-        public Site Site(LR leftRight) {
+        public Site Site(OrientationType leftRight) {
             return sites[leftRight];
         }
 
@@ -166,7 +166,7 @@ namespace VoxelEngine.Delaunay
             sites.Clear();
             sites = null;
 
-            pool.Enqueue(this);
+            Pool.Enqueue(this);
         }
 
         public Edge() {
@@ -175,13 +175,13 @@ namespace VoxelEngine.Delaunay
         }
 
         public Edge Init() {
-            sites = new Dictionary<LR, Site>();
+            sites = new Dictionary<OrientationType, Site>();
 
             return this;
         }
 
         public override string ToString() {
-            return "Edge " + edgeIndex + "; sites " + sites[LR.LEFT] + ", " + sites[LR.RIGHT] +
+            return "Edge " + edgeIndex + "; sites " + sites[OrientationType.Left] + ", " + sites[OrientationType.Right] +
                    "; endVertices " + (leftVertex != null ? leftVertex.VertexIndex.ToString() : "null") + ", " +
                    (rightVertex != null ? rightVertex.VertexIndex.ToString() : "null") + "::";
         }
@@ -286,13 +286,13 @@ namespace VoxelEngine.Delaunay
                 }
             }
 
-            clippedVertices = new Dictionary<LR, Vector2f>();
+            clippedVertices = new Dictionary<OrientationType, Vector2f>();
             if(vertex0 == leftVertex) {
-                clippedVertices[LR.LEFT] = new Vector2f(x0, y0);
-                clippedVertices[LR.RIGHT] = new Vector2f(x1, y1);
+                clippedVertices[OrientationType.Left] = new Vector2f(x0, y0);
+                clippedVertices[OrientationType.Right] = new Vector2f(x1, y1);
             } else {
-                clippedVertices[LR.RIGHT] = new Vector2f(x0, y0);
-                clippedVertices[LR.LEFT] = new Vector2f(x1, y1);
+                clippedVertices[OrientationType.Right] = new Vector2f(x0, y0);
+                clippedVertices[OrientationType.Left] = new Vector2f(x1, y1);
             }
         }
 
