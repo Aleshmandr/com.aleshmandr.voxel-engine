@@ -2,10 +2,11 @@
 
 namespace VoxelEngine
 {
-    [ExecuteAlways][RequireComponent(typeof(MeshFilter))][RequireComponent(typeof(MeshRenderer))]
+    [ExecuteAlways] [RequireComponent(typeof(MeshFilter))] [RequireComponent(typeof(MeshRenderer))]
     public class VoxelsContainer : MonoBehaviour
     {
-        [SerializeField] private TextAsset asset;
+        public TextAsset Asset;
+        [SerializeField] private bool loadOnStart;
         private VoxelsData data;
         private MeshFilter meshFilter;
 
@@ -19,12 +20,14 @@ namespace VoxelEngine
         }
 
         private void Start() {
-            Initialize();
+            if(loadOnStart) {
+                LoadAsset();
+            }
         }
 
-        [ContextMenu("Initialize")]
-        private void Initialize() {
-            data = Utilities.DeserializeObject<VoxelsData>(asset.bytes);
+        [ContextMenu("LoadAsset")]
+        private void LoadAsset() {
+            data = Utilities.DeserializeObject<VoxelsData>(Asset.bytes);
             MeshFilter.mesh = Utilities.GenerateMesh(data);
         }
     }

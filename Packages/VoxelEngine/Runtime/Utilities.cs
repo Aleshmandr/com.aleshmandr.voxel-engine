@@ -28,9 +28,9 @@ namespace VoxelEngine
             //           8bit    8bit     8it  2bit(not used)   6bit(faces)
 
             // Reset faces
-            for(int y = data.fromY; y < data.toY; y++) {
-                for(int x = data.fromX; x < data.toX; x++) {
-                    for(int z = data.fromZ; z < data.toZ; z++) {
+            for(int y = 0; y < data.SizeY; y++) {
+                for(int x = 0; x < data.SizeX; x++) {
+                    for(int z = 0; z < data.SizeZ; z++) {
                         if(blocks[x, y, z] != 0) {
                             blocks[x, y, z] &= ~(1 << 0);
                             blocks[x, y, z] &= ~(1 << 1);
@@ -43,56 +43,54 @@ namespace VoxelEngine
                 }
             }
 
-            for(int x = data.fromX; x < data.toX; x++) {
-                for(int y = data.fromY; y < data.toY; y++) {
-                    for(int z = data.fromZ; z < data.toZ; z++) {
+            for(int x = 0; x < data.SizeX; x++) {
+                for(int y = 0; y < data.SizeY; y++) {
+                    for(int z = 0; z < data.SizeZ; z++) {
                         if(blocks[x, y, z] == 0) {
                             continue; // Skip empty blocks
                         }
 
                         // Check if hidden
                         bool left = false, right = false, above = false, front = false, back = false, below = false;
-                        if(z > data.fromZ) {
+                        if(z > 0) {
                             if(blocks[x, y, z - 1] != 0) {
                                 back = true;
                                 blocks[x, y, z] |= 0x10;
                             }
                         }
-                        if(z < data.toZ - 1) {
+                        if(z < data.SizeZ - 1) {
                             if(blocks[x, y, z + 1] != 0) {
                                 front = true;
                                 blocks[x, y, z] |= 0x1;
                             }
                         }
 
-                        if(x > data.fromX) {
+                        if(x > 0) {
                             if(blocks[x - 1, y, z] != 0) {
                                 left = true;
                                 blocks[x, y, z] |= 0x8;
                             }
                         }
-                        if(x < data.toX - 1) {
+                        if(x < data.SizeX - 1) {
                             if(blocks[x + 1, y, z] != 0) {
                                 right = true;
                                 blocks[x, y, z] |= 0x4;
                             }
                         }
 
-                        if(y > data.fromY) {
-
+                        if(y > 0) {
                             if(blocks[x, y - 1, z] != 0) {
                                 below = true;
                                 blocks[x, y, z] |= 0x20;
                             }
                         }
-                        if(y < data.toY - 1) {
+                        if(y < data.SizeY - 1) {
                             if(blocks[x, y + 1, z] != 0) {
                                 above = true;
                                 blocks[x, y, z] |= 0x2;
                             }
                         }
-
-
+                        
                         if(front && left && right && above && back && below) {
                             continue; // Block is hidden
                         }
@@ -103,7 +101,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxZ = 0;
 
-                                for(int xi = x; xi < data.toX; xi++) {
+                                for(int xi = x; xi < data.SizeX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x20) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -111,7 +109,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpZ = 0;
-                                    for(int zi = z; zi < data.toZ; zi++) {
+                                    for(int zi = z; zi < data.SizeZ; zi++) {
                                         if((blocks[xi, y, zi] & 0x20) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
                                             tmpZ++;
                                         } else {
@@ -168,7 +166,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxZ = 0;
 
-                                for(int xi = x; xi < data.toX; xi++) {
+                                for(int xi = x; xi < data.SizeX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x2) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -176,7 +174,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpZ = 0;
-                                    for(int zi = z; zi < data.toZ; zi++) {
+                                    for(int zi = z; zi < data.SizeZ; zi++) {
                                         if((blocks[xi, y, zi] & 0x2) == 0 && SameColor(blocks[xi, y, zi], blocks[x, y, z])) {
                                             tmpZ++;
                                         } else {
@@ -233,7 +231,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxY = 0;
 
-                                for(int xi = x; xi < data.toX; xi++) {
+                                for(int xi = x; xi < data.SizeX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x10) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -241,7 +239,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < data.toY; yi++) {
+                                    for(int yi = y; yi < data.SizeY; yi++) {
                                         if((blocks[xi, yi, z] & 0x10) == 0 && SameColor(blocks[xi, yi, z], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -297,7 +295,7 @@ namespace VoxelEngine
                                 int maxX = 0;
                                 int maxY = 0;
 
-                                for(int xi = x; xi < data.toX; xi++) {
+                                for(int xi = x; xi < data.SizeX; xi++) {
                                     // Check not drawn + same color
                                     if((blocks[xi, y, z] & 0x1) == 0 && SameColor(blocks[xi, y, z], blocks[x, y, z])) {
                                         maxX++;
@@ -305,7 +303,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < data.toY; yi++) {
+                                    for(int yi = y; yi < data.SizeY; yi++) {
                                         if((blocks[xi, yi, z] & 0x1) == 0 && SameColor(blocks[xi, yi, z], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -359,7 +357,7 @@ namespace VoxelEngine
                                 int maxZ = 0;
                                 int maxY = 0;
 
-                                for(int zi = z; zi < data.toZ; zi++) {
+                                for(int zi = z; zi < data.SizeZ; zi++) {
                                     // Check not drawn + same color
                                     if((blocks[x, y, zi] & 0x8) == 0 && SameColor(blocks[x, y, zi], blocks[x, y, z])) {
                                         maxZ++;
@@ -367,7 +365,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < data.toY; yi++) {
+                                    for(int yi = y; yi < data.SizeY; yi++) {
                                         if((blocks[x, yi, zi] & 0x8) == 0 && SameColor(blocks[x, yi, zi], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {
@@ -422,7 +420,7 @@ namespace VoxelEngine
                                 int maxZ = 0;
                                 int maxY = 0;
 
-                                for(int zi = z; zi < data.toZ; zi++) {
+                                for(int zi = z; zi < data.SizeZ; zi++) {
                                     // Check not drawn + same color
                                     if((blocks[x, y, zi] & 0x4) == 0 && SameColor(blocks[x, y, zi], blocks[x, y, z])) {
                                         maxZ++;
@@ -430,7 +428,7 @@ namespace VoxelEngine
                                         break;
                                     }
                                     int tmpY = 0;
-                                    for(int yi = y; yi < data.toY; yi++) {
+                                    for(int yi = y; yi < data.SizeY; yi++) {
                                         if((blocks[x, yi, zi] & 0x4) == 0 && SameColor(blocks[x, yi, zi], blocks[x, y, z])) {
                                             tmpY++;
                                         } else {

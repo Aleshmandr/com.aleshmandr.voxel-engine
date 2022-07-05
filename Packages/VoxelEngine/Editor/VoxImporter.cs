@@ -6,7 +6,7 @@ namespace VoxelEngine.Editor
 {
     public class VoxImporter : EditorWindow
     {
-        private static ushort[] DefaultPalette = {
+        private static readonly ushort[] DefaultPalette = {
             32767, 25599, 19455, 13311, 7167, 1023, 32543, 25375, 19231, 13087, 6943, 799, 32351, 25183,
             19039, 12895, 6751, 607, 32159, 24991, 18847, 12703, 6559, 415, 31967, 24799, 18655, 12511, 6367, 223, 31775, 24607, 18463, 12319, 6175, 31,
             32760, 25592, 19448, 13304, 7160, 1016, 32536, 25368, 19224, 13080, 6936, 792, 32344, 25176, 19032, 12888, 6744, 600, 32152, 24984, 18840,
@@ -22,6 +22,7 @@ namespace VoxelEngine.Editor
         };
 
         private bool compress = true;
+        private bool clusterize;
 
         [MenuItem("Tools/VoxelEngine/Magica Voxel Importer (.vox)", false)]
         public static void ShowWindow() {
@@ -33,18 +34,21 @@ namespace VoxelEngine.Editor
             EditorGUILayout.BeginVertical("Box");
 
             compress = EditorGUILayout.Toggle("Compress", compress);
+            clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
             EditorGUILayout.LabelField("Import .vox file");
             if(GUILayout.Button("Import")) {
                 string filePath = EditorUtility.OpenFilePanel("Import file", "", "vox");
                 if(string.IsNullOrEmpty(filePath)) {
                     return;
                 }
-                LoadModel(filePath);
+                var data = LoadVoxFile(filePath);
+                var assetsName = Path.GetFileNameWithoutExtension(filePath);
+                GenerateAssets(assetsName, data);
             }
             EditorGUILayout.EndVertical();
         }
 
-        private void LoadModel(string filePath) {
+        private VoxelsData LoadVoxFile(string filePath) {
             var stream = new BinaryReader(File.OpenRead(filePath));
 
             int[] colors = null;
@@ -53,7 +57,7 @@ namespace VoxelEngine.Editor
             int version = stream.ReadInt32();
 
             if(magic != "VOX ") {
-                return;
+                return null;
             }
 
             int maxX = 0;
@@ -102,27 +106,38 @@ namespace VoxelEngine.Editor
             stream.Close();
 
             if(voxelData == null || voxelData.Length == 0) {
+                return null;
+            }
+            
+            var data = new VoxelsData(maxX+1, maxZ+1, maxY+1);
+            for(int i = 0; i < voxelData.Length; i++) {
+                int voxelColor = colors?[voxelData[i].Color - 1] ?? DefaultPalette[voxelData[i].Color - 1];
+                data.Blocks[voxelData[i].X, voxelData[i].Z, voxelData[i].Y] = voxelColor;
+            }
+
+            return data;
+        }
+
+        private void GenerateAssets(string assetsName, VoxelsData data) {
+            if(data == null) {
                 return;
             }
-
-            var data = new VoxelsData(maxX, maxZ, maxY);
-            for(int i = 0; i < voxelData.Length; i++) {
-                int voxelColor = colors?[voxelData[i].color - 1] ?? DefaultPalette[voxelData[i].color - 1];
-                data.Blocks[voxelData[i].x, voxelData[i].z, voxelData[i].y] = voxelColor;
-            }
-
+            
             var generatedMesh = Utilities.GenerateMesh(data);
-
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
-
             var bytes = Utilities.SerializeObject(data, compress);
 
-            File.WriteAllBytes(Application.dataPath + $"/{fileName}.bytes", bytes);
+            File.WriteAllBytes(Application.dataPath + $"/{assetsName}.bytes", bytes);
 
-            AssetDatabase.CreateAsset(generatedMesh, $"Assets/{fileName}.asset");
-
+            AssetDatabase.CreateAsset(generatedMesh, $"Assets/{assetsName}.asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+
+            GameObject gameObject = new GameObject(assetsName);
+            gameObject.AddComponent<MeshFilter>().mesh = generatedMesh;
+            var container = gameObject.AddComponent<VoxelsContainer>();
+            container.Asset = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{assetsName}.bytes");
+            
+            EditorUtility.SetDirty(gameObject);
         }
     }
 }
