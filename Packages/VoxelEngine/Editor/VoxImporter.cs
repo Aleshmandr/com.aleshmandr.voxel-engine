@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Editor
 {
@@ -25,10 +26,10 @@ namespace VoxelEngine.Editor
 
         private bool compress = true;
         private bool clusterize;
-        private int clusterVoxelsStep;
+        private int clusterVoxelsStep = 20;
         private bool stepBasedDispersion = true;
         private int clusterDispersion;
-        private int clusterGenerationSeed;
+        private int clusterGenerationSeed = 12345;
 
         [MenuItem("Tools/VoxelEngine/Magica Voxel Importer (.vox)", false)]
         public static void ShowWindow() {
@@ -55,19 +56,27 @@ namespace VoxelEngine.Editor
                 if(string.IsNullOrEmpty(filePath)) {
                     return;
                 }
-                var rawVoxelsData = LoadVoxFile(filePath);
-                var assetName = Path.GetFileNameWithoutExtension(filePath);
-                if(clusterize) {
-                    var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsData);
-                    var clustersAssetsData = new List<GeneratedAssetsData>();
-                    for(int i = 0; i < clusters.Length; i++) {
-                        var assetData = GenerateAssets(assetName, clusters[i], i);
-                        clustersAssetsData.Add(assetData);
+                try {
+                    EditorUtility.DisplayProgressBar("Importing .vox file", "Reading file", 0f);
+                    var rawVoxelsData = LoadVoxFile(filePath);
+                    var assetName = Path.GetFileNameWithoutExtension(filePath);
+                    if(clusterize) {
+                        var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsData);
+                        var clustersAssetsData = new List<GeneratedAssetsData>();
+                        for(int i = 0; i < clusters.Length; i++) {
+                            EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", (float)i / clusters.Length);
+                            var assetData = GenerateAssets(assetName, clusters[i], i);
+                            clustersAssetsData.Add(assetData);
+                        }
+                        CreateClusterizedGameObject(clustersAssetsData);
+                    } else {
+                        EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", 0.5f);
+                        var assetsData = GenerateAssets(assetName, rawVoxelsData);
+                        CreateGameObject(assetsData);
                     }
-                    CreateClusterizedGameObject(clustersAssetsData);
-                } else {
-                    var assetsData = GenerateAssets(assetName, rawVoxelsData);
-                    CreateGameObject(assetsData);
+                }
+                finally {
+                    EditorUtility.ClearProgressBar();
                 }
             }
             EditorGUILayout.EndVertical();
@@ -197,9 +206,9 @@ namespace VoxelEngine.Editor
             var size = voxelsData.Size;
             Vector3Int boxSize = new Vector3Int(size.x, size.y, size.z);
 
-            int stepsX = Mathf.CeilToInt(boxSize.x / (float)clusterStep);
-            int stepsY = Mathf.CeilToInt(boxSize.y / (float)clusterStep);
-            int stepsZ = Mathf.CeilToInt(boxSize.z / (float)clusterStep);
+            int stepsX = Mathf.Max(Mathf.CeilToInt(boxSize.x / (float)clusterStep), 1);
+            int stepsY = Mathf.Max(Mathf.CeilToInt(boxSize.y / (float)clusterStep), 1);
+            int stepsZ = Mathf.Max(Mathf.CeilToInt(boxSize.z / (float)clusterStep), 1);
 
             int clustersCount = stepsX * stepsY * stepsZ;
             Vector3Int[] clustersCenters = new Vector3Int[clustersCount];
@@ -208,7 +217,7 @@ namespace VoxelEngine.Editor
             for(int i = 0; i < stepsX; i++) {
                 for(int j = 0; j < stepsY; j++) {
                     for(int k = 0; k < stepsZ; k++) {
-                        int index = i + stepsY * j + stepsY * stepsX * k;
+                        int index = i + stepsX * j + stepsY * stepsX * k;
                         clustersCenters[index] = new Vector3Int(
                             i * clusterStep + Random.Range(0, dispersion),
                             j * clusterStep + Random.Range(0, dispersion),
@@ -226,7 +235,7 @@ namespace VoxelEngine.Editor
                 int nearestClusterIndex = 0;
                 for(int c = 0; c < clustersCenters.Length; c++) {
                     var cluster = clustersCenters[c];
-                    int dist = Mathf.Abs(cluster.x - vox.X) + Mathf.Abs(cluster.y - vox.Y) + Mathf.Abs(cluster.z - vox.Z);
+                    int dist = (int)Vector3Int.Distance(cluster, new Vector3Int(vox.X, vox.Y, vox.Z));
                     if(dist < voxMinDist) {
                         voxMinDist = dist;
                         nearestClusterIndex = c;
