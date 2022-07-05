@@ -1,33 +1,32 @@
 ﻿namespace VoxelEngine.Delaunay
 {
+    public struct Rectf
+    {
+        public static readonly Rectf Zero = new Rectf(0, 0, 0, 0);
+        public static readonly Rectf One = new Rectf(1, 1, 1, 1);
 
-	public struct Rectf
-	{
-		public static readonly Rectf Zero = new Rectf(0, 0, 0, 0);
-		public static readonly Rectf One = new Rectf(1, 1, 1, 1);
+        public readonly float X;
+        public readonly float Y;
+        public readonly float Width;
+        public readonly float Height;
 
-		public readonly float x;
-		public readonly float y;
-		public readonly float width;
-		public readonly float height;
+        public float Left => X;
 
-		public Rectf(float x, float y, float width, float height) {
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-		}
+        public float Right => X + Width;
 
-		public float left => x;
+        public float Top => Y;
 
-		public float right => x + width;
+        public float Bottom => Y + Height;
 
-		public float top => y;
+        public Vector2f TopLeft => new Vector2f(Left, Top);
 
-		public float bottom => y + height;
+        public Vector2f BottomRight => new Vector2f(Right, Bottom);
 
-		public Vector2f topLeft => new Vector2f(left, top);
-
-		public Vector2f bottomRight => new Vector2f(right, bottom);
-	}
+        public Rectf(float x, float y, float width, float height) {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+    }
 }

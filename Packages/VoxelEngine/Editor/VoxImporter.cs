@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,10 +24,14 @@ namespace VoxelEngine.Editor
 
         private bool compress = true;
         private bool clusterize;
+        private int clusterVoxelsStep;
+        private bool stepBasedDispersion = true;
+        private int clusterDispersion;
+        private int clusterGenerationSeed;
 
         [MenuItem("Tools/VoxelEngine/Magica Voxel Importer (.vox)", false)]
         public static void ShowWindow() {
-            EditorWindow.GetWindow(typeof(VoxImporter));
+            GetWindow(typeof(VoxImporter));
         }
 
         private void OnGUI() {
@@ -35,34 +40,42 @@ namespace VoxelEngine.Editor
 
             compress = EditorGUILayout.Toggle("Compress", compress);
             clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
+            if(clusterize) {
+                clusterVoxelsStep = EditorGUILayout.IntField("Clusters Voxels Step", clusterVoxelsStep);
+                clusterGenerationSeed = EditorGUILayout.IntField("Clusters Generation Seed", clusterGenerationSeed);
+                stepBasedDispersion = EditorGUILayout.Toggle("Step Based Dispersion", stepBasedDispersion);
+                if(!stepBasedDispersion) {
+                    clusterDispersion = EditorGUILayout.IntField("Dispersion", clusterDispersion);
+                }
+            }
             EditorGUILayout.LabelField("Import .vox file");
             if(GUILayout.Button("Import")) {
                 string filePath = EditorUtility.OpenFilePanel("Import file", "", "vox");
                 if(string.IsNullOrEmpty(filePath)) {
                     return;
                 }
-                var data = LoadVoxFile(filePath);
-                var assetsName = Path.GetFileNameWithoutExtension(filePath);
-                GenerateAssets(assetsName, data);
+                var rawVoxelsData = LoadVoxFile(filePath);
+                if(clusterize) {
+                    var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsData);
+                } else {
+                    var assetsName = Path.GetFileNameWithoutExtension(filePath);
+                    GenerateAssets(assetsName, rawVoxelsData);
+                }
             }
             EditorGUILayout.EndVertical();
         }
 
-        private VoxelsData LoadVoxFile(string filePath) {
+        private RawVoxelsData LoadVoxFile(string filePath) {
             var stream = new BinaryReader(File.OpenRead(filePath));
 
             int[] colors = null;
-            VoxelData[] voxelData = null;
+            RawVoxelData[] rawData = null;
             string magic = new string(stream.ReadChars(4));
             int version = stream.ReadInt32();
 
             if(magic != "VOX ") {
                 return null;
             }
-
-            int maxX = 0;
-            int maxY = 0;
-            int maxZ = 0;
 
             while(stream.BaseStream.Position < stream.BaseStream.Length) {
                 char[] chunkId = stream.ReadChars(4);
@@ -72,16 +85,16 @@ namespace VoxelEngine.Editor
 
                 switch(chunkName) {
                     case "SIZE":
-                        maxX = stream.ReadInt32();
-                        maxY = stream.ReadInt32();
-                        maxZ = stream.ReadInt32();
+                        int sizeX = stream.ReadInt32();
+                        int sizeY = stream.ReadInt32();
+                        int sizeZ = stream.ReadInt32();
                         stream.ReadBytes(chunkSize - 4 * 3);
                         break;
                     case "XYZI":
                         int numVoxels = stream.ReadInt32();
-                        voxelData = new VoxelData[numVoxels];
-                        for(int i = 0; i < voxelData.Length; i++) {
-                            voxelData[i] = new VoxelData(stream);
+                        rawData = new RawVoxelData[numVoxels];
+                        for(int i = 0; i < rawData.Length; i++) {
+                            rawData[i] = new RawVoxelData(stream);
                         }
                         break;
                     case "RGBA":
@@ -105,24 +118,29 @@ namespace VoxelEngine.Editor
 
             stream.Close();
 
-            if(voxelData == null || voxelData.Length == 0) {
+            if(rawData == null || rawData.Length == 0) {
                 return null;
             }
-            
-            var data = new VoxelsData(maxX+1, maxZ+1, maxY+1);
-            for(int i = 0; i < voxelData.Length; i++) {
-                int voxelColor = colors?[voxelData[i].Color - 1] ?? DefaultPalette[voxelData[i].Color - 1];
-                data.Blocks[voxelData[i].X, voxelData[i].Z, voxelData[i].Y] = voxelColor;
+
+            for(int i = 0; i < rawData.Length; i++) {
+                int voxelColor = colors?[rawData[i].ColorCode - 1] ?? DefaultPalette[rawData[i].ColorCode - 1];
+                rawData[i].Color = voxelColor;
             }
 
-            return data;
+            return new RawVoxelsData(rawData);
         }
 
-        private void GenerateAssets(string assetsName, VoxelsData data) {
-            if(data == null) {
+        private void GenerateAssets(string assetsName, RawVoxelsData rawData) {
+            if(rawData == null) {
                 return;
             }
-            
+
+            var size = rawData.Size;
+            var data = new VoxelsData(size.x, size.z, size.y);
+            for(int i = 0; i < rawData.Voxels.Count; i++) {
+                data.Blocks[rawData.Voxels[i].X, rawData.Voxels[i].Z, rawData.Voxels[i].Y] = rawData.Voxels[i].Color;
+            }
+
             var generatedMesh = Utilities.GenerateMesh(data);
             var bytes = Utilities.SerializeObject(data, compress);
 
@@ -136,8 +154,60 @@ namespace VoxelEngine.Editor
             gameObject.AddComponent<MeshFilter>().mesh = generatedMesh;
             var container = gameObject.AddComponent<VoxelsContainer>();
             container.Asset = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{assetsName}.bytes");
-            
+
             EditorUtility.SetDirty(gameObject);
+        }
+
+        private Dictionary<int, RawVoxelsData> GenerateClusters(int clusterStep, int seed, RawVoxelsData voxelsData) {
+            Random.InitState(seed);
+            var size = voxelsData.Size;
+            Vector3Int boxSize = new Vector3Int(size.x, size.y, size.z);
+
+            int stepsX = Mathf.CeilToInt(boxSize.x / (float)clusterStep);
+            int stepsY = Mathf.CeilToInt(boxSize.y / (float)clusterStep);
+            int stepsZ = Mathf.CeilToInt(boxSize.z / (float)clusterStep);
+
+            int clustersCount = stepsX * stepsY * stepsZ;
+            Vector3Int[] clustersCenters = new Vector3Int[clustersCount];
+            int dispersion = stepBasedDispersion ? clusterStep / 2 : clusterDispersion;
+
+            for(int i = 0; i < stepsX; i++) {
+                for(int j = 0; j < stepsY; j++) {
+                    for(int k = 0; k < stepsZ; k++) {
+                        int index = i + stepsY * j + stepsY * stepsX * k;
+                        clustersCenters[index] = new Vector3Int(
+                            i * clusterStep + Random.Range(0, dispersion),
+                            j * clusterStep + Random.Range(0, dispersion),
+                            k * clusterStep + Random.Range(0, dispersion)
+                        );
+                    }
+                }
+            }
+
+            var clusters = new Dictionary<int, RawVoxelsData>();
+
+            for(int i = 0; i < voxelsData.Voxels.Count; i++) {
+                var vox = voxelsData.Voxels[i];
+                int voxMinDist = int.MaxValue;
+                int nearestClusterIndex = 0;
+                for(int c = 0; c < clustersCenters.Length; c++) {
+                    var cluster = clustersCenters[c];
+                    int dist = Mathf.Abs(cluster.x - vox.X) + Mathf.Abs(cluster.y - vox.Y) + Mathf.Abs(cluster.z - vox.Z);
+                    if(dist < voxMinDist) {
+                        voxMinDist = dist;
+                        nearestClusterIndex = c;
+                    }
+                }
+
+                if(clusters.TryGetValue(nearestClusterIndex, out RawVoxelsData clusterData)) {
+                    clusterData.Voxels.Add(vox);
+                } else {
+                    clusterData = new RawVoxelsData();
+                    clusters.Add(nearestClusterIndex, clusterData);
+                }
+            }
+
+            return clusters;
         }
     }
 }

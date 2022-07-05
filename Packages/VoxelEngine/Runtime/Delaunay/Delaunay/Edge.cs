@@ -192,10 +192,10 @@ namespace VoxelEngine.Delaunay
          * @param bounds
          */
         public void ClipVertices(Rectf bounds) {
-            float xmin = bounds.x;
-            float ymin = bounds.y;
-            float xmax = bounds.right;
-            float ymax = bounds.bottom;
+            float xmin = bounds.X;
+            float ymin = bounds.Y;
+            float xmax = bounds.Right;
+            float ymax = bounds.Bottom;
 
             Vertex vertex0, vertex1;
             float x0, x1, y0, y1;

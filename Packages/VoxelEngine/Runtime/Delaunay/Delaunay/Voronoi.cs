@@ -162,8 +162,8 @@ namespace VoxelEngine.Delaunay {
 			Rectf dataBounds = sites.GetSitesBounds();
 
 			int sqrtSitesNb = (int)Math.Sqrt(sites.Count() + 4);
-			HalfedgePriorityQueue heap = new HalfedgePriorityQueue(dataBounds.y, dataBounds.height, sqrtSitesNb);
-			EdgeList edgeList = new EdgeList(dataBounds.x, dataBounds.width, sqrtSitesNb);
+			HalfedgePriorityQueue heap = new HalfedgePriorityQueue(dataBounds.Y, dataBounds.Height, sqrtSitesNb);
+			EdgeList edgeList = new EdgeList(dataBounds.X, dataBounds.Width, sqrtSitesNb);
 			List<Halfedge> halfEdges = new List<Halfedge>();
 			List<Vertex> vertices = new List<Vertex>();
 

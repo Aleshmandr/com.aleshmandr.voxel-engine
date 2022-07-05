@@ -1,16 +1,17 @@
-﻿namespace VoxelEngine.Delaunay {
-	public class Circle {
+﻿namespace VoxelEngine.Delaunay
+{
+    public class Circle
+    {
+        public readonly Vector2f Center;
+        public readonly float Radius;
 
-		public Vector2f center;
-		public float radius;
+        public Circle(float centerX, float centerY, float radius) {
+            Center = new Vector2f(centerX, centerY);
+            Radius = radius;
+        }
 
-		public Circle(float centerX, float centerY, float radius) {
-			this.center = new Vector2f(centerX, centerY);
-			this.radius = radius;
-		}
-
-		public override string ToString () {
-			return "Circle (center: " + center + "; radius: " + radius + ")";
-		}
-	}
+        public override string ToString() {
+            return "Circle (center: " + Center + "; radius: " + Radius + ")";
+        }
+    }
 }

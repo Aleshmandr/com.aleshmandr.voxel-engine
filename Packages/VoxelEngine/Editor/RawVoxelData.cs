@@ -3,18 +3,21 @@ using System.IO;
 namespace VoxelEngine
 {
     [System.Serializable]
-    public struct VoxelData
+    public struct RawVoxelData
     {
         public byte X;
         public byte Y;
         public byte Z;
-        public byte Color;
+        public byte ColorCode;
+        public int Color;
 
-        public VoxelData(BinaryReader stream) {
+        public RawVoxelData(BinaryReader stream) {
             X = stream.ReadByte();
             Y = stream.ReadByte();
             Z = stream.ReadByte();
-            Color = stream.ReadByte();
+            ColorCode = stream.ReadByte();
+            Color = 0;
         }
     }
+
 }

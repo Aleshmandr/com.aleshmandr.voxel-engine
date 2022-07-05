@@ -235,84 +235,84 @@ namespace VoxelEngine.Delaunay {
 					int newCheck = BoundsCheck.Check(newPoint, bounds);
 					float px, py;
 					if ((rightCheck & BoundsCheck.RIGHT) != 0) {
-						px = bounds.right;
+						px = bounds.Right;
 
 						if ((newCheck & BoundsCheck.BOTTOM) != 0) {
-							py = bounds.bottom;
+							py = bounds.Bottom;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.TOP) != 0) {
-							py = bounds.top;
+							py = bounds.Top;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.LEFT) != 0) {
-							if (rightPoint.y - bounds.y + newPoint.y - bounds.y < bounds.height) {
-								py = bounds.top;
+							if (rightPoint.y - bounds.Y + newPoint.y - bounds.Y < bounds.Height) {
+								py = bounds.Top;
 							} else {
-								py = bounds.bottom;
+								py = bounds.Bottom;
 							}
 							points.Add(new Vector2f(px,py));
-							points.Add(new Vector2f(bounds.left, py));
+							points.Add(new Vector2f(bounds.Left, py));
 						}
 					} else if ((rightCheck & BoundsCheck.LEFT) != 0) {
-						px = bounds.left;
+						px = bounds.Left;
 
 						if ((newCheck & BoundsCheck.BOTTOM) != 0) {
-							py = bounds.bottom;
+							py = bounds.Bottom;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.TOP) != 0) {
-							py = bounds.top;
+							py = bounds.Top;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.RIGHT) != 0) {
-							if (rightPoint.y - bounds.y + newPoint.y - bounds.y < bounds.height) {
-								py = bounds.top;
+							if (rightPoint.y - bounds.Y + newPoint.y - bounds.Y < bounds.Height) {
+								py = bounds.Top;
 							} else {
-								py = bounds.bottom;
+								py = bounds.Bottom;
 							}
 							points.Add(new Vector2f(px,py));
-							points.Add(new Vector2f(bounds.right, py));
+							points.Add(new Vector2f(bounds.Right, py));
 						}
 					} else if ((rightCheck & BoundsCheck.TOP) != 0) {
-						py = bounds.top;
+						py = bounds.Top;
 
 						if ((newCheck & BoundsCheck.RIGHT) != 0) {
-							px = bounds.right;
+							px = bounds.Right;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.LEFT) != 0) {
-							px = bounds.left;
+							px = bounds.Left;
 							points.Add(new Vector2f(px,py));
 
 						} else if ((newCheck & BoundsCheck.BOTTOM) != 0) {
-							if (rightPoint.x - bounds.x + newPoint.x - bounds.x < bounds.width) {
-								px = bounds.left;
+							if (rightPoint.x - bounds.X + newPoint.x - bounds.X < bounds.Width) {
+								px = bounds.Left;
 							} else {
-								px = bounds.right;
+								px = bounds.Right;
 							}
 							points.Add(new Vector2f(px,py));
-							points.Add(new Vector2f(px, bounds.bottom));
+							points.Add(new Vector2f(px, bounds.Bottom));
 						}
 					} else if ((rightCheck & BoundsCheck.BOTTOM) != 0) {
-						py = bounds.bottom;
+						py = bounds.Bottom;
 						
 						if ((newCheck & BoundsCheck.RIGHT) != 0) {
-							px = bounds.right;
+							px = bounds.Right;
 							points.Add(new Vector2f(px,py));
 							
 						} else if ((newCheck & BoundsCheck.LEFT) != 0) {
-							px = bounds.left;
+							px = bounds.Left;
 							points.Add(new Vector2f(px,py));
 							
 						} else if ((newCheck & BoundsCheck.TOP) != 0) {
-							if (rightPoint.x - bounds.x + newPoint.x - bounds.x < bounds.width) {
-								px = bounds.left;
+							if (rightPoint.x - bounds.X + newPoint.x - bounds.X < bounds.Width) {
+								px = bounds.Left;
 							} else {
-								px = bounds.right;
+								px = bounds.Right;
 							}
 							points.Add(new Vector2f(px,py));
-							points.Add(new Vector2f(px, bounds.top));
+							points.Add(new Vector2f(px, bounds.Top));
 						}
 					}
 				}
@@ -347,16 +347,16 @@ namespace VoxelEngine.Delaunay {
 		 */
 		public static int Check(Vector2f point, Rectf bounds) {
 			int value = 0;
-			if (point.x == bounds.left) {
+			if (point.x == bounds.Left) {
 				value |= LEFT;
 			}
-			if (point.x == bounds.right) {
+			if (point.x == bounds.Right) {
 				value |= RIGHT;
 			}
-			if (point.y == bounds.top) {
+			if (point.y == bounds.Top) {
 				value |= TOP;
 			}
-			if (point.y == bounds.bottom) {
+			if (point.y == bounds.Bottom) {
 				value |= BOTTOM;
 			}
 
