@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace VoxelEngine
+namespace VoxelEngine.Editor
 {
     [System.Serializable]
     public struct RawVoxelData
@@ -19,5 +19,4 @@ namespace VoxelEngine
             Color = 0;
         }
     }
-
 }

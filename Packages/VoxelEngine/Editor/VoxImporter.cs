@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -55,11 +56,18 @@ namespace VoxelEngine.Editor
                     return;
                 }
                 var rawVoxelsData = LoadVoxFile(filePath);
+                var assetName = Path.GetFileNameWithoutExtension(filePath);
                 if(clusterize) {
                     var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsData);
+                    var clustersAssetsData = new List<GeneratedAssetsData>();
+                    for(int i = 0; i < clusters.Length; i++) {
+                        var assetData = GenerateAssets(assetName, clusters[i], i);
+                        clustersAssetsData.Add(assetData);
+                    }
+                    CreateClusterizedGameObject(clustersAssetsData);
                 } else {
-                    var assetsName = Path.GetFileNameWithoutExtension(filePath);
-                    GenerateAssets(assetsName, rawVoxelsData);
+                    var assetsData = GenerateAssets(assetName, rawVoxelsData);
+                    CreateGameObject(assetsData);
                 }
             }
             EditorGUILayout.EndVertical();
@@ -130,9 +138,9 @@ namespace VoxelEngine.Editor
             return new RawVoxelsData(rawData);
         }
 
-        private void GenerateAssets(string assetsName, RawVoxelsData rawData) {
+        private GeneratedAssetsData GenerateAssets(string originalAssetName, RawVoxelsData rawData, int clusterIndex = -1) {
             if(rawData == null) {
-                return;
+                return null;
             }
 
             var size = rawData.Size;
@@ -144,21 +152,47 @@ namespace VoxelEngine.Editor
             var generatedMesh = Utilities.GenerateMesh(data);
             var bytes = Utilities.SerializeObject(data, compress);
 
-            File.WriteAllBytes(Application.dataPath + $"/{assetsName}.bytes", bytes);
+            var assetParentFolderName = originalAssetName;
+            var assetName = clusterIndex >= 0 ? $"{originalAssetName}_{clusterIndex}" : originalAssetName;
 
-            AssetDatabase.CreateAsset(generatedMesh, $"Assets/{assetsName}.asset");
+            var localAssetDirectory = $"Imported/{assetParentFolderName}";
+            var assetDirectoryPath = Application.dataPath + $"/{localAssetDirectory}";
+            if(!Directory.Exists(assetDirectoryPath)) {
+                Directory.CreateDirectory(assetDirectoryPath);
+            }
+            File.WriteAllBytes($"{assetDirectoryPath}/{assetName}.bytes", bytes);
+            AssetDatabase.CreateAsset(generatedMesh, $"Assets/{localAssetDirectory}/{assetName}.asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            GameObject gameObject = new GameObject(assetsName);
-            gameObject.AddComponent<MeshFilter>().mesh = generatedMesh;
-            var container = gameObject.AddComponent<VoxelsContainer>();
-            container.Asset = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{assetsName}.bytes");
-
-            EditorUtility.SetDirty(gameObject);
+            var voxelsData = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{localAssetDirectory}/{assetName}.bytes");
+            return new GeneratedAssetsData(originalAssetName, assetName, generatedMesh, voxelsData);
         }
 
-        private Dictionary<int, RawVoxelsData> GenerateClusters(int clusterStep, int seed, RawVoxelsData voxelsData) {
+        private void CreateClusterizedGameObject(List<GeneratedAssetsData> clustersAssetsData) {
+            if(clustersAssetsData == null || clustersAssetsData.Count == 0) {
+                return;
+            }
+            GameObject parentObject = new GameObject(clustersAssetsData[0].OriginalAssetName);
+            for(int i = 0; i < clustersAssetsData.Count; i++) {
+                CreateGameObject(clustersAssetsData[i], parentObject.transform);
+            }
+        }
+
+        private void CreateGameObject(GeneratedAssetsData assetsData, Transform parent = null) {
+            if(assetsData == null) {
+                return;
+            }
+            GameObject gameObject = new GameObject(assetsData.AssetName);
+            if(parent != null) {
+                gameObject.transform.SetParent(parent);
+            }
+            gameObject.AddComponent<MeshFilter>().mesh = assetsData.MeshAsset;
+            var container = gameObject.AddComponent<VoxelsContainer>();
+            container.Asset = assetsData.DataAsset;
+        }
+
+        private RawVoxelsData[] GenerateClusters(int clusterStep, int seed, RawVoxelsData voxelsData) {
             Random.InitState(seed);
             var size = voxelsData.Size;
             Vector3Int boxSize = new Vector3Int(size.x, size.y, size.z);
@@ -199,15 +233,14 @@ namespace VoxelEngine.Editor
                     }
                 }
 
-                if(clusters.TryGetValue(nearestClusterIndex, out RawVoxelsData clusterData)) {
-                    clusterData.Voxels.Add(vox);
-                } else {
+                if(!clusters.TryGetValue(nearestClusterIndex, out var clusterData)) {
                     clusterData = new RawVoxelsData();
                     clusters.Add(nearestClusterIndex, clusterData);
                 }
+                clusterData.Voxels.Add(vox);
             }
 
-            return clusters;
+            return clusters.Values.ToArray();
         }
     }
 }
