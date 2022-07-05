@@ -10,6 +10,8 @@ namespace VoxelEngine
         private VoxelsData data;
         private MeshFilter meshFilter;
 
+        public VoxelsData Data => data;
+
         private MeshFilter MeshFilter {
             get {
                 if(meshFilter == null) {
@@ -28,6 +30,10 @@ namespace VoxelEngine
         [ContextMenu("LoadAsset")]
         private void LoadAsset() {
             data = Utilities.DeserializeObject<VoxelsData>(Asset.bytes);
+            RebuildMesh();
+        }
+
+        public void RebuildMesh() {
             MeshFilter.mesh = Utilities.GenerateMesh(data);
         }
     }
