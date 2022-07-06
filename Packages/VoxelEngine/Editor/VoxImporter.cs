@@ -153,13 +153,13 @@ namespace VoxelEngine.Editor
             }
 
             var size = rawData.Size;
-            var data = new VoxelsData(size.x, size.z, size.y);
+            var data = new NativeArray3d<int>(size.x, size.z, size.y);
             for(int i = 0; i < rawData.Voxels.Count; i++) {
-                data.Blocks[rawData.Voxels[i].X, rawData.Voxels[i].Z, rawData.Voxels[i].Y] = rawData.Voxels[i].Color;
+                data[rawData.Voxels[i].X, rawData.Voxels[i].Z, rawData.Voxels[i].Y] = rawData.Voxels[i].Color;
             }
 
             var generatedMesh = Utilities.GenerateMesh(data);
-            var bytes = Utilities.SerializeObject(data, compress);
+            var bytes = NativeArray3dSerializer.Serialize(data, compress);
 
             var assetParentFolderName = originalAssetName;
             var assetName = clusterIndex >= 0 ? $"{originalAssetName}_{clusterIndex}" : originalAssetName;

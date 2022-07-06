@@ -6,12 +6,10 @@ namespace VoxelEngine
     public class VoxelsContainer : MonoBehaviour
     {
         public TextAsset Asset;
+        public NativeArray3d<int> Data;
         [SerializeField] private bool loadOnStart;
-        private VoxelsData data;
         private MeshFilter meshFilter;
         private MeshCollider meshCollider;
-
-        public VoxelsData Data => data;
 
         private MeshFilter MeshFilter {
             get {
@@ -28,9 +26,13 @@ namespace VoxelEngine
             }
         }
 
+        private void OnDestroy() {
+            Data.Dispose();
+        }
+
         [ContextMenu("RebuildMesh")]
         public void RebuildMesh() {
-            MeshFilter.mesh = Utilities.GenerateMesh(data);
+            MeshFilter.mesh = Utilities.GenerateMesh(Data);
         }
 
         [ContextMenu("UpdateCollider")]
@@ -43,7 +45,8 @@ namespace VoxelEngine
         
         [ContextMenu("LoadAsset")]
         private void LoadAsset() {
-            data = Utilities.DeserializeObject<VoxelsData>(Asset.bytes);
+            Data.Dispose();
+            Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             RebuildMesh();
         }
     }
