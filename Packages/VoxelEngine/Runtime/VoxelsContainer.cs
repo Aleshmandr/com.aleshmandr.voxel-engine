@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace VoxelEngine
 {
@@ -10,6 +11,7 @@ namespace VoxelEngine
         [SerializeField] private bool loadOnStart;
         private MeshFilter meshFilter;
         private MeshCollider meshCollider;
+        private Mesh dynamicMesh;
 
         private MeshFilter MeshFilter {
             get {
@@ -30,24 +32,23 @@ namespace VoxelEngine
             Data.Dispose();
         }
 
-        [ContextMenu("RebuildMesh")]
         public void RebuildMesh() {
-            MeshFilter.mesh = Utilities.GenerateMesh(Data);
+            dynamicMesh = Utilities.GenerateMesh(Data, dynamicMesh);
+            MeshFilter.mesh = dynamicMesh;
         }
 
-        [ContextMenu("UpdateCollider")]
         public void UpdateCollider() {
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
-            meshCollider.sharedMesh = MeshFilter.mesh;
+            meshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
         
-        [ContextMenu("LoadAsset")]
         private void LoadAsset() {
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             RebuildMesh();
+            UpdateCollider();
         }
     }
 }
