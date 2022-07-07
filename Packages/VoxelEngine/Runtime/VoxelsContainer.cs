@@ -24,8 +24,16 @@ namespace VoxelEngine
         }
 
         private void Start() {
+#if UNITY_EDITOR
+            if(!Application.isPlaying) {
+                OnEditorStart();
+                return;
+            }
+#endif
+            Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             if(loadOnStart) {
-                LoadAsset();
+                RebuildMesh();
+                UpdateCollider();
             }
         }
 
@@ -46,16 +54,18 @@ namespace VoxelEngine
             meshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
 
-        private void LoadAsset() {
-            Data.Dispose();
+#if UNITY_EDITOR
+        private void OnEditorStart() {
+            //Do not generate mesh in editor if exist to not loose link to the original mesh asset
+            if(MeshFilter.sharedMesh != null || !loadOnStart) {
+                return;
+            }
+
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             RebuildMesh();
             UpdateCollider();
-#if UNITY_EDITOR
-            if(!Application.isPlaying) {
-                Data.Dispose();
-            }
-#endif
+            Data.Dispose();
         }
+#endif
     }
 }

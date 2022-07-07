@@ -14,6 +14,7 @@ namespace VoxelEngine.Jobs
         public int SizeY;
         public int SizeZ;
         public Mesh.MeshData MeshData;
+        [DeallocateOnJobCompletion]
         public NativeArray<int> Voxels;
 
         public void Execute() {
@@ -26,19 +27,14 @@ namespace VoxelEngine.Jobs
             //           8bit    8bit     8it  2bit(not used)   6bit(faces)
 
             // Reset faces
-            for(int y = 0; y < SizeY; y++) {
-                for(int x = 0; x < SizeX; x++) {
-                    for(int z = 0; z < SizeZ; z++) {
-                        int indexXYZ = x + SizeX * (y + SizeY * z);
-                        if(Voxels[indexXYZ] != 0) {
-                            Voxels[indexXYZ] &= ~(1 << 0);
-                            Voxels[indexXYZ] &= ~(1 << 1);
-                            Voxels[indexXYZ] &= ~(1 << 2);
-                            Voxels[indexXYZ] &= ~(1 << 3);
-                            Voxels[indexXYZ] &= ~(1 << 4);
-                            Voxels[indexXYZ] &= ~(1 << 5);
-                        }
-                    }
+            for(int i = 0; i < Voxels.Length; i++) {
+                if(Voxels[i] != 0) {
+                    Voxels[i] &= ~(1 << 0);
+                    Voxels[i] &= ~(1 << 1);
+                    Voxels[i] &= ~(1 << 2);
+                    Voxels[i] &= ~(1 << 3);
+                    Voxels[i] &= ~(1 << 4);
+                    Voxels[i] &= ~(1 << 5);
                 }
             }
 

@@ -175,6 +175,9 @@ namespace VoxelEngine.Editor
             AssetDatabase.Refresh();
 
             var voxelsData = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{localAssetDirectory}/{assetName}.bytes");
+            
+            data.Dispose();
+            
             return new GeneratedAssetsData(originalAssetName, assetName, generatedMesh, voxelsData);
         }
 

@@ -15,7 +15,7 @@ namespace VoxelEngine.Jobs
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
             var meshData = meshDataArray[0];
             var voxelsDataCopy = voxels.AllocateNativeDataCopy(Allocator.TempJob);
-            
+
             var meshGenerationJob = new VoxelMeshGenerationJob {
                 SizeX = voxels.SizeX,
                 SizeY = voxels.SizeY,
@@ -32,10 +32,6 @@ namespace VoxelEngine.Jobs
             }
 
             jobHandle.Complete();
-            
-            if(voxelsDataCopy.IsCreated) {
-                voxelsDataCopy.Dispose();
-            }
 
             if(mesh == null) {
                 mesh = new Mesh();
