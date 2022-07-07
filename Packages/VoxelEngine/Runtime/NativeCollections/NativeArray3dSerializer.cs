@@ -48,7 +48,7 @@ namespace VoxelEngine
             }
             var memoryStream = new MemoryStream(bytes);
 
-            NativeArray3dSerializationData<T> serializationData = null;
+            NativeArray3dSerializationData<T> serializationData;
 
             //Check if file compressed
             bool unzip = memoryStream.ReadByte() == 1;

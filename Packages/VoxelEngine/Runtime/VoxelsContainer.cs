@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace VoxelEngine
 {
@@ -43,12 +42,17 @@ namespace VoxelEngine
             }
             meshCollider.sharedMesh = MeshFilter.sharedMesh;
         }
-        
+
         private void LoadAsset() {
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             RebuildMesh();
             UpdateCollider();
+#if UNITY_EDITOR
+            if(!Application.isPlaying) {
+                Data.Dispose();
+            }
+#endif
         }
     }
 }
