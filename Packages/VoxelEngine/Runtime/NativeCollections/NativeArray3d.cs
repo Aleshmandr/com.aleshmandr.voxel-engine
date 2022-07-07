@@ -11,6 +11,8 @@ namespace VoxelEngine
 
         private NativeArray<T> nativeArray;
 
+        public NativeArray<T> NativeArray => nativeArray;
+        
         public T this[int x, int y, int z] {
             get => nativeArray[x + SizeX * (y + SizeY * z)];
             set => nativeArray[x + SizeX * (y + SizeY * z)] = value;
@@ -32,6 +34,10 @@ namespace VoxelEngine
 
         public T[] ToArray() {
             return nativeArray.ToArray();
+        }
+        
+        public NativeArray<T> AllocateNativeDataCopy(Allocator allocator) {
+            return new NativeArray<T>(nativeArray, allocator);
         }
 
         public void Dispose() {

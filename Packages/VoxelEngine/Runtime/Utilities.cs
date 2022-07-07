@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
+using VoxelEngine.Jobs;
+using Unity.Jobs;
 
 namespace VoxelEngine
 {

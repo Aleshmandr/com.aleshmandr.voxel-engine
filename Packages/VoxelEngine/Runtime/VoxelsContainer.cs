@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using VoxelEngine.Jobs;
 
 namespace VoxelEngine
 {
@@ -11,6 +12,7 @@ namespace VoxelEngine
         private MeshFilter meshFilter;
         private MeshCollider meshCollider;
         private Mesh dynamicMesh;
+        private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
 
         private MeshFilter MeshFilter {
             get {
@@ -31,8 +33,9 @@ namespace VoxelEngine
             Data.Dispose();
         }
 
-        public void RebuildMesh() {
-            dynamicMesh = Utilities.GenerateMesh(Data, dynamicMesh);
+        public async void RebuildMesh() {
+            meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
+            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             MeshFilter.mesh = dynamicMesh;
         }
 
