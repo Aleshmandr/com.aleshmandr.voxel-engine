@@ -8,10 +8,18 @@ namespace VoxelEngine
     public static class Utilities
     {
         private const int MaxMeshSizeUInt16 = 65535;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool SameColor(int block1, int block2) {
-            return ((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0;
+        public static bool IsSameColor(int voxel1, int voxel2) {
+            return ((voxel1 >> 8) & 0xFFFFFF) == ((voxel2 >> 8) & 0xFFFFFF) && voxel1 != 0 && voxel2 != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Color32 VoxelColor(int voxel) {
+            return new Color32((byte)((voxel >> 24) & 0xFF),
+                               (byte)((voxel >> 16) & 0xFF),
+                               (byte)((voxel >> 8) & 0xFF),
+                               255);
         }
 
         public static Mesh GenerateMesh(NativeArray3d<int> voxels, Mesh mesh = null) {
@@ -86,7 +94,7 @@ namespace VoxelEngine
                                 voxels[x, y, z] |= 0x2;
                             }
                         }
-                        
+
                         if(front && left && right && above && back && below) {
                             continue; // Block is hidden
                         }
@@ -99,14 +107,14 @@ namespace VoxelEngine
 
                                 for(int xi = x; xi < voxels.SizeX; xi++) {
                                     // Check not drawn + same color
-                                    if((voxels[xi, y, z] & 0x20) == 0 && SameColor(voxels[xi, y, z], voxels[x, y, z])) {
+                                    if((voxels[xi, y, z] & 0x20) == 0 && IsSameColor(voxels[xi, y, z], voxels[x, y, z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     int tmpZ = 0;
                                     for(int zi = z; zi < voxels.SizeZ; zi++) {
-                                        if((voxels[xi, y, zi] & 0x20) == 0 && SameColor(voxels[xi, y, zi], voxels[x, y, z])) {
+                                        if((voxels[xi, y, zi] & 0x20) == 0 && IsSameColor(voxels[xi, y, zi], voxels[x, y, z])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -164,14 +172,14 @@ namespace VoxelEngine
 
                                 for(int xi = x; xi < voxels.SizeX; xi++) {
                                     // Check not drawn + same color
-                                    if((voxels[xi, y, z] & 0x2) == 0 && SameColor(voxels[xi, y, z], voxels[x, y, z])) {
+                                    if((voxels[xi, y, z] & 0x2) == 0 && IsSameColor(voxels[xi, y, z], voxels[x, y, z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     int tmpZ = 0;
                                     for(int zi = z; zi < voxels.SizeZ; zi++) {
-                                        if((voxels[xi, y, zi] & 0x2) == 0 && SameColor(voxels[xi, y, zi], voxels[x, y, z])) {
+                                        if((voxels[xi, y, zi] & 0x2) == 0 && IsSameColor(voxels[xi, y, zi], voxels[x, y, z])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -229,14 +237,14 @@ namespace VoxelEngine
 
                                 for(int xi = x; xi < voxels.SizeX; xi++) {
                                     // Check not drawn + same color
-                                    if((voxels[xi, y, z] & 0x10) == 0 && SameColor(voxels[xi, y, z], voxels[x, y, z])) {
+                                    if((voxels[xi, y, z] & 0x10) == 0 && IsSameColor(voxels[xi, y, z], voxels[x, y, z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < voxels.SizeY; yi++) {
-                                        if((voxels[xi, yi, z] & 0x10) == 0 && SameColor(voxels[xi, yi, z], voxels[x, y, z])) {
+                                        if((voxels[xi, yi, z] & 0x10) == 0 && IsSameColor(voxels[xi, yi, z], voxels[x, y, z])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -293,14 +301,14 @@ namespace VoxelEngine
 
                                 for(int xi = x; xi < voxels.SizeX; xi++) {
                                     // Check not drawn + same color
-                                    if((voxels[xi, y, z] & 0x1) == 0 && SameColor(voxels[xi, y, z], voxels[x, y, z])) {
+                                    if((voxels[xi, y, z] & 0x1) == 0 && IsSameColor(voxels[xi, y, z], voxels[x, y, z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < voxels.SizeY; yi++) {
-                                        if((voxels[xi, yi, z] & 0x1) == 0 && SameColor(voxels[xi, yi, z], voxels[x, y, z])) {
+                                        if((voxels[xi, yi, z] & 0x1) == 0 && IsSameColor(voxels[xi, yi, z], voxels[x, y, z])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -355,14 +363,14 @@ namespace VoxelEngine
 
                                 for(int zi = z; zi < voxels.SizeZ; zi++) {
                                     // Check not drawn + same color
-                                    if((voxels[x, y, zi] & 0x8) == 0 && SameColor(voxels[x, y, zi], voxels[x, y, z])) {
+                                    if((voxels[x, y, zi] & 0x8) == 0 && IsSameColor(voxels[x, y, zi], voxels[x, y, z])) {
                                         maxZ++;
                                     } else {
                                         break;
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < voxels.SizeY; yi++) {
-                                        if((voxels[x, yi, zi] & 0x8) == 0 && SameColor(voxels[x, yi, zi], voxels[x, y, z])) {
+                                        if((voxels[x, yi, zi] & 0x8) == 0 && IsSameColor(voxels[x, yi, zi], voxels[x, y, z])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -418,14 +426,14 @@ namespace VoxelEngine
 
                                 for(int zi = z; zi < voxels.SizeZ; zi++) {
                                     // Check not drawn + same color
-                                    if((voxels[x, y, zi] & 0x4) == 0 && SameColor(voxels[x, y, zi], voxels[x, y, z])) {
+                                    if((voxels[x, y, zi] & 0x4) == 0 && IsSameColor(voxels[x, y, zi], voxels[x, y, z])) {
                                         maxZ++;
                                     } else {
                                         break;
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < voxels.SizeY; yi++) {
-                                        if((voxels[x, yi, zi] & 0x4) == 0 && SameColor(voxels[x, yi, zi], voxels[x, y, z])) {
+                                        if((voxels[x, yi, zi] & 0x4) == 0 && IsSameColor(voxels[x, yi, zi], voxels[x, y, z])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -463,11 +471,7 @@ namespace VoxelEngine
                                 triangles.Add(idx + 2);
 
                                 for(int n = 0; n < 6; n++) {
-                                    colors.Add(new Color32((byte)((voxels[x, y, z] >> 24) & 0xFF),
-                                                           (byte)((voxels[x, y, z] >> 16) & 0xFF),
-                                                           (byte)((voxels[x, y, z] >> 8) & 0xFF),
-                                                           (byte)255
-                                               ));
+                                    colors.Add(VoxelColor(voxels[x, y, z]));
                                 }
                             }
                         }

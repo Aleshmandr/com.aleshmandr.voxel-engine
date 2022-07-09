@@ -105,7 +105,7 @@ namespace VoxelEngine.Jobs
                                 for(int xi = x; xi < SizeX; xi++) {
                                     int indexXiYZ = xi + SizeX * (y + SizeY * z); 
                                     // Check not drawn + same color
-                                    if((Voxels[indexXiYZ] & 0x20) == 0 && IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXiYZ] & 0x20) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
                                     } else {
                                         break;
@@ -113,7 +113,7 @@ namespace VoxelEngine.Jobs
                                     int tmpZ = 0;
                                     for(int zi = z; zi < SizeZ; zi++) {
                                         int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
-                                        if((Voxels[indexXiYZi] & 0x20) == 0 && IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXiYZi] & 0x20) == 0 && Utilities.IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -173,7 +173,7 @@ namespace VoxelEngine.Jobs
                                 for(int xi = x; xi < SizeX; xi++) {
                                     int indexXiYZ = xi + SizeX * (y + SizeY * z); 
                                     // Check not drawn + same color
-                                    if((Voxels[indexXiYZ] & 0x2) == 0 && IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXiYZ] & 0x2) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
                                     } else {
                                         break;
@@ -181,7 +181,7 @@ namespace VoxelEngine.Jobs
                                     int tmpZ = 0;
                                     for(int zi = z; zi < SizeZ; zi++) {
                                         int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
-                                        if((Voxels[indexXiYZi] & 0x2) == 0 && IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXiYZi] & 0x2) == 0 && Utilities.IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -241,7 +241,7 @@ namespace VoxelEngine.Jobs
                                 for(int xi = x; xi < SizeX; xi++) {
                                     int indexXiYZ = xi + SizeX * (y + SizeY * z); 
                                     // Check not drawn + same color
-                                    if((Voxels[indexXiYZ] & 0x10) == 0 && IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXiYZ] & 0x10) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
                                     } else {
                                         break;
@@ -249,7 +249,7 @@ namespace VoxelEngine.Jobs
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
                                         int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
-                                        if((Voxels[indexXiYiZ] & 0x10) == 0 && IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXiYiZ] & 0x10) == 0 && Utilities.IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -308,7 +308,7 @@ namespace VoxelEngine.Jobs
                                 for(int xi = x; xi < SizeX; xi++) {
                                     int indexXiYZ = xi + SizeX * (y + SizeY * z); 
                                     // Check not drawn + same color
-                                    if((Voxels[indexXiYZ] & 0x1) == 0 && IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXiYZ] & 0x1) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
                                     } else {
                                         break;
@@ -316,7 +316,7 @@ namespace VoxelEngine.Jobs
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
                                         int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
-                                        if((Voxels[indexXiYiZ] & 0x1) == 0 && IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXiYiZ] & 0x1) == 0 && Utilities.IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -374,7 +374,7 @@ namespace VoxelEngine.Jobs
                                     int indexXYZi = x + SizeX * (y + SizeY * zi);
 
                                     // Check not drawn + same color
-                                    if((Voxels[indexXYZi] & 0x8) == 0 && IsSameColor(Voxels[indexXYZi], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXYZi] & 0x8) == 0 && Utilities.IsSameColor(Voxels[indexXYZi], Voxels[indexXYZ])) {
                                         maxZ++;
                                     } else {
                                         break;
@@ -382,7 +382,7 @@ namespace VoxelEngine.Jobs
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
                                         int indexXYiZi = x + SizeX * (yi + SizeY * zi);
-                                        if((Voxels[indexXYiZi] & 0x8) == 0 && IsSameColor(Voxels[indexXYiZi], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXYiZi] & 0x8) == 0 && Utilities.IsSameColor(Voxels[indexXYiZi], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -440,7 +440,7 @@ namespace VoxelEngine.Jobs
                                 for(int zi = z; zi < SizeZ; zi++) {
                                     // Check not drawn + same color
                                     int indexXYZi = x + SizeX * (y + SizeY * zi);
-                                    if((Voxels[indexXYZi] & 0x4) == 0 && IsSameColor(Voxels[indexXYZi], Voxels[indexXYZ])) {
+                                    if((Voxels[indexXYZi] & 0x4) == 0 && Utilities.IsSameColor(Voxels[indexXYZi], Voxels[indexXYZ])) {
                                         maxZ++;
                                     } else {
                                         break;
@@ -448,7 +448,7 @@ namespace VoxelEngine.Jobs
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
                                         int indexXYiZi = x + SizeX * (yi + SizeY * zi);
-                                        if((Voxels[indexXYiZi] & 0x4) == 0 && IsSameColor(Voxels[indexXYiZi], Voxels[indexXYZ])) {
+                                        if((Voxels[indexXYiZi] & 0x4) == 0 && Utilities.IsSameColor(Voxels[indexXYiZi], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
                                             break;
@@ -487,11 +487,7 @@ namespace VoxelEngine.Jobs
                                 triangles.Add(idx + 2);
 
                                 for(int n = 0; n < 6; n++) {
-                                    colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
-                                                           (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
-                                                           (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
-                                               ));
+                                    colors.Add(Utilities.VoxelColor(Voxels[indexXYZ] ));
                                 }
                             }
                         }
@@ -520,11 +516,6 @@ namespace VoxelEngine.Jobs
             // One sub-mesh with all the indices.
             MeshData.subMeshCount = 1;
             MeshData.SetSubMesh(0, new SubMeshDescriptor(0, indexes.Length));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsSameColor(int block1, int block2) {
-            return ((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0;
         }
     }
 }
