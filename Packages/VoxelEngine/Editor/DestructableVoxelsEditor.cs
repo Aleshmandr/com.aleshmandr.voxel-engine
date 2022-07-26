@@ -1,6 +1,7 @@
 using UnityEditor;
+using VoxelEngine.Destructions;
 
-namespace VoxelEngine.Destructions.Editor
+namespace VoxelEngine.Editor
 {
     [CustomEditor(typeof(DestructableVoxels))]
     [CanEditMultipleObjects]
