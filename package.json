@@ -1,7 +1,7 @@
 {
   "name": "com.aleshmandr.voxel-engine",
   "displayName": "Voxel Engine",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "unity": "2019.1",
   "author": "Alexander Papchikhin",
   "description": "Simple Voxel Engine for Unity",

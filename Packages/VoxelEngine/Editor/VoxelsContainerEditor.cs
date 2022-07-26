@@ -72,7 +72,10 @@ namespace VoxelEngine.Editor
             }
 
             Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Align Center With Parent");
-            voxelsContainer.transform.localPosition = new Vector3(minX + maxX - 1, minY + maxY - 1, minZ + maxZ - 1) * -0.5f;
+            var targetWorldPos = voxelsContainer.transform.parent == null ? Vector3.zero : voxelsContainer.transform.parent.position;
+            var voxelsCenterWorldPos = voxelsContainer.transform.TransformPoint(new Vector3(minX + maxX - 1, minY + maxY - 1, minZ + maxZ - 1) * 0.5f);
+            var worldMoveVector = targetWorldPos - voxelsCenterWorldPos;
+            voxelsContainer.transform.position += worldMoveVector;
         }
     }
 }
