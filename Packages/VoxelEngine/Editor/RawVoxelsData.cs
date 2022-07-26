@@ -5,6 +5,7 @@ namespace VoxelEngine.Editor
 {
     public class RawVoxelsData
     {
+        public Vector3Int Pivot;
         public readonly List<RawVoxelData> Voxels;
 
         public Vector3Int Size {

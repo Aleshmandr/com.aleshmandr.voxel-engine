@@ -32,6 +32,10 @@ namespace VoxelEngine
             nativeArray = new NativeArray<T>(array, Allocator.Persistent);
         }
 
+        public bool IsCoordsValid(int x, int y, int z) {
+            return x >= 0 && x < SizeX && y >= 0 && y < SizeY && z >= 0 && z < SizeZ;
+        }
+
         public T[] ToArray() {
             return nativeArray.ToArray();
         }

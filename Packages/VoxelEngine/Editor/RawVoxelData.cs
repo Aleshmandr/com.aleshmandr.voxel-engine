@@ -3,14 +3,14 @@ using System.IO;
 namespace VoxelEngine.Editor
 {
     [System.Serializable]
-    public struct RawVoxelData
+    public class RawVoxelData
     {
-        public byte X;
-        public byte Y;
-        public byte Z;
+        public int X;
+        public int Y;
+        public int Z;
         public byte ColorCode;
         public int Color;
-
+        
         public RawVoxelData(BinaryReader stream) {
             X = stream.ReadByte();
             Y = stream.ReadByte();

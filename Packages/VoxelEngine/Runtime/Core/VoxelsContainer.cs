@@ -14,14 +14,13 @@ namespace VoxelEngine
         private Mesh dynamicMesh;
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
 
-        private MeshFilter MeshFilter {
-            get {
-                if(meshFilter == null) {
-                    meshFilter = GetComponent<MeshFilter>();
-                }
-                return meshFilter;
+        private MeshFilter MeshFilter
+        { get {
+            if(meshFilter == null) {
+                meshFilter = GetComponent<MeshFilter>();
             }
-        }
+            return meshFilter;
+        } }
 
         private void Start() {
 #if UNITY_EDITOR
@@ -52,6 +51,16 @@ namespace VoxelEngine
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
             meshCollider.sharedMesh = MeshFilter.sharedMesh;
+        }
+
+        public bool IsVoxelInner(int x, int y, int z) {
+            return Data.IsCoordsValid(x, y, z)
+                && Data.IsCoordsValid(x + 1, y, z) && Data[x + 1, y, z] != 0
+                && Data.IsCoordsValid(x - 1, y, z) && Data[x - 1, y, z] != 0
+                && Data.IsCoordsValid(x, y + 1, z) && Data[x, y + 1, z] != 0
+                && Data.IsCoordsValid(x, y - 1, z) && Data[x, y - 1, z] != 0
+                && Data.IsCoordsValid(x, y, z + 1) && Data[x, y, z + 1] != 0
+                && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
         }
 
 #if UNITY_EDITOR

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -65,6 +66,7 @@ namespace VoxelEngine.Editor
                         var clustersAssetsData = new List<GeneratedAssetsData>();
                         for(int i = 0; i < clusters.Length; i++) {
                             EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", (float)i / clusters.Length);
+                            RecalculateClusterPivot(clusters[i]);
                             var assetData = GenerateAssets(assetName, clusters[i], i);
                             clustersAssetsData.Add(assetData);
                         }
@@ -80,6 +82,30 @@ namespace VoxelEngine.Editor
                 }
             }
             EditorGUILayout.EndVertical();
+        }
+
+        private void RecalculateClusterPivot(RawVoxelsData cluster) {
+            var minX = int.MaxValue;
+            var minY = int.MaxValue;
+            var minZ = int.MaxValue;
+            foreach(var voxelData in cluster.Voxels) {
+                if(voxelData.X < minX) {
+                    minX = voxelData.X;
+                }
+                if(voxelData.Y < minY) {
+                    minY = voxelData.Y;
+                }
+                if(voxelData.Z < minZ) {
+                    minZ = voxelData.Z;
+                }
+            }
+
+            foreach(var voxelData in cluster.Voxels) {
+                voxelData.X -= minX;
+                voxelData.Y -= minY;
+                voxelData.Z -= minZ;
+            }
+            cluster.Pivot = new Vector3Int(minX, minY, minZ);
         }
 
         private RawVoxelsData LoadVoxFile(string filePath) {
@@ -175,10 +201,10 @@ namespace VoxelEngine.Editor
             AssetDatabase.Refresh();
 
             var voxelsData = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{localAssetDirectory}/{assetName}.bytes");
-            
+
             data.Dispose();
-            
-            return new GeneratedAssetsData(originalAssetName, assetName, generatedMesh, voxelsData);
+
+            return new GeneratedAssetsData(originalAssetName, assetName, generatedMesh, voxelsData, rawData.Pivot);
         }
 
         private void CreateClusterizedGameObject(List<GeneratedAssetsData> clustersAssetsData) {
@@ -199,6 +225,7 @@ namespace VoxelEngine.Editor
             if(parent != null) {
                 gameObject.transform.SetParent(parent);
             }
+            gameObject.transform.localPosition = new Vector3(assetsData.Offset.x, assetsData.Offset.z, assetsData.Offset.y);
             gameObject.AddComponent<MeshFilter>().mesh = assetsData.MeshAsset;
             gameObject.AddComponent<MeshCollider>().sharedMesh = assetsData.MeshAsset;
             var container = gameObject.AddComponent<VoxelsContainer>();
