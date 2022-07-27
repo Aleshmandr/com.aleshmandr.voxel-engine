@@ -497,7 +497,7 @@ namespace VoxelEngine.Jobs
 
             var attributes = new NativeArray<VertexAttributeDescriptor>(2, Allocator.Temp);
             attributes[0] = new VertexAttributeDescriptor(VertexAttribute.Position);
-            attributes[1] = new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UInt32, 4, stream: 1);
+            attributes[1] = new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.Float32, 4, stream: 1);
             MeshData.SetVertexBufferParams(vertices.Length, attributes);
 
             var positions = MeshData.GetVertexData<Vector3>();
