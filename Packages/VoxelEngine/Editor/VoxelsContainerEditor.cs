@@ -14,7 +14,7 @@ namespace VoxelEngine.Editor
 
         private void OnEnable() {
             voxelsContainer = target as VoxelsContainer;
-            if(voxelsContainer == null) {
+            if(voxelsContainer == null || voxelsContainer.Asset == null) {
                 return;
             }
             assetProperty = serializedObject.FindProperty("Asset");

@@ -1,6 +1,11 @@
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+using Unity.Jobs;
+using VoxelEngine.Destructions.Jobs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEditor;
+using Unity.Collections;
 using UnityEngine;
 
 namespace VoxelEngine.Destructions
@@ -84,7 +89,7 @@ namespace VoxelEngine.Destructions
 
         private const float Epsilon = 0.01f;
 
-        [ContextMenu("Bake Connections")]
+        [ContextMenu("Bake Connections (Low Precision)")]
         public void BakeConnections() {
             EditorUtility.ClearProgressBar();
             var clusters = GetComponentsInChildren<DestructableVoxels>();
@@ -101,7 +106,7 @@ namespace VoxelEngine.Destructions
                 foreach(var cluster in clusters) {
                     foreach(var otherCluster in otherClusters) {
                         var progress = currentClusterIndex / (float)totalClustersProgressCount;
-                        if(EditorUtility.DisplayCancelableProgressBar("Bake Connections", "Baking", progress)) {
+                        if(EditorUtility.DisplayCancelableProgressBar("Bake Connections (Low Precision)", $"Baking {currentClusterIndex}/{totalClustersProgressCount}", progress)) {
                             return;
                         }
                         if(cluster == otherCluster || IsNeighbours(cluster, otherCluster)) {
@@ -109,7 +114,7 @@ namespace VoxelEngine.Destructions
                             continue;
                         }
 
-                        if(CheckIfNeighbours(cluster, otherCluster)) {
+                        if(CheckIfNeighboursFast(cluster, otherCluster)) {
                             Connect(cluster, otherCluster);
                         }
                         currentClusterIndex++;
@@ -125,7 +130,65 @@ namespace VoxelEngine.Destructions
             }
         }
 
-        private bool CheckIfNeighbours(DestructableVoxels cluster, DestructableVoxels otherCluster) {
+        [ContextMenu("Bake Connections (High Precision)")]
+        public void BakeConnectionsWithJobs() {
+            EditorUtility.ClearProgressBar();
+            var clusters = GetComponentsInChildren<DestructableVoxels>();
+            var otherClusters = new List<DestructableVoxels>(clusters);
+            connections = new ClustersConnectionData[clusters.Length];
+            try {
+                for(int i = 0; i < clusters.Length; i++) {
+                    connections[i] = new ClustersConnectionData(clusters[i]);
+                    clusters[i].VoxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(clusters[i].VoxelsContainer.Asset.bytes);
+                }
+
+                int currentClusterIndex = 0;
+                int totalClustersProgressCount = clusters.Length * clusters.Length;
+                foreach(var cluster in clusters) {
+                    foreach(var otherCluster in otherClusters) {
+                        var progress = currentClusterIndex / (float)totalClustersProgressCount;
+                        if(EditorUtility.DisplayCancelableProgressBar("Bake Connections ((High Precision))", $"Baking {currentClusterIndex}/{totalClustersProgressCount}", progress)) {
+                            return;
+                        }
+                        if(cluster == otherCluster || IsNeighbours(cluster, otherCluster)) {
+                            currentClusterIndex++;
+                            continue;
+                        }
+
+                        RunCheckNeighboursJob(cluster, otherCluster);
+
+                        currentClusterIndex++;
+                    }
+                    currentClusterIndex++;
+                }
+            }
+            finally {
+                EditorUtility.ClearProgressBar();
+                for(int i = 0; i < clusters.Length; i++) {
+                    clusters[i].VoxelsContainer.Data.Dispose();
+                }
+            }
+        }
+
+        private void RunCheckNeighboursJob(DestructableVoxels cluster, DestructableVoxels otherCluster) {
+            var result = new NativeArray<bool>(1, Allocator.TempJob);
+            var checkNeighboursJob = new CheckVoxelsChunksNeighboursJob {
+                ChunkOneData = cluster.VoxelsContainer.Data,
+                ChunkTwoData = otherCluster.VoxelsContainer.Data,
+                ChunkOnePos = cluster.transform.localPosition,
+                ChunkTwoPos = otherCluster.transform.localPosition,
+                Result = result
+            };
+
+            checkNeighboursJob.Schedule().Complete();
+
+            if(result[0]) {
+                Connect(cluster, otherCluster);
+            }
+            result.Dispose();
+        }
+
+        private bool CheckIfNeighboursFast(DestructableVoxels cluster, DestructableVoxels otherCluster) {
             var clusterVoxels = cluster.VoxelsContainer;
             var otherClusterVoxels = otherCluster.VoxelsContainer;
             if(otherClusterVoxels == null || clusterVoxels == null) {
@@ -133,40 +196,12 @@ namespace VoxelEngine.Destructions
             }
 
             var clustersDelta = otherCluster.transform.localPosition - cluster.transform.localPosition;
-            if(clustersDelta.x - Epsilon > clusterVoxels.Data.SizeX ||
-               clustersDelta.y - Epsilon > clusterVoxels.Data.SizeY ||
-               clustersDelta.z - Epsilon > clusterVoxels.Data.SizeZ) {
-                return false;
-            }
 
-            var clusterLocalPos = cluster.transform.localPosition;
-            var otherClusterLocalPos = otherCluster.transform.localPosition;
+            var dx = Mathf.Abs(clustersDelta.x) - (cluster.VoxelsContainer.Data.SizeX + otherCluster.VoxelsContainer.Data.SizeX) * 0.5f;
+            var dy = Mathf.Abs(clustersDelta.y) - (cluster.VoxelsContainer.Data.SizeY + otherCluster.VoxelsContainer.Data.SizeY) * 0.5f;
+            var dz = Mathf.Abs(clustersDelta.z) - (cluster.VoxelsContainer.Data.SizeZ + otherCluster.VoxelsContainer.Data.SizeZ) * 0.5f;
 
-            for(int i1 = 0; i1 < clusterVoxels.Data.SizeX; i1++) {
-                for(int j1 = 0; j1 < clusterVoxels.Data.SizeY; j1++) {
-                    for(int k1 = 0; k1 < clusterVoxels.Data.SizeZ; k1++) {
-                        if(clusterVoxels.Data[i1, j1, k1] == 0 || clusterVoxels.IsVoxelInner(i1, j1, k1)) {
-                            continue;
-                        }
-                        var voxelPos = new Vector3(i1 + clusterLocalPos.x, j1 + clusterLocalPos.y, k1 + clusterLocalPos.z);
-
-                        for(int i2 = 0; i2 < otherClusterVoxels.Data.SizeX; i2++) {
-                            for(int j2 = 0; j2 < otherClusterVoxels.Data.SizeY; j2++) {
-                                for(int k2 = 0; k2 < otherClusterVoxels.Data.SizeZ; k2++) {
-                                    if(otherClusterVoxels.Data[i2, j2, k2] == 0 || otherClusterVoxels.IsVoxelInner(i2, j2, k2)) {
-                                        continue;
-                                    }
-                                    var otherVoxelPos = new Vector3(i2 + otherClusterLocalPos.x, j2 + otherClusterLocalPos.y, k2 + otherClusterLocalPos.z);
-                                    if((otherVoxelPos - voxelPos).sqrMagnitude <= 1f + Epsilon) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
+            return dx < Epsilon && dy < Epsilon && dz < Epsilon;
         }
 
         private void Connect(DestructableVoxels a, DestructableVoxels b) {
