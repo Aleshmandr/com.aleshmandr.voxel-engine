@@ -8,15 +8,18 @@ namespace VoxelEngine.Effects
         private static readonly Vector3 Offset = new Vector3(-0.5f, -0.5f, -0.5f);
         [SerializeField] private ParticleSystem particles;
         [SerializeField] [Min(1)] private int mod = 1;
+        
+        public bool IsMaxParticlesReached => particles.particleCount >= particles.main.maxParticles;
 
         public void Play(NativeList<VoxelData> voxels, Matrix4x4 transformationMatrix) {
+            var mainModule = particles.main;
+            var prevParticlesCount = particles.particleCount;
+            var maxParticles = mainModule.maxParticles;
             var rotation = transformationMatrix.rotation;
             var scale = transformationMatrix.lossyScale;
-            var totalParticles = voxels.Length / mod + 1;
+            var totalParticles = Mathf.Clamp(voxels.Length / mod, 0, maxParticles - prevParticlesCount);
             var nativeParticles = new NativeArray<ParticleSystem.Particle>(totalParticles, Allocator.Temp);
 
-            var mainModule = particles.main;
-            mainModule.maxParticles = totalParticles;
             mainModule.startSizeX = scale.x;
             mainModule.startSizeY = scale.y;
             mainModule.startSizeZ = scale.z;
@@ -25,7 +28,11 @@ namespace VoxelEngine.Effects
             mainModule.startRotationZ = rotation.z;
 
             particles.Emit(totalParticles);
-            particles.GetParticles(nativeParticles);
+            var getOffset = prevParticlesCount - 1;
+            if(getOffset < 0) {
+                getOffset = 0;
+            }
+            particles.GetParticles(nativeParticles, totalParticles, getOffset);
 
             var particleIndex = 0;
             for(var i = 0; i < voxels.Length && particleIndex < totalParticles; i++) {
@@ -39,7 +46,7 @@ namespace VoxelEngine.Effects
                 particleIndex++;
             }
 
-            particles.SetParticles(nativeParticles, totalParticles);
+            particles.SetParticles(nativeParticles, totalParticles, prevParticlesCount);
         }
     }
 }
