@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
+using VoxelEngine.Destructions.Jobs;
 
 namespace VoxelEngine.Destructions
 {
@@ -14,6 +16,7 @@ namespace VoxelEngine.Destructions
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
         private int initialVoxelsCount;
+        private VoxelsDamageJobsScheduler damageJobsScheduler;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
         
@@ -53,7 +56,24 @@ namespace VoxelEngine.Destructions
             IsCollapsed = true;
             IntegrityChanged?.Invoke(this);
         }
-        
+
+        public async Task<NativeList<VoxelData>> RunDamageJob(Vector3 worldPoint, float radius, Allocator allocator) {
+            int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
+            var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
+            var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
+            
+            damageJobsScheduler ??= new VoxelsDamageJobsScheduler();
+            var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
+
+            VoxelsCount -= damageVoxels.Length;
+            
+            voxelsContainer.RebuildMesh();
+            voxelsContainer.UpdateCollider();
+            HandleVoxelsRemove();
+
+            return damageVoxels;
+        }
+
         public void Damage(Vector3 worldPoint, float radius, ref NativeList<VoxelData> damagedVoxels) {
             int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
