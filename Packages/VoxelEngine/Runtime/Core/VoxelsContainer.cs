@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Threading;
+using UnityEngine;
 using VoxelEngine.Jobs;
 
 namespace VoxelEngine
@@ -13,6 +14,7 @@ namespace VoxelEngine
         private MeshCollider meshCollider;
         private Mesh dynamicMesh;
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
+        private bool isDestroyed;
 
         private MeshFilter MeshFilter
         { get {
@@ -38,11 +40,15 @@ namespace VoxelEngine
 
         private void OnDestroy() {
             Data.Dispose();
+            isDestroyed = true;
         }
 
         public async void RebuildMesh() {
             meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
+            if(isDestroyed) {
+                return;
+            }
             MeshFilter.mesh = dynamicMesh;
         }
 
