@@ -68,7 +68,6 @@ namespace VoxelEngine.Destructions
             VoxelsCount -= damageVoxels.Length;
             
             voxelsContainer.RebuildMesh();
-            voxelsContainer.UpdateCollider();
             HandleVoxelsRemove();
 
             return damageVoxels;
@@ -100,7 +99,6 @@ namespace VoxelEngine.Destructions
                 }
             }
             voxelsContainer.RebuildMesh();
-            voxelsContainer.UpdateCollider();
             HandleVoxelsRemove();
         }
         

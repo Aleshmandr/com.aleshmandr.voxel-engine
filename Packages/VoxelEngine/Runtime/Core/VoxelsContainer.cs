@@ -34,7 +34,6 @@ namespace VoxelEngine
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             if(loadOnStart) {
                 RebuildMesh();
-                UpdateCollider();
             }
         }
 
@@ -50,9 +49,6 @@ namespace VoxelEngine
                 return;
             }
             MeshFilter.mesh = dynamicMesh;
-        }
-
-        public void UpdateCollider() {
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
@@ -78,7 +74,6 @@ namespace VoxelEngine
 
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             RebuildMesh();
-            UpdateCollider();
             Data.Dispose();
         }
 #endif
