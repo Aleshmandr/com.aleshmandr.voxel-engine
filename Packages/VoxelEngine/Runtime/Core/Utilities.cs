@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -496,8 +495,6 @@ namespace VoxelEngine
             mesh.RecalculateBounds();
             
             mesh.UploadMeshData(true);
-            MeshUtility.Optimize(mesh);
-            MeshUtility.SetMeshCompression(mesh, ModelImporterMeshCompression.High);
             return mesh;
         }
     }

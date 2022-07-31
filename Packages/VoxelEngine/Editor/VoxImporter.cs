@@ -185,6 +185,8 @@ namespace VoxelEngine.Editor
             }
 
             var generatedMesh = Utilities.GenerateMesh(data);
+            MeshUtility.Optimize(generatedMesh);
+            MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
             var bytes = NativeArray3dSerializer.Serialize(data, compress);
 
             var assetParentFolderName = originalAssetName;
