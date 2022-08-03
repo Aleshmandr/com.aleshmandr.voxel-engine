@@ -13,6 +13,7 @@ namespace VoxelEngine.Destructions
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
         [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
+        [SerializeField] private int layer;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
@@ -20,11 +21,10 @@ namespace VoxelEngine.Destructions
         private VoxelsDamageJobsScheduler damageJobsScheduler;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
-        
+
         public bool IsCollapsed { get; private set; }
 
-        public int VoxelsCount
-        {
+        public int VoxelsCount {
             get {
                 if(voxelsCount < 0) {
                     for(int i = 0; i < voxelsContainer.Data.NativeArray.Length; i++) {
@@ -40,7 +40,7 @@ namespace VoxelEngine.Destructions
                 voxelsCount = value;
             }
         }
-        
+
         private void Start() {
             initialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * initialVoxelsCount / 100);
@@ -62,12 +62,12 @@ namespace VoxelEngine.Destructions
             int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
-            
+
             damageJobsScheduler ??= new VoxelsDamageJobsScheduler();
             var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
 
             VoxelsCount -= damageVoxels.Length;
-            
+
             voxelsContainer.RebuildMesh();
             HandleVoxelsRemove();
 
@@ -102,7 +102,7 @@ namespace VoxelEngine.Destructions
             voxelsContainer.RebuildMesh();
             HandleVoxelsRemove();
         }
-        
+
         private void HandleVoxelsRemove() {
             if(CheckIfNeedCollapse()) {
                 Collapse();
@@ -115,8 +115,15 @@ namespace VoxelEngine.Destructions
             int destroyedVoxelsCount = initialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
         }
-        
+
         private void MakePhysical() {
+            gameObject.layer = layer;
+
+            MeshCollider meshCollider = GetComponent<MeshCollider>();
+            if(meshCollider != null) {
+                meshCollider.convex = true;
+            }
+            
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
@@ -124,19 +131,17 @@ namespace VoxelEngine.Destructions
                 }
             }
 
-            MeshCollider meshCollider = GetComponent<MeshCollider>();
-            if(meshCollider != null) {
-                meshCollider.convex = true;
-            }
-
             rigidbody.mass = VoxelsCount * Constants.VoxelWeight;
             rigidbody.WakeUp();
         }
         
+#if UNITY_EDITOR
         private void Reset() {
             if(voxelsContainer == null) {
                 voxelsContainer = GetComponent<VoxelsContainer>();
             }
+            layer = gameObject.layer;
         }
+#endif
     }
 }
