@@ -17,20 +17,20 @@ namespace VoxelEngine
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
 
+        public MeshRenderer MeshRenderer
+        { get {
+            if(meshRenderer == null) {
+                meshRenderer = GetComponent<MeshRenderer>();
+            }
+            return meshRenderer;
+        } }
+        
         private MeshFilter MeshFilter
         { get {
             if(meshFilter == null) {
                 meshFilter = GetComponent<MeshFilter>();
             }
             return meshFilter;
-        } }
-        
-        private MeshRenderer MeshRenderer
-        { get {
-            if(meshRenderer == null) {
-                meshRenderer = GetComponent<MeshRenderer>();
-            }
-            return meshRenderer;
         } }
 
         private void Start() {
