@@ -12,6 +12,7 @@ namespace VoxelEngine.Destructions
         [SerializeField] private VoxelsContainer voxelsContainer;
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
+        [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
@@ -119,6 +120,7 @@ namespace VoxelEngine.Destructions
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
+                    rigidbody.interpolation = interpolation;
                 }
             }
 
