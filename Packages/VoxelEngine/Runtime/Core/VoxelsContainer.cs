@@ -11,6 +11,7 @@ namespace VoxelEngine
         public NativeArray3d<int> Data;
         [SerializeField] private bool loadOnStart;
         private MeshFilter meshFilter;
+        private MeshRenderer meshRenderer;
         private MeshCollider meshCollider;
         private Mesh dynamicMesh;
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
@@ -22,6 +23,14 @@ namespace VoxelEngine
                 meshFilter = GetComponent<MeshFilter>();
             }
             return meshFilter;
+        } }
+        
+        private MeshRenderer MeshRenderer
+        { get {
+            if(meshRenderer == null) {
+                meshRenderer = GetComponent<MeshRenderer>();
+            }
+            return meshRenderer;
         } }
 
         private void Start() {
