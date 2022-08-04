@@ -13,7 +13,6 @@ namespace VoxelEngine.Destructions
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
         [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
-        [SerializeField] private int layer;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
@@ -117,7 +116,6 @@ namespace VoxelEngine.Destructions
         }
 
         private void MakePhysical() {
-            gameObject.layer = layer;
 
             MeshCollider meshCollider = GetComponent<MeshCollider>();
             if(meshCollider != null) {
@@ -140,7 +138,6 @@ namespace VoxelEngine.Destructions
             if(voxelsContainer == null) {
                 voxelsContainer = GetComponent<VoxelsContainer>();
             }
-            layer = gameObject.layer;
         }
 #endif
     }

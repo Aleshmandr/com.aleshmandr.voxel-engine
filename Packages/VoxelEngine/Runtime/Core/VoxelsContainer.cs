@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using VoxelEngine.Jobs;
 
@@ -16,6 +17,8 @@ namespace VoxelEngine
         private Mesh dynamicMesh;
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
+        private CancellationTokenSource colliderUpdateCts;
+        private const float ColliderUpdateCooldown = 0.1f;//TODO: Move to global config
 
         public MeshRenderer MeshRenderer
         { get {
@@ -42,16 +45,17 @@ namespace VoxelEngine
 #endif
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             if(loadOnStart) {
-                RebuildMesh();
+                RebuildMesh(true);
             }
         }
 
         private void OnDestroy() {
             Data.Dispose();
             isDestroyed = true;
+            colliderUpdateCts?.Cancel();
         }
 
-        public async void RebuildMesh() {
+        public async void RebuildMesh(bool forceUpdateCollider = false) {
             meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
@@ -61,7 +65,26 @@ namespace VoxelEngine
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
+            
+            if(forceUpdateCollider) {
+                colliderUpdateCts?.Cancel();
+                meshCollider.sharedMesh = MeshFilter.sharedMesh;
+            } else if(colliderUpdateCts == null){
+                colliderUpdateCts = new CancellationTokenSource();
+                UpdateColliderAsync(colliderUpdateCts.Token);
+            }
+        }
+
+        private async void UpdateColliderAsync(CancellationToken cancellationToken) {
+            var updateEndTime = Time.unscaledTime + ColliderUpdateCooldown;
+            while(Time.unscaledTime < updateEndTime) {
+                await Task.Yield();
+                if(cancellationToken.IsCancellationRequested) {
+                    return;
+                }
+            }
             meshCollider.sharedMesh = MeshFilter.sharedMesh;
+            colliderUpdateCts = null;
         }
 
         public bool IsVoxelInner(int x, int y, int z) {
@@ -82,7 +105,7 @@ namespace VoxelEngine
             }
 
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
-            RebuildMesh();
+            RebuildMesh(true);
             Data.Dispose();
         }
 #endif
