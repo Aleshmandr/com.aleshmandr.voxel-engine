@@ -88,6 +88,7 @@ namespace VoxelEngine.Destructions
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
+        private const float NearAxisCheckDistance = 1f + Epsilon;
 
         [ContextMenu("Bake Connections (Low Precision)")]
         public void BakeConnections() {
@@ -201,7 +202,7 @@ namespace VoxelEngine.Destructions
             var dy = Mathf.Abs(clustersDelta.y) - (cluster.VoxelsContainer.Data.SizeY + otherCluster.VoxelsContainer.Data.SizeY) * 0.5f;
             var dz = Mathf.Abs(clustersDelta.z) - (cluster.VoxelsContainer.Data.SizeZ + otherCluster.VoxelsContainer.Data.SizeZ) * 0.5f;
 
-            return dx < Epsilon && dy < Epsilon && dz < Epsilon;
+            return dx < NearAxisCheckDistance && dy < NearAxisCheckDistance && dz < NearAxisCheckDistance;
         }
 
         private void Connect(DestructableVoxels a, DestructableVoxels b) {
