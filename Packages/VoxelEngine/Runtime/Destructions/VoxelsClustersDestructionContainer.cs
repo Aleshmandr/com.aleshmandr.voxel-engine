@@ -88,7 +88,6 @@ namespace VoxelEngine.Destructions
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
-        private const float NearAxisCheckDistance = 1f + Epsilon;
 
         [ContextMenu("Bake Connections (Low Precision)")]
         public void BakeConnections() {
@@ -192,17 +191,23 @@ namespace VoxelEngine.Destructions
         private bool CheckIfNeighboursFast(DestructableVoxels cluster, DestructableVoxels otherCluster) {
             var clusterVoxels = cluster.VoxelsContainer;
             var otherClusterVoxels = otherCluster.VoxelsContainer;
+            
             if(otherClusterVoxels == null || clusterVoxels == null) {
                 return false;
             }
 
             var clustersDelta = otherCluster.transform.localPosition - cluster.transform.localPosition;
 
-            var dx = Mathf.Abs(clustersDelta.x) - (cluster.VoxelsContainer.Data.SizeX + otherCluster.VoxelsContainer.Data.SizeX) * 0.5f;
-            var dy = Mathf.Abs(clustersDelta.y) - (cluster.VoxelsContainer.Data.SizeY + otherCluster.VoxelsContainer.Data.SizeY) * 0.5f;
-            var dz = Mathf.Abs(clustersDelta.z) - (cluster.VoxelsContainer.Data.SizeZ + otherCluster.VoxelsContainer.Data.SizeZ) * 0.5f;
+            var dx = clustersDelta.x > 0f ? clustersDelta.x - cluster.VoxelsContainer.Data.SizeX 
+                : Mathf.Abs(clustersDelta.x) - otherCluster.VoxelsContainer.Data.SizeX;
+            
+            var dy = clustersDelta.y > 0f ? clustersDelta.y - cluster.VoxelsContainer.Data.SizeY 
+                : Mathf.Abs(clustersDelta.y) - otherCluster.VoxelsContainer.Data.SizeY;
+            
+            var dz = clustersDelta.z > 0f ? clustersDelta.z - cluster.VoxelsContainer.Data.SizeZ 
+                : Mathf.Abs(clustersDelta.z) - otherCluster.VoxelsContainer.Data.SizeZ;
 
-            return dx < NearAxisCheckDistance && dy < NearAxisCheckDistance && dz < NearAxisCheckDistance;
+            return dx < Epsilon && dy < Epsilon && dz < Epsilon;
         }
 
         private void Connect(DestructableVoxels a, DestructableVoxels b) {

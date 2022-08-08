@@ -14,14 +14,20 @@ namespace VoxelEngine.Destructions.Jobs
         public Vector3 ChunkTwoPos;
         public NativeArray<bool> Result;
         private const float Epsilon = 0.01f;
-        private const float NearAxisCheckDistance = 1f + Epsilon;
 
         public void Execute() {
             var clustersDelta = ChunkTwoPos - ChunkOnePos;
-            var dx = Mathf.Abs(clustersDelta.x) - (ChunkOneData.SizeX + ChunkTwoData.SizeX) * 0.5f;
-            var dy = Mathf.Abs(clustersDelta.y) - (ChunkOneData.SizeY + ChunkTwoData.SizeY) * 0.5f;
-            var dz = Mathf.Abs(clustersDelta.z) - (ChunkOneData.SizeZ + ChunkTwoData.SizeZ) * 0.5f;
-            if(dx > NearAxisCheckDistance || dy > NearAxisCheckDistance || dz > NearAxisCheckDistance) {
+            
+            var dx = clustersDelta.x > 0f ? clustersDelta.x - ChunkOneData.SizeX 
+                : Mathf.Abs(clustersDelta.x) - ChunkTwoData.SizeX;
+            
+            var dy = clustersDelta.y > 0f ? clustersDelta.y - ChunkOneData.SizeY 
+                : Mathf.Abs(clustersDelta.y) - ChunkTwoData.SizeY;
+            
+            var dz = clustersDelta.z > 0f ? clustersDelta.z - ChunkOneData.SizeZ 
+                : Mathf.Abs(clustersDelta.z) - ChunkTwoData.SizeZ;
+            
+            if(dx > Epsilon || dy > Epsilon || dz > Epsilon) {
                 return;
             }
 
