@@ -43,10 +43,7 @@ namespace VoxelEngine
                 return;
             }
 #endif
-            Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
-            if(loadOnStart) {
-                RebuildMesh(true);
-            }
+            Deserialize(Asset.bytes, loadOnStart);
         }
 
         private void OnDestroy() {
@@ -95,6 +92,17 @@ namespace VoxelEngine
                 && Data.IsCoordsValid(x, y - 1, z) && Data[x, y - 1, z] != 0
                 && Data.IsCoordsValid(x, y, z + 1) && Data[x, y, z + 1] != 0
                 && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
+        }
+
+        public void Deserialize(byte[] bytes, bool rebuildMesh) {
+            Data = NativeArray3dSerializer.Deserialize<int>(bytes);
+            if(rebuildMesh) {
+                RebuildMesh(true);
+            }
+        }
+
+        public byte[] Serialize() {
+            return NativeArray3dSerializer.Serialize(Data, true);
         }
 
 #if UNITY_EDITOR

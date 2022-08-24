@@ -16,13 +16,14 @@ namespace VoxelEngine.Destructions
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
-        private int initialVoxelsCount;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
         public bool IsCollapsed { get; private set; }
 
+        public int InitialVoxelsCount { get; private set; }
+        
         public int VoxelsCount {
             get {
                 if(voxelsCount < 0) {
@@ -41,8 +42,8 @@ namespace VoxelEngine.Destructions
         }
 
         private void Start() {
-            initialVoxelsCount = VoxelsCount;
-            destructionVoxelsCountThresh = (int)(collapsePercentsThresh * initialVoxelsCount / 100);
+            InitialVoxelsCount = VoxelsCount;
+            destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
         }
 
         [ContextMenu("Collapse")]
@@ -111,7 +112,7 @@ namespace VoxelEngine.Destructions
         }
 
         private bool CheckIfNeedCollapse() {
-            int destroyedVoxelsCount = initialVoxelsCount - VoxelsCount;
+            int destroyedVoxelsCount = InitialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
         }
 
