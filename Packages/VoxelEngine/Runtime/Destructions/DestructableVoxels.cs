@@ -136,7 +136,16 @@ namespace VoxelEngine.Destructions
             rigidbody.mass = VoxelsCount * Constants.VoxelWeight;
             rigidbody.WakeUp();
         }
+
+        public void MarkCollapsed() {
+            IsCollapsed = true;
+        }
         
+        public void MarkDirty() {
+            VoxelsCount = -1;
+            IntegrityChanged?.Invoke(this);
+        }
+
 #if UNITY_EDITOR
         private void Reset() {
             if(voxelsContainer == null) {

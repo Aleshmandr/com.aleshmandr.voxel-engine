@@ -98,6 +98,9 @@ namespace VoxelEngine
         }
 
         public void Deserialize(byte[] bytes, bool rebuildMesh) {
+            if(bytes == null) {
+                return;
+            }
             Data = NativeArray3dSerializer.Deserialize<int>(bytes);
             if(rebuildMesh) {
                 RebuildMesh(true);
