@@ -23,6 +23,8 @@ namespace VoxelEngine.Destructions
         public bool IsCollapsed { get; private set; }
 
         public int InitialVoxelsCount { get; private set; }
+
+        public bool IsInitialized { get; private set; }
         
         public int VoxelsCount {
             get {
@@ -44,6 +46,7 @@ namespace VoxelEngine.Destructions
         private void Start() {
             InitialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
+            IsInitialized = true;
         }
 
         [ContextMenu("Collapse")]

@@ -35,6 +35,8 @@ namespace VoxelEngine
             }
             return meshFilter;
         } }
+        
+        public bool IsInitialized { get; private set; }
 
         private void Start() {
 #if UNITY_EDITOR
@@ -44,6 +46,7 @@ namespace VoxelEngine
             }
 #endif
             Deserialize(Asset.bytes, loadOnStart);
+            IsInitialized = true;
         }
 
         private void OnDestroy() {
