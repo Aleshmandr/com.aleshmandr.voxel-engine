@@ -101,6 +101,7 @@ namespace VoxelEngine
             if(bytes == null) {
                 return;
             }
+            Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(bytes);
             if(rebuildMesh) {
                 RebuildMesh(true);
