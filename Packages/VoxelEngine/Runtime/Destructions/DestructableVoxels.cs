@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
@@ -17,8 +18,11 @@ namespace VoxelEngine.Destructions
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
+        private bool isIntergrityCheckScheduled;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
         private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
+        private const float IntegrityCheckCooldown = 1f;
+        private bool isDirty;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
@@ -83,6 +87,30 @@ namespace VoxelEngine.Destructions
             return damageVoxels;
         }
 
+        private void Update() {
+            if(isDirty) {
+                isDirty = false;
+                ScheduleIntegrityCheck();
+            }
+        }
+
+        private void ScheduleIntegrityCheck() {
+            if(isIntergrityCheckScheduled) {
+                return;
+            }
+            WaitIntegrityCheck();
+        }
+        
+        private async void WaitIntegrityCheck() {
+            isIntergrityCheckScheduled = true;
+            await Task.Delay(TimeSpan.FromSeconds(IntegrityCheckCooldown));
+            if(isDestroyed) {
+                return;
+            }
+            await CheckIntegrityCollapse();
+            isIntergrityCheckScheduled = false;
+        }
+
         public void Damage(Vector3 worldPoint, float radius, ref NativeList<VoxelData> damagedVoxels) {
             int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
@@ -113,6 +141,8 @@ namespace VoxelEngine.Destructions
         }
 
         private void HandleVoxelsRemove() {
+            isDirty = true;
+            
             if(IsCollapsed) {
                 return;
             }
@@ -121,12 +151,11 @@ namespace VoxelEngine.Destructions
                 Collapse();
                 return;
             }
-
-            CheckIntegrityCollapse();
+            
             IntegrityChanged?.Invoke(this);
         }
 
-        private async void CheckIntegrityCollapse() {
+        private async Task CheckIntegrityCollapse() {
             if(IsCollapsed || !makePhysicalOnCollapse) {
                 return;
             }
