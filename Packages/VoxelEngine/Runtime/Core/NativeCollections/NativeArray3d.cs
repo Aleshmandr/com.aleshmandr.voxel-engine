@@ -17,6 +17,11 @@ namespace VoxelEngine
             get => nativeArray[x + SizeX * (y + SizeY * z)];
             set => nativeArray[x + SizeX * (y + SizeY * z)] = value;
         }
+        
+        public T this[int index] {
+            get => nativeArray[index];
+            set => nativeArray[index] = value;
+        }
 
         public NativeArray3d(int sizeX, int sizeY, int sizeZ) {
             SizeX = sizeX;
@@ -31,9 +36,24 @@ namespace VoxelEngine
             SizeZ = sizeZ;
             nativeArray = new NativeArray<T>(array, Allocator.Persistent);
         }
+        
+        public NativeArray3d(int sizeX, int sizeY, int sizeZ, NativeArray<T> array) {
+            SizeX = sizeX;
+            SizeY = sizeY;
+            SizeZ = sizeZ;
+            nativeArray = array;
+        }
 
         public bool IsCoordsValid(int x, int y, int z) {
             return x >= 0 && x < SizeX && y >= 0 && y < SizeY && z >= 0 && z < SizeZ;
+        }
+        
+        public int CoordToIndex(int x, int y, int z) {
+            return x + SizeX * (y + SizeY * z);
+        }
+        
+        public bool IsIndexValid(int index) {
+            return index >= 0 && index < nativeArray.Length;
         }
 
         public T[] ToArray() {
@@ -42,6 +62,10 @@ namespace VoxelEngine
         
         public NativeArray<T> AllocateNativeDataCopy(Allocator allocator) {
             return new NativeArray<T>(nativeArray, allocator);
+        }
+        
+        public NativeArray3d<T> Copy(Allocator allocator) {
+            return new NativeArray3d<T>(SizeX, SizeY, SizeZ, AllocateNativeDataCopy(allocator));
         }
 
         public void Dispose() {

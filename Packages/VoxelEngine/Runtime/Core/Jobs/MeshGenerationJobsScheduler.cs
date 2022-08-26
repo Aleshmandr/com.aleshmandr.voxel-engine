@@ -28,7 +28,7 @@ namespace VoxelEngine.Jobs
             lastJobHandle = jobHandle;
 
             while(!jobHandle.IsCompleted) {
-                await Task.Delay(1);
+                await Task.Yield();
             }
 
             jobHandle.Complete();

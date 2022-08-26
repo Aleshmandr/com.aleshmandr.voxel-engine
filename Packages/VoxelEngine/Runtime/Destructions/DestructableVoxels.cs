@@ -13,10 +13,12 @@ namespace VoxelEngine.Destructions
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
         [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
+        private bool isDestroyed;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
+        private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
@@ -29,6 +31,7 @@ namespace VoxelEngine.Destructions
         public int VoxelsCount {
             get {
                 if(voxelsCount < 0) {
+                    voxelsCount = 0;
                     for(int i = 0; i < voxelsContainer.Data.NativeArray.Length; i++) {
                         if(voxelsContainer.Data.NativeArray[i] == 0) {
                             continue;
@@ -47,6 +50,10 @@ namespace VoxelEngine.Destructions
             InitialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
             IsInitialized = true;
+        }
+
+        private void OnDestroy() {
+            isDestroyed = true;
         }
 
         [ContextMenu("Collapse")]
@@ -68,7 +75,6 @@ namespace VoxelEngine.Destructions
 
             damageJobsScheduler ??= new VoxelsDamageJobsScheduler();
             var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
-
             VoxelsCount -= damageVoxels.Length;
 
             voxelsContainer.RebuildMesh();
@@ -107,13 +113,32 @@ namespace VoxelEngine.Destructions
         }
 
         private void HandleVoxelsRemove() {
+            if(IsCollapsed) {
+                return;
+            }
+            
             if(CheckIfNeedCollapse()) {
                 Collapse();
                 return;
             }
+            
+            CheckIntegrity();
             IntegrityChanged?.Invoke(this);
         }
 
+        private async void CheckIntegrity() {
+            integrityJobsScheduler ??= new VoxelsIntegrityJobsScheduler();
+            var isIntegral = await integrityJobsScheduler.Run(voxelsContainer.Data, VoxelsCount);
+            
+            if(isDestroyed) {
+                return;
+            }
+            
+            if(!isIntegral) {
+                Collapse();
+            }
+        }
+        
         private bool CheckIfNeedCollapse() {
             int destroyedVoxelsCount = InitialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
