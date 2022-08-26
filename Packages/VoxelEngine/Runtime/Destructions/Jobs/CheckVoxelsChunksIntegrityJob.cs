@@ -4,7 +4,7 @@ using Unity.Jobs;
 
 namespace VoxelEngine.Destructions.Jobs
 {
-    [BurstCompile(CompileSynchronously = true)]
+    [BurstCompile(CompileSynchronously = true, DisableSafetyChecks = true)]
     public struct CheckVoxelsChunksIntegrityJob : IJob
     {
         public NativeArray3d<int> Voxels;
@@ -27,10 +27,9 @@ namespace VoxelEngine.Destructions.Jobs
         }
         
         private void TraceRecurcively(int i, int j, int k, ref int sum) {
-            int index = Voxels.CoordToIndex(i, j, k);
-            if(Voxels.IsIndexValid(index) && Voxels[index] != 0) {
+            if(Voxels.IsCoordsValid(i, j, k) && Voxels[i, j, k] != 0) {
                 sum++;
-                Voxels[index] = 0;
+                Voxels[i, j, k] = 0;
 
                 int left = i - 1;
                 int right = i + 1;
