@@ -7,14 +7,10 @@ namespace VoxelEngine.Destructions.Jobs
     [BurstCompile(CompileSynchronously = true)]
     public struct CheckVoxelsChunksIntegrityJob : IJob
     {
-        public int MaxCycles;
         public NativeArray3d<int> Voxels;
         public NativeArray<int> Result;
-        private int cycleIndex;
-        private int maxCycle;
 
         public void Execute() {
-            maxCycle = Voxels.NativeArray.Length;
             
             for(int i = 0; i < Voxels.SizeX; i++) {
                 for(int j = 0; j < Voxels.SizeY; j++) {
@@ -31,11 +27,6 @@ namespace VoxelEngine.Destructions.Jobs
         }
         
         private void TraceRecurcively(int i, int j, int k, ref int sum) {
-            if(cycleIndex >= maxCycle) {
-                return;
-            }
-            
-            cycleIndex ++;
             int index = Voxels.CoordToIndex(i, j, k);
             if(Voxels.IsIndexValid(index) && Voxels[index] != 0) {
                 sum++;
