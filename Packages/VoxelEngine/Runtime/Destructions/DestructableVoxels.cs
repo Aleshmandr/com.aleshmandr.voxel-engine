@@ -121,12 +121,16 @@ namespace VoxelEngine.Destructions
                 Collapse();
                 return;
             }
-            
-            CheckIntegrity();
+
+            CheckIntegrityCollapse();
             IntegrityChanged?.Invoke(this);
         }
 
-        private async void CheckIntegrity() {
+        private async void CheckIntegrityCollapse() {
+            if(IsCollapsed || !makePhysicalOnCollapse) {
+                return;
+            }
+            
             integrityJobsScheduler ??= new VoxelsIntegrityJobsScheduler();
             var isIntegral = await integrityJobsScheduler.Run(voxelsContainer.Data, VoxelsCount);
             
