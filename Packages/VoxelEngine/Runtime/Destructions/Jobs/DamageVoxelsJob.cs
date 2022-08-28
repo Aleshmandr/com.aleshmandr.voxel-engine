@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace VoxelEngine.Destructions.Jobs
 {
-    [BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct DamageVoxelsJob : IJob
     {
         public int Radius;

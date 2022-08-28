@@ -5,12 +5,13 @@ using VoxelEngine.Jobs;
 
 namespace VoxelEngine
 {
-    [ExecuteAlways] [RequireComponent(typeof(MeshFilter))] [RequireComponent(typeof(MeshRenderer))]
+    [ExecuteInEditMode] [RequireComponent(typeof(MeshFilter))] [RequireComponent(typeof(MeshRenderer))]
     public class VoxelsContainer : MonoBehaviour
     {
         public TextAsset Asset;
         public NativeArray3d<int> Data;
         [SerializeField] private bool loadOnStart;
+        [SerializeField] private bool updateMeshFilterOnStart;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private MeshCollider meshCollider;
@@ -40,12 +41,17 @@ namespace VoxelEngine
 
         private void Start() {
 #if UNITY_EDITOR
-            if(!Application.isPlaying) {
+            if(Application.isPlaying) {
+                if(IsInitialized)
+                {
+                    return;
+                }
+            } else {
                 OnEditorStart();
                 return;
             }
 #endif
-            Deserialize(Asset.bytes, loadOnStart);
+            Deserialize(Asset.bytes, loadOnStart, updateMeshFilterOnStart);
             IsInitialized = true;
         }
 
@@ -55,20 +61,22 @@ namespace VoxelEngine
             colliderUpdateCts?.Cancel();
         }
 
-        public async void RebuildMesh(bool forceUpdateCollider = false) {
+        public async void RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
             meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
                 return;
             }
-            MeshFilter.mesh = dynamicMesh;
+            if(updateMeshFilter) {
+                MeshFilter.mesh = dynamicMesh;
+            }
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
             
             if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel();
-                meshCollider.sharedMesh = MeshFilter.sharedMesh;
+                meshCollider.sharedMesh = dynamicMesh;
             } else if(colliderUpdateCts == null){
                 colliderUpdateCts = new CancellationTokenSource();
                 UpdateColliderAsync(colliderUpdateCts.Token);
@@ -97,14 +105,14 @@ namespace VoxelEngine
                 && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
         }
 
-        public void Deserialize(byte[] bytes, bool rebuildMesh) {
+        public void Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
             if(bytes == null) {
                 return;
             }
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(bytes);
             if(rebuildMesh) {
-                RebuildMesh(true);
+                RebuildMesh(updateMeshFilter, true);
             }
         }
 
@@ -120,7 +128,7 @@ namespace VoxelEngine
             }
 
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
-            RebuildMesh(true);
+            RebuildMesh(true, true);
             Data.Dispose();
         }
 #endif

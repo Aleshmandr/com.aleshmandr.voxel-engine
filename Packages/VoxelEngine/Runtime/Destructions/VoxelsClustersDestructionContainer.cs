@@ -1,9 +1,12 @@
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+using System;
 using Unity.Jobs;
 using VoxelEngine.Destructions.Jobs;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
@@ -12,13 +15,30 @@ namespace VoxelEngine.Destructions
 {
     public class VoxelsClustersDestructionContainer : MonoBehaviour
     {
+        [SerializeField] private float connectionsUpdateDelay = 0.5f;
+        [SerializeField] private bool updateConnectionsInRuntime;
+        [SerializeField] private bool updateIntegrityInRuntime;
         [SerializeField] private ClustersConnectionData[] connections;
+        private List<DestructableVoxels> integrityCheckQueue;
+        private List<DestructableVoxels> connectionsCheckQueue;
+        private CheckClustersConnectionJobsScheduler neighboursScheduler;
+        private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
+        private CancellationTokenSource lifetimeCts;
         private const int ClusterDestructionDelayMilliseconds = 200;
 
         public void Start() {
+            lifetimeCts = new CancellationTokenSource();
+            connectionsCheckQueue = new List<DestructableVoxels>();
+            integrityCheckQueue = new List<DestructableVoxels>();
+            neighboursScheduler = new CheckClustersConnectionJobsScheduler();
+            integrityJobsScheduler = new VoxelsIntegrityJobsScheduler();
             foreach(var connectionData in connections) {
-                connectionData.Root.IntegrityChanged += HandleClusterDestruction;
+                connectionData.Root.IntegrityChanged += HandleClusterDamage;
             }
+        }
+
+        private void OnDestroy() {
+            lifetimeCts?.Cancel();
         }
 
         private ClustersConnectionData GetClusterConnections(DestructableVoxels cluster) {
@@ -30,15 +50,82 @@ namespace VoxelEngine.Destructions
             return null;
         }
 
-        private void HandleClusterDestruction(DestructableVoxels cluster) {
-            if(!cluster.IsCollapsed) {
+        private void HandleClusterDamage(DestructableVoxels cluster) {
+            if(cluster.IsCollapsed) {
+                var connectionsData = GetClusterConnections(cluster);
+                CheckStructureAsync(connectionsData, CancellationToken.None);
                 return;
             }
-            var connectionsData = GetClusterConnections(cluster);
-            CheckStructureAsync(connectionsData);
+            
+            if(updateConnectionsInRuntime) {
+                if(!connectionsCheckQueue.Contains(cluster)) {
+                    UpdateConnections(cluster, lifetimeCts.Token);
+                }
+                
+            }
+
+            if(updateIntegrityInRuntime) {
+                if(!integrityCheckQueue.Contains(cluster)) {
+                    UpdateIntegrity(cluster, lifetimeCts.Token);
+                }
+            }
         }
 
-        private async void CheckStructureAsync(ClustersConnectionData connectionsData) {
+        private async void UpdateIntegrity(DestructableVoxels cluster, CancellationToken cancellationToken) {
+            integrityCheckQueue.Add(cluster);
+            await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
+            integrityCheckQueue.Remove(cluster);
+            
+            var isIntegral = await integrityJobsScheduler.Run(cluster.VoxelsContainer.Data, cluster.VoxelsCount);
+            if(cancellationToken.IsCancellationRequested) {
+                return;
+            }
+            
+            if(!isIntegral) {
+                cluster.Collapse();
+            }
+        }
+
+        private async void UpdateConnections(DestructableVoxels cluster, CancellationToken cancellationToken) {
+            connectionsCheckQueue.Add(cluster);
+            await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
+
+            await UpdateConnectionsAsync(cluster, cancellationToken);
+            
+            if(cancellationToken.IsCancellationRequested) {
+                return;
+            }
+
+            connectionsCheckQueue.Remove(cluster);
+        }
+
+        private async Task UpdateConnectionsAsync(DestructableVoxels cluster, CancellationToken cancellationToken) {
+            var connectionsData = GetClusterConnections(cluster);
+            for(int i = connectionsData.Connections.Count-1; i >=0; i--) {
+                if(cluster.IsCollapsed) {
+                    break;
+                }
+                if(connectionsData.Connections[i].IsCollapsed) {
+                    continue;
+                }
+                
+                var result = await neighboursScheduler.Run(cluster, connectionsData.Connections[i], false);
+                if(cancellationToken.IsCancellationRequested) {
+                    return;
+                }
+                if(result) {
+                   continue;
+                }
+                var notConnectedCluster = connectionsData.Connections[i];
+                var notConnectedClusterConnectionsData = GetClusterConnections(notConnectedCluster);
+                notConnectedClusterConnectionsData.Connections.Remove(cluster);
+                connectionsData.Connections.RemoveAt(i);
+            }
+            
+            CheckStructureAsync(connectionsData, cancellationToken);
+        }
+
+        private async void CheckStructureAsync(ClustersConnectionData connectionsData, CancellationToken cancellationToken) {
             if(connectionsData == null) {
                 return;
             }
@@ -51,7 +138,10 @@ namespace VoxelEngine.Destructions
                     neighbour
                 };
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
-                    await Task.Delay(ClusterDestructionDelayMilliseconds);
+                    await Task.Delay(ClusterDestructionDelayMilliseconds, cancellationToken);
+                    if(cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
                     neighbour.Collapse();
                 }
             }
@@ -85,6 +175,7 @@ namespace VoxelEngine.Destructions
             return connectionsData != null && connectionsData.Connections.Contains(b);
         }
 
+        
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
@@ -172,7 +263,7 @@ namespace VoxelEngine.Destructions
 
         private void RunCheckNeighboursJob(DestructableVoxels cluster, DestructableVoxels otherCluster) {
             var result = new NativeArray<bool>(1, Allocator.TempJob);
-            var checkNeighboursJob = new CheckVoxelsChunksNeighboursJob {
+            var checkNeighboursJob = new CheckClustersConnectionJob {
                 ChunkOneData = cluster.VoxelsContainer.Data,
                 ChunkTwoData = otherCluster.VoxelsContainer.Data,
                 ChunkOnePos = cluster.transform.localPosition,

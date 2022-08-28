@@ -21,8 +21,6 @@ namespace VoxelEngine.Destructions
         private bool isIntergrityCheckScheduled;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
         private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
-        private const float IntegrityCheckCooldown = 1f;
-        private bool isDirty;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
@@ -81,34 +79,10 @@ namespace VoxelEngine.Destructions
             var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
             VoxelsCount -= damageVoxels.Length;
 
-            voxelsContainer.RebuildMesh();
+            voxelsContainer.RebuildMesh(true);
             HandleVoxelsRemove();
 
             return damageVoxels;
-        }
-
-        private void Update() {
-            if(isDirty) {
-                isDirty = false;
-                ScheduleIntegrityCheck();
-            }
-        }
-
-        private void ScheduleIntegrityCheck() {
-            if(isIntergrityCheckScheduled) {
-                return;
-            }
-            WaitIntegrityCheck();
-        }
-        
-        private async void WaitIntegrityCheck() {
-            isIntergrityCheckScheduled = true;
-            await Task.Delay(TimeSpan.FromSeconds(IntegrityCheckCooldown));
-            if(isDestroyed) {
-                return;
-            }
-            await CheckIntegrityCollapse();
-            isIntergrityCheckScheduled = false;
         }
 
         public void Damage(Vector3 worldPoint, float radius, ref NativeList<VoxelData> damagedVoxels) {
@@ -136,13 +110,20 @@ namespace VoxelEngine.Destructions
                     }
                 }
             }
-            voxelsContainer.RebuildMesh();
+            voxelsContainer.RebuildMesh(true);
             HandleVoxelsRemove();
+        }
+        
+        public void MarkCollapsed() {
+            IsCollapsed = true;
+        }
+        
+        public void MarkDirty() {
+            VoxelsCount = -1;
+            IntegrityChanged?.Invoke(this);
         }
 
         private void HandleVoxelsRemove() {
-            isDirty = true;
-            
             if(IsCollapsed) {
                 return;
             }
@@ -155,23 +136,6 @@ namespace VoxelEngine.Destructions
             IntegrityChanged?.Invoke(this);
         }
 
-        private async Task CheckIntegrityCollapse() {
-            if(IsCollapsed || !makePhysicalOnCollapse) {
-                return;
-            }
-            
-            integrityJobsScheduler ??= new VoxelsIntegrityJobsScheduler();
-            var isIntegral = await integrityJobsScheduler.Run(voxelsContainer.Data, VoxelsCount);
-            
-            if(isDestroyed) {
-                return;
-            }
-            
-            if(!isIntegral) {
-                Collapse();
-            }
-        }
-        
         private bool CheckIfNeedCollapse() {
             int destroyedVoxelsCount = InitialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
@@ -193,15 +157,6 @@ namespace VoxelEngine.Destructions
 
             rigidbody.mass = VoxelsCount * Constants.VoxelWeight;
             rigidbody.WakeUp();
-        }
-
-        public void MarkCollapsed() {
-            IsCollapsed = true;
-        }
-        
-        public void MarkDirty() {
-            VoxelsCount = -1;
-            IntegrityChanged?.Invoke(this);
         }
 
 #if UNITY_EDITOR

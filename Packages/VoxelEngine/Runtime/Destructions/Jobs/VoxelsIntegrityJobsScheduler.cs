@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 
 namespace VoxelEngine.Destructions.Jobs
 {
@@ -9,10 +10,12 @@ namespace VoxelEngine.Destructions.Jobs
         public async Task<bool> Run(NativeArray3d<int> voxels, int integralCount) {
             var voxelsDataCopy = voxels.Copy(Allocator.TempJob);
             var result = new NativeArray<int>(1, Allocator.TempJob);
+            var taskQueue = new NativeQueue<int3>(Allocator.TempJob);
             
             var job = new CheckVoxelsChunksIntegrityJob {
                 Voxels = voxelsDataCopy,
-                Result = result
+                Result = result,
+                Queue = taskQueue
             };
 
             var jobHandle = job.Schedule();
@@ -26,7 +29,8 @@ namespace VoxelEngine.Destructions.Jobs
             
             voxelsDataCopy.Dispose();
             result.Dispose();
-
+            taskQueue.Dispose();
+            
             return count >= integralCount;
         }
     }

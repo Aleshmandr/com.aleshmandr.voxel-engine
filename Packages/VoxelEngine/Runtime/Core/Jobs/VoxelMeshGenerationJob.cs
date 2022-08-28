@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace VoxelEngine.Jobs
 {
-    [BurstCompile(CompileSynchronously = true)]
+    [BurstCompile]
     public struct VoxelMeshGenerationJob : IJob
     {
         public int SizeX;

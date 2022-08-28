@@ -10,6 +10,7 @@ namespace VoxelEngine.Editor
         private VoxelsContainer voxelsContainer;
         private SerializedProperty assetProperty;
         private SerializedProperty loadOnStartProperty;
+        private SerializedProperty updateMeshOnStartProperty;
         private const string CenterToParentIconName = "d_ToolHandleCenter@2x";
 
         private void OnEnable() {
@@ -19,6 +20,7 @@ namespace VoxelEngine.Editor
             }
             assetProperty = serializedObject.FindProperty("Asset");
             loadOnStartProperty = serializedObject.FindProperty("loadOnStart");
+            updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
         }
 
@@ -30,6 +32,9 @@ namespace VoxelEngine.Editor
             serializedObject.Update();
             EditorGUILayout.PropertyField(assetProperty);
             loadOnStartProperty.boolValue = EditorGUILayout.Toggle(loadOnStartProperty.displayName, loadOnStartProperty.boolValue);
+            if(loadOnStartProperty.boolValue) {
+                updateMeshOnStartProperty.boolValue = EditorGUILayout.Toggle(updateMeshOnStartProperty.displayName, updateMeshOnStartProperty.boolValue);
+            }
             serializedObject.ApplyModifiedProperties();
             GUILayout.BeginHorizontal();
             if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {

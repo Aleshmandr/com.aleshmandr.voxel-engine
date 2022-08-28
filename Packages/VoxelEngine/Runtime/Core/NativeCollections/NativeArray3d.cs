@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 
 namespace VoxelEngine
@@ -8,47 +9,55 @@ namespace VoxelEngine
         public readonly int SizeX;
         public readonly int SizeY;
         public readonly int SizeZ;
+        private readonly int Size;
 
-        private NativeArray<T> nativeArray;
+        public NativeArray<T> NativeArray;
 
-        public NativeArray<T> NativeArray => nativeArray;
-        
         public T this[int x, int y, int z] {
-            get => nativeArray[x + SizeX * (y + SizeY * z)];
-            set => nativeArray[x + SizeX * (y + SizeY * z)] = value;
+            get => NativeArray[x + SizeX * (y + SizeY * z)];
+            set => NativeArray[x + SizeX * (y + SizeY * z)] = value;
         }
         
         public NativeArray3d(int sizeX, int sizeY, int sizeZ) {
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
-            nativeArray = new NativeArray<T>(sizeX * sizeY * sizeZ, Allocator.Persistent);
+            Size = sizeX * sizeY * sizeZ;
+            NativeArray = new NativeArray<T>(Size, Allocator.Persistent);
         }
         
         public NativeArray3d(int sizeX, int sizeY, int sizeZ, T[] array) {
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
-            nativeArray = new NativeArray<T>(array, Allocator.Persistent);
+            Size = sizeX * sizeY * sizeZ;
+            NativeArray = new NativeArray<T>(array, Allocator.Persistent);
         }
         
         public NativeArray3d(int sizeX, int sizeY, int sizeZ, NativeArray<T> array) {
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
-            nativeArray = array;
+            Size = sizeX * sizeY * sizeZ;
+            NativeArray = array;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsCoordsValid(int x, int y, int z) {
             return x >= 0 && x < SizeX && y >= 0 && y < SizeY && z >= 0 && z < SizeZ;
         }
-
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int CoordToIndex(int x, int y, int z) {
+            return x + SizeX * (y + SizeY * z);
+        }
+        
         public T[] ToArray() {
-            return nativeArray.ToArray();
+            return NativeArray.ToArray();
         }
         
         public NativeArray<T> AllocateNativeDataCopy(Allocator allocator) {
-            return new NativeArray<T>(nativeArray, allocator);
+            return new NativeArray<T>(NativeArray, allocator);
         }
         
         public NativeArray3d<T> Copy(Allocator allocator) {
@@ -56,8 +65,8 @@ namespace VoxelEngine
         }
 
         public void Dispose() {
-            if(nativeArray.IsCreated) {
-                nativeArray.Dispose();
+            if(NativeArray.IsCreated) {
+                NativeArray.Dispose();
             }
         }
     }
