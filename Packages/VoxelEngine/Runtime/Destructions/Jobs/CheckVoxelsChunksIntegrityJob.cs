@@ -20,11 +20,7 @@ namespace VoxelEngine.Destructions.Jobs
                     for(int k = 0; k < Voxels.SizeZ; k++) {
                         if(Voxels[i, j, k] != 0) {
                             int sum = 0;
-#if UNITY_EDITOR
                             StartTrace(i, j, k, ref sum);
-#else
-                            TraceRecursively(i, j, k, ref sum);
-#endif
                             Result[0] = sum;
                             return;
                         }
@@ -39,7 +35,6 @@ namespace VoxelEngine.Destructions.Jobs
         }
 
         private void TraceWithStack(ref int sum) {
-
             while(!Queue.IsEmpty()) {
                 var voxel = Queue.Dequeue();
                 int i = voxel.x;
