@@ -100,7 +100,12 @@ namespace VoxelEngine
                     return;
                 }
             }
-            meshCollider.sharedMesh = MeshFilter.sharedMesh;
+            if(MeshFilter.sharedMesh.vertexCount > 0) {
+                meshCollider.sharedMesh = MeshFilter.sharedMesh;
+                meshCollider.enabled = true;
+            } else {
+                meshCollider.enabled = false;
+            }
             colliderUpdateCts = null;
         }
 
