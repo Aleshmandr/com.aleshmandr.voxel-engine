@@ -39,7 +39,7 @@ namespace VoxelEngine
         
         public bool IsInitialized { get; private set; }
 
-        private void Start() {
+        private async void Start() {
 #if UNITY_EDITOR
             if(Application.isPlaying) {
                 if(IsInitialized)
@@ -51,7 +51,7 @@ namespace VoxelEngine
                 return;
             }
 #endif
-            Deserialize(Asset.bytes, loadOnStart, updateMeshFilterOnStart);
+            await Deserialize(Asset.bytes, loadOnStart, updateMeshFilterOnStart);
             IsInitialized = true;
         }
 
@@ -61,7 +61,11 @@ namespace VoxelEngine
             colliderUpdateCts?.Cancel();
         }
 
-        public async void RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
+        public async Task Reload() {
+            await Deserialize(Asset.bytes, true, true);
+        }
+
+        public async Task RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
             meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
@@ -79,11 +83,11 @@ namespace VoxelEngine
                 meshCollider.sharedMesh = dynamicMesh;
             } else if(colliderUpdateCts == null){
                 colliderUpdateCts = new CancellationTokenSource();
-                UpdateColliderAsync(colliderUpdateCts.Token);
+                await UpdateColliderAsync(colliderUpdateCts.Token);
             }
         }
 
-        private async void UpdateColliderAsync(CancellationToken cancellationToken) {
+        private async Task UpdateColliderAsync(CancellationToken cancellationToken) {
             var updateEndTime = Time.unscaledTime + ColliderUpdateCooldown;
             while(Time.unscaledTime < updateEndTime) {
                 await Task.Yield();
@@ -105,14 +109,14 @@ namespace VoxelEngine
                 && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
         }
 
-        public void Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
+        public async Task Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
             if(bytes == null) {
                 return;
             }
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(bytes);
             if(rebuildMesh) {
-                RebuildMesh(updateMeshFilter, true);
+                await RebuildMesh(updateMeshFilter, true);
             }
         }
 
@@ -121,14 +125,14 @@ namespace VoxelEngine
         }
 
 #if UNITY_EDITOR
-        private void OnEditorStart() {
+        private async void OnEditorStart() {
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
             if(MeshFilter.sharedMesh != null || !loadOnStart) {
                 return;
             }
 
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
-            RebuildMesh(true, true);
+            await RebuildMesh(true, true);
             Data.Dispose();
         }
 #endif

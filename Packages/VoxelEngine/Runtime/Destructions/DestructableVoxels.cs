@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
@@ -14,13 +13,10 @@ namespace VoxelEngine.Destructions
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
         [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
-        private bool isDestroyed;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
-        private bool isIntergrityCheckScheduled;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
-        private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
@@ -52,10 +48,6 @@ namespace VoxelEngine.Destructions
             InitialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
             IsInitialized = true;
-        }
-
-        private void OnDestroy() {
-            isDestroyed = true;
         }
 
         [ContextMenu("Collapse")]
@@ -114,6 +106,11 @@ namespace VoxelEngine.Destructions
             HandleVoxelsRemove();
         }
         
+        public async void Recover() {
+            await voxelsContainer.Reload();
+            MarkDirty();
+        }
+        
         public void MarkCollapsed() {
             IsCollapsed = true;
         }
@@ -135,7 +132,7 @@ namespace VoxelEngine.Destructions
             
             IntegrityChanged?.Invoke(this);
         }
-
+       
         private bool CheckIfNeedCollapse() {
             int destroyedVoxelsCount = InitialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
