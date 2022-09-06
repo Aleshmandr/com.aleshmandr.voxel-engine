@@ -80,7 +80,12 @@ namespace VoxelEngine
             
             if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel();
-                meshCollider.sharedMesh = dynamicMesh;
+                if(dynamicMesh.vertexCount > 0) {
+                    meshCollider.sharedMesh = dynamicMesh;
+                    meshCollider.enabled = true;
+                } else {
+                    meshCollider.enabled = false;
+                }
             } else if(colliderUpdateCts == null){
                 colliderUpdateCts = new CancellationTokenSource();
                 await UpdateColliderAsync(colliderUpdateCts.Token);
