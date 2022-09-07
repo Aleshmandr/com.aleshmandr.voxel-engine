@@ -149,6 +149,7 @@ namespace VoxelEngine.Destructions
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
                     rigidbody.interpolation = interpolation;
+                    rigidbody.solverIterations = Constants.DestructableSolverIterations;
                 }
             }
 
