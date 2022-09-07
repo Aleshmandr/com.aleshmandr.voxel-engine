@@ -14,6 +14,7 @@ namespace VoxelEngine
         public NativeArray3d<int> Data;
         [SerializeField] private bool loadOnStart;
         [SerializeField] private bool updateMeshFilterOnStart;
+        [SerializeField] private bool useBakeJob;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private MeshCollider meshCollider;
@@ -21,7 +22,7 @@ namespace VoxelEngine
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
         private CancellationTokenSource colliderUpdateCts;
-        private const float ColliderUpdateCooldown = 0.1f;//TODO: Move to global config
+        private const float ColliderUpdateCooldown = 0.2f;//TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
         
         public MeshRenderer MeshRenderer
@@ -84,13 +85,15 @@ namespace VoxelEngine
             if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel();
                 if(dynamicMesh.vertexCount > 0) {
-                    
-                    var meshIds = new NativeArray<int>(1, Allocator.TempJob);
-                    meshIds[0] = dynamicMesh.GetInstanceID();
-                    bakeMeshJobHandle = new BakeMeshJob {
-                        MeshIds = meshIds, Convex = meshCollider.convex
-                    }.Schedule(1,1, bakeMeshJobHandle);
-                    bakeMeshJobHandle.Complete();
+
+                    if(useBakeJob) {
+                        var meshIds = new NativeArray<int>(1, Allocator.TempJob);
+                        meshIds[0] = dynamicMesh.GetInstanceID();
+                        bakeMeshJobHandle = new BakeMeshJob {
+                            MeshIds = meshIds, Convex = meshCollider.convex
+                        }.Schedule(1,1, bakeMeshJobHandle);
+                        bakeMeshJobHandle.Complete();
+                    }
                     
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
@@ -113,19 +116,21 @@ namespace VoxelEngine
             }
 
             if(MeshFilter.sharedMesh.vertexCount > 0) {
-                
-                var meshIds = new NativeArray<int>(1, Allocator.TempJob);
-                meshIds[0] = MeshFilter.sharedMesh.GetInstanceID();
-                bakeMeshJobHandle = new BakeMeshJob {
-                    MeshIds = meshIds, Convex = meshCollider.convex
-                }.Schedule(1,1, bakeMeshJobHandle);
 
-                while(!bakeMeshJobHandle.IsCompleted) {
-                    await Task.Yield();
-                }
+                if(useBakeJob) {
+                    var meshIds = new NativeArray<int>(1, Allocator.TempJob);
+                    meshIds[0] = MeshFilter.sharedMesh.GetInstanceID();
+                    bakeMeshJobHandle = new BakeMeshJob {
+                        MeshIds = meshIds, Convex = meshCollider.convex
+                    }.Schedule(1,1, bakeMeshJobHandle);
+
+                    while(!bakeMeshJobHandle.IsCompleted) {
+                        await Task.Yield();
+                    }
                 
-                if(cancellationToken.IsCancellationRequested) {
-                    return;
+                    if(cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
                 }
 
                 meshCollider.sharedMesh = MeshFilter.sharedMesh;
