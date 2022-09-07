@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using VoxelEngine.Jobs;
 
@@ -20,7 +22,8 @@ namespace VoxelEngine
         private bool isDestroyed;
         private CancellationTokenSource colliderUpdateCts;
         private const float ColliderUpdateCooldown = 0.1f;//TODO: Move to global config
-
+        private JobHandle bakeMeshJobHandle;
+        
         public MeshRenderer MeshRenderer
         { get {
             if(meshRenderer == null) {
@@ -81,6 +84,14 @@ namespace VoxelEngine
             if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel();
                 if(dynamicMesh.vertexCount > 0) {
+                    
+                    var meshIds = new NativeArray<int>(1, Allocator.TempJob);
+                    meshIds[0] = dynamicMesh.GetInstanceID();
+                    bakeMeshJobHandle = new BakeMeshJob {
+                        MeshIds = meshIds, Convex = meshCollider.convex
+                    }.Schedule(1,1, bakeMeshJobHandle);
+                    bakeMeshJobHandle.Complete();
+                    
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
                 } else {
@@ -100,7 +111,23 @@ namespace VoxelEngine
                     return;
                 }
             }
+
             if(MeshFilter.sharedMesh.vertexCount > 0) {
+                
+                var meshIds = new NativeArray<int>(1, Allocator.TempJob);
+                meshIds[0] = MeshFilter.sharedMesh.GetInstanceID();
+                bakeMeshJobHandle = new BakeMeshJob {
+                    MeshIds = meshIds, Convex = meshCollider.convex
+                }.Schedule(1,1, bakeMeshJobHandle);
+
+                while(!bakeMeshJobHandle.IsCompleted) {
+                    await Task.Yield();
+                }
+                
+                if(cancellationToken.IsCancellationRequested) {
+                    return;
+                }
+
                 meshCollider.sharedMesh = MeshFilter.sharedMesh;
                 meshCollider.enabled = true;
             } else {
