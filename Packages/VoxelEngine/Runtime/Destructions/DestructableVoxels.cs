@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
+using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Destructions
 {
@@ -17,6 +18,7 @@ namespace VoxelEngine.Destructions
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
+        private static readonly Vector2 CollapseTorqueMinMax = new Vector2(3, 20);
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
@@ -150,6 +152,8 @@ namespace VoxelEngine.Destructions
                     rigidbody = gameObject.AddComponent<Rigidbody>();
                     rigidbody.interpolation = interpolation;
                     rigidbody.solverIterations = Constants.DestructableSolverIterations;
+                    var torqueForce = Random.Range(CollapseTorqueMinMax.x, CollapseTorqueMinMax.y);
+                    rigidbody.AddTorque(Random.insideUnitSphere * torqueForce, ForceMode.Acceleration);
                 }
             }
 
