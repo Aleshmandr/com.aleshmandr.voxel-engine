@@ -18,7 +18,7 @@ namespace VoxelEngine.Destructions
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
         private VoxelsDamageJobsScheduler damageJobsScheduler;
-        private static readonly Vector2 CollapseTorqueMinMax = new Vector2(3, 20);
+        private static readonly Vector2 CollapseTorqueMinMax = new Vector2(10, 200);
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
