@@ -16,14 +16,15 @@ namespace VoxelEngine.Destructions
     public class VoxelsClustersDestructionContainer : MonoBehaviour
     {
         [SerializeField] private float connectionsUpdateDelay = 0.5f;
-        [SerializeField] private bool updateConnectionsInRuntime;
-        [SerializeField] private bool updateIntegrityInRuntime;
+        [SerializeField] private bool updateConnectionsInRuntime = true;
+        [SerializeField] private bool updateIntegrityInRuntime = true;
         [SerializeField] private ClustersConnectionData[] connections;
         private List<DestructableVoxels> integrityCheckQueue;
         private List<DestructableVoxels> connectionsCheckQueue;
         private CheckClustersConnectionJobsScheduler neighboursScheduler;
         private VoxelsIntegrityJobsScheduler integrityJobsScheduler;
         private CancellationTokenSource lifetimeCts;
+        private List<DestructableVoxels> processedClusters;
         private const int ClusterDestructionDelayMilliseconds = 200;
 
         public void Start() {
@@ -31,17 +32,21 @@ namespace VoxelEngine.Destructions
             connectionsCheckQueue = new List<DestructableVoxels>();
             integrityCheckQueue = new List<DestructableVoxels>();
             neighboursScheduler = new CheckClustersConnectionJobsScheduler();
+            processedClusters = new List<DestructableVoxels>();
             integrityJobsScheduler = new VoxelsIntegrityJobsScheduler();
             foreach(var connectionData in connections) {
                 connectionData.Root.IntegrityChanged += HandleClusterDamage;
             }
         }
-
+        
         private void OnDestroy() {
             lifetimeCts?.Cancel();
+            foreach(var connectionData in connections) {
+                connectionData.Root.IntegrityChanged -= HandleClusterDamage;
+            }
         }
 
-        private ClustersConnectionData GetClusterConnections(DestructableVoxels cluster) {
+        public ClustersConnectionData GetClusterConnections(DestructableVoxels cluster) {
             for(int i = 0; i < connections.Length; i++) {
                 if(connections[i].Root == cluster) {
                     return connections[i];
@@ -61,7 +66,6 @@ namespace VoxelEngine.Destructions
                 if(!connectionsCheckQueue.Contains(cluster)) {
                     UpdateConnections(cluster, lifetimeCts.Token);
                 }
-                
             }
 
             if(updateIntegrityInRuntime) {
@@ -129,14 +133,15 @@ namespace VoxelEngine.Destructions
             if(connectionsData == null) {
                 return;
             }
+            
             foreach(var neighbour in connectionsData.Connections) {
                 if(neighbour.IsCollapsed) {
                     continue;
                 }
 
-                var processedClusters = new List<DestructableVoxels> {
-                    neighbour
-                };
+                processedClusters.Clear();
+                processedClusters.Add(neighbour);
+                
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
                     await Task.Delay(ClusterDestructionDelayMilliseconds, cancellationToken);
                     if(cancellationToken.IsCancellationRequested) {
@@ -148,18 +153,19 @@ namespace VoxelEngine.Destructions
         }
 
         private bool CheckIfClusterConnected(DestructableVoxels cluster, List<DestructableVoxels> processedClusters) {
+            
             var connectionsData = GetClusterConnections(cluster);
             if(connectionsData == null) {
                 return false;
+            }
+            
+            if(connectionsData.IsFixed) {
+                return true;
             }
 
             foreach(var neighbour in connectionsData.Connections) {
                 if(neighbour.IsCollapsed || processedClusters.Contains(neighbour)) {
                     continue;
-                }
-
-                if(connectionsData.IsFixed) {
-                    return true;
                 }
 
                 processedClusters.Add(neighbour);

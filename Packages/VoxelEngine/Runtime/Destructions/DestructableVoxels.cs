@@ -93,8 +93,7 @@ namespace VoxelEngine.Destructions
                             if(x >= 0 && x < voxelsContainer.Data.SizeX && y >= 0 && voxelsContainer.Data.SizeY > y && z >= 0 && voxelsContainer.Data.SizeZ > z) {
                                 if(voxelsContainer.Data[x, y, z] != 0) {
                                     damagedVoxels.Add(new VoxelData {
-                                        Position = new Vector3(x, y, z),
-                                        Color = Utilities.VoxelColor(voxelsContainer.Data[x, y, z])
+                                        Position = new Vector3(x, y, z), Color = Utilities.VoxelColor(voxelsContainer.Data[x, y, z])
                                     });
                                     voxelsContainer.Data[x, y, z] = 0;
                                     VoxelsCount--;
@@ -107,16 +106,16 @@ namespace VoxelEngine.Destructions
             voxelsContainer.RebuildMesh(true);
             HandleVoxelsRemove();
         }
-        
+
         public async void Recover() {
             await voxelsContainer.Reload();
             MarkDirty();
         }
-        
+
         public void MarkCollapsed() {
             IsCollapsed = true;
         }
-        
+
         public void MarkDirty() {
             VoxelsCount = -1;
             IntegrityChanged?.Invoke(this);
@@ -126,27 +125,27 @@ namespace VoxelEngine.Destructions
             if(IsCollapsed) {
                 return;
             }
-            
+
             if(CheckIfNeedCollapse()) {
                 Collapse();
                 return;
             }
-            
+
             IntegrityChanged?.Invoke(this);
         }
-       
+
         private bool CheckIfNeedCollapse() {
             int destroyedVoxelsCount = InitialVoxelsCount - VoxelsCount;
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
         }
 
         private void MakePhysical() {
-
+            UnRoot();
             MeshCollider meshCollider = GetComponent<MeshCollider>();
             if(meshCollider != null) {
                 meshCollider.convex = true;
             }
-            
+
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
@@ -159,6 +158,13 @@ namespace VoxelEngine.Destructions
 
             rigidbody.mass = VoxelsCount * Constants.VoxelWeight;
             rigidbody.WakeUp();
+        }
+
+        private void UnRoot() {
+            var root = transform.GetComponentInParent<DestructableVoxelsRoot>();
+            if(root != null) {
+                transform.SetParent(root.transform.parent);
+            }
         }
 
 #if UNITY_EDITOR
