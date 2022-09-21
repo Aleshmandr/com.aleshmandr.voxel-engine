@@ -22,7 +22,7 @@ namespace VoxelEngine.Destructions
             while(!IsInitialized) {
                 bool isInitialized = true;
                 for(int i = 0; i < DestructableVoxels.Length; i++) {
-                    if(!DestructableVoxels[i].IsInitialized) {
+                    if(!DestructableVoxels[i].VoxelsContainer.IsInitialized) {
                         isInitialized = false;
                         break;
                     }

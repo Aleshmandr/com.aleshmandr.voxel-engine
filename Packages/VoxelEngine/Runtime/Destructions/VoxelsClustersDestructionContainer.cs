@@ -55,6 +55,15 @@ namespace VoxelEngine.Destructions
             return null;
         }
 
+        public void BreakFixedConnections() {
+            for(int i = 0; i < connections.Length; i++) {
+                connections[i].IsFixed = false;
+            }
+            
+            var connectionsData = GetClusterConnections(connections[0].Root);
+            CheckStructureAsync(connectionsData, lifetimeCts.Token);
+        }
+
         private void HandleClusterDamage(DestructableVoxels cluster) {
             if(cluster.IsCollapsed) {
                 var connectionsData = GetClusterConnections(cluster);

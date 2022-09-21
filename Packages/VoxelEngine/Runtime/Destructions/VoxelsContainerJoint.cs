@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,16 +12,14 @@ namespace VoxelEngine.Destructions
         
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
-        private VoxelsClustersDestructionContainer container;
-        private Collider[] colliders;
+        [NonSerialized] private VoxelsClustersDestructionContainer container;
+        [NonSerialized] private Collider[] colliders;
+        [NonSerialized] private DestructableVoxelsRoot root;
         private List<DestructableVoxels> connectedClusters;
-        private List<DestructableVoxels> fixedClusters;
-        private DestructableVoxelsRoot root;
 
         private void Start() {
             container = GetComponent<VoxelsClustersDestructionContainer>();
             connectedClusters = new List<DestructableVoxels>();
-            fixedClusters = new List<DestructableVoxels>();
             root = this.GetComponentInParent<DestructableVoxelsRoot>();
             StartCoroutine(InitFixationRoutine());
         }
@@ -52,7 +51,6 @@ namespace VoxelEngine.Destructions
                         destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
                     } else {
                         connectionData.IsFixed = true;
-                        fixedClusters.Add(destructableVoxels);
                     }
                 }
             }
@@ -64,7 +62,6 @@ namespace VoxelEngine.Destructions
                     yield return null;
                 }
             }
-            
             FixJoint();
         }
 
@@ -74,9 +71,7 @@ namespace VoxelEngine.Destructions
             }
             if(connectedClusters.Count == 0) {
                 UnsubscribeFromConnectedClusters();
-                for(int i = 0; i < fixedClusters.Count; i++) {
-                    fixedClusters[i].Collapse();
-                }
+                container.BreakFixedConnections();
             }
         }
 
