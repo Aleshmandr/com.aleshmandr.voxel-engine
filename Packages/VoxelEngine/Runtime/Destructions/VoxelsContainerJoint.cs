@@ -41,7 +41,12 @@ namespace VoxelEngine.Destructions
             if(colliders == null || colliders.Length == 0) {
                 colliders = new Collider[CheckCollidersCount];
             }
-            var overlaps = Physics.OverlapSphereNonAlloc(transform.TransformPoint(center), radius, colliders);
+            
+            var overlaps = 0;
+            var pos = transform.TransformPoint(center);
+            
+            overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, radius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
                 if(destructableVoxels != null) {
