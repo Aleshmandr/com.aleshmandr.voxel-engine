@@ -8,7 +8,7 @@ namespace VoxelEngine.Destructions
     [RequireComponent(typeof(VoxelsClustersDestructionContainer))][ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
-        private const int CheckCollidersCount = 20;
+        private const int CheckCollidersCount = 10;
         
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
@@ -42,11 +42,10 @@ namespace VoxelEngine.Destructions
                 colliders = new Collider[CheckCollidersCount];
             }
             
-            var overlaps = 0;
             var pos = transform.TransformPoint(center);
             var scaledRadius = radius * transform.lossyScale.x;
             
-            overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, scaledRadius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, scaledRadius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
             
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();

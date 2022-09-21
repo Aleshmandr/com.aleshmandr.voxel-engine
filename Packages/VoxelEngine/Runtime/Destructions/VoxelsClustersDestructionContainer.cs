@@ -57,11 +57,12 @@ namespace VoxelEngine.Destructions
 
         public void BreakFixedConnections() {
             for(int i = 0; i < connections.Length; i++) {
-                connections[i].IsFixed = false;
+                if (connections[i].IsFixed)
+                {
+                    connections[i].IsFixed = false;
+                    connections[i].Root.Collapse();
+                }
             }
-            
-            var connectionsData = GetClusterConnections(connections[0].Root);
-            CheckStructureAsync(connectionsData, lifetimeCts.Token);
         }
 
         private void HandleClusterDamage(DestructableVoxels cluster) {
