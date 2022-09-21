@@ -8,7 +8,7 @@ namespace VoxelEngine.Destructions
     [RequireComponent(typeof(VoxelsClustersDestructionContainer))][ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
-        private const int CheckCollidersCount = 6;
+        private const int CheckCollidersCount = 20;
         
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
