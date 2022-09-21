@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,13 +15,15 @@ namespace VoxelEngine.Destructions
         private Collider[] colliders;
         private List<DestructableVoxels> connectedClusters;
         private List<DestructableVoxels> fixedClusters;
+        private DestructableVoxelsRoot root;
 
         private void Start() {
             colliders = new Collider[CheckCollidersCount];
             container = GetComponent<VoxelsClustersDestructionContainer>();
             connectedClusters = new List<DestructableVoxels>();
             fixedClusters = new List<DestructableVoxels>();
-            InitFixation();
+            root = this.GetComponentInParent<DestructableVoxelsRoot>();
+            StartCoroutine(InitFixationRoutine());
         }
 
         private void OnDestroy() {
@@ -36,7 +39,12 @@ namespace VoxelEngine.Destructions
             }
         }
 
-        private void InitFixation() {
+        private IEnumerator InitFixationRoutine() {
+            if(root != null) {
+                while(!root.IsInitialized) {
+                    yield return null;
+                }
+            }
             var overlaps = Physics.OverlapSphereNonAlloc(transform.TransformPoint(center), radius, colliders);
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
