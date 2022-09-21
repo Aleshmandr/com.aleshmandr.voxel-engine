@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace VoxelEngine.Destructions
 {
-    [RequireComponent(typeof(VoxelsClustersDestructionContainer))]
+    [RequireComponent(typeof(VoxelsClustersDestructionContainer))][ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
         private const int CheckCollidersCount = 6;
@@ -18,7 +18,6 @@ namespace VoxelEngine.Destructions
         private DestructableVoxelsRoot root;
 
         private void Start() {
-            colliders = new Collider[CheckCollidersCount];
             container = GetComponent<VoxelsClustersDestructionContainer>();
             connectedClusters = new List<DestructableVoxels>();
             fixedClusters = new List<DestructableVoxels>();
@@ -35,7 +34,27 @@ namespace VoxelEngine.Destructions
                 return;
             }
             for(int i = 0; i < connectedClusters.Count; i++) {
-                connectedClusters[i].IntegrityChanged -= HandleConnectionIntegrityChnage;
+                connectedClusters[i].IntegrityChanged -= HandleConnectionIntegrityChange;
+            }
+        }
+
+        public void FixJoint() {
+            if(colliders == null || colliders.Length == 0) {
+                colliders = new Collider[CheckCollidersCount];
+            }
+            var overlaps = Physics.OverlapSphereNonAlloc(transform.TransformPoint(center), radius, colliders);
+            for(int i = 0; i < overlaps; i++) {
+                var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
+                if(destructableVoxels != null) {
+                    var connectionData = container.GetClusterConnections(destructableVoxels);
+                    if(connectionData == null) {
+                        connectedClusters.Add(destructableVoxels);
+                        destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
+                    } else {
+                        connectionData.IsFixed = true;
+                        fixedClusters.Add(destructableVoxels);
+                    }
+                }
             }
         }
 
@@ -45,23 +64,11 @@ namespace VoxelEngine.Destructions
                     yield return null;
                 }
             }
-            var overlaps = Physics.OverlapSphereNonAlloc(transform.TransformPoint(center), radius, colliders);
-            for(int i = 0; i < overlaps; i++) {
-                var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
-                if(destructableVoxels != null) {
-                    var connectionData = container.GetClusterConnections(destructableVoxels);
-                    if(connectionData == null) {
-                        connectedClusters.Add(destructableVoxels);
-                        destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChnage;
-                    } else {
-                        connectionData.IsFixed = true;
-                        fixedClusters.Add(destructableVoxels);
-                    }
-                }
-            }
+            
+            FixJoint();
         }
 
-        private void HandleConnectionIntegrityChnage(DestructableVoxels connectedCluster) {
+        private void HandleConnectionIntegrityChange(DestructableVoxels connectedCluster) {
             if(connectedCluster.IsCollapsed) {
                 connectedClusters.Remove(connectedCluster);
             }

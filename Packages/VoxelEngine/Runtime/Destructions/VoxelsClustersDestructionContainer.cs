@@ -58,7 +58,7 @@ namespace VoxelEngine.Destructions
         private void HandleClusterDamage(DestructableVoxels cluster) {
             if(cluster.IsCollapsed) {
                 var connectionsData = GetClusterConnections(cluster);
-                CheckStructureAsync(connectionsData, CancellationToken.None);
+                CheckStructureAsync(connectionsData, lifetimeCts.Token);
                 return;
             }
             
@@ -135,7 +135,7 @@ namespace VoxelEngine.Destructions
             }
             
             foreach(var neighbour in connectionsData.Connections) {
-                if(neighbour.IsCollapsed) {
+                if(neighbour == null || neighbour.IsCollapsed) {
                     continue;
                 }
 
