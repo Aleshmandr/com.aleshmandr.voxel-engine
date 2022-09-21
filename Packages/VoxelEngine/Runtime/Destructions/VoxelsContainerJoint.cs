@@ -44,8 +44,9 @@ namespace VoxelEngine.Destructions
             
             var overlaps = 0;
             var pos = transform.TransformPoint(center);
+            var scaledRadius = radius * transform.lossyScale.x;
             
-            overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, radius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, scaledRadius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
             
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
