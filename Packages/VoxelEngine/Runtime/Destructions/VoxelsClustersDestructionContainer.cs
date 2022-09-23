@@ -65,6 +65,18 @@ namespace VoxelEngine.Destructions
             }
         }
 
+        public bool ContainsCluster(DestructableVoxels cluster) {
+            if(connections == null) {
+                return false;
+            }
+            for(int i = 0; i < connections.Length; i++) {
+                if(connections[i].Root == cluster) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void HandleClusterDamage(DestructableVoxels cluster) {
             if(cluster.IsCollapsed) {
                 var connectionsData = GetClusterConnections(cluster);
@@ -199,7 +211,7 @@ namespace VoxelEngine.Destructions
         [ContextMenu("Bake Connections (Low Precision)")]
         public void BakeConnections() {
             EditorUtility.ClearProgressBar();
-            var clusters = GetComponentsInChildren<DestructableVoxels>();
+            var clusters = GetClustersInChildren();
             var otherClusters = new List<DestructableVoxels>(clusters);
             connections = new ClustersConnectionData[clusters.Length];
             try {
@@ -240,7 +252,7 @@ namespace VoxelEngine.Destructions
         [ContextMenu("Bake Connections (High Precision)")]
         public void BakeConnectionsWithJobs() {
             EditorUtility.ClearProgressBar();
-            var clusters = GetComponentsInChildren<DestructableVoxels>();
+            var clusters = GetClustersInChildren();
             var otherClusters = new List<DestructableVoxels>(clusters);
             connections = new ClustersConnectionData[clusters.Length];
             try {
@@ -254,7 +266,7 @@ namespace VoxelEngine.Destructions
                 foreach(var cluster in clusters) {
                     foreach(var otherCluster in otherClusters) {
                         var progress = currentClusterIndex / (float)totalClustersProgressCount;
-                        if(EditorUtility.DisplayCancelableProgressBar("Bake Connections ((High Precision))", $"Baking {currentClusterIndex}/{totalClustersProgressCount}", progress)) {
+                        if(EditorUtility.DisplayCancelableProgressBar("Bake Connections (High Precision)", $"Baking {currentClusterIndex}/{totalClustersProgressCount}", progress)) {
                             return;
                         }
                         if(cluster == otherCluster || IsNeighbours(cluster, otherCluster)) {
@@ -326,6 +338,28 @@ namespace VoxelEngine.Destructions
             connectionsA.Connections.Add(b);
             connectionsB.Connections.Add(a);
             EditorUtility.SetDirty(this);
+        }
+        
+        private DestructableVoxels[] GetClustersInChildren() {
+            var result = new List<DestructableVoxels>();
+            CollectClustersRecursive(transform, result);
+            return result.ToArray();
+        }
+
+        private void CollectClustersRecursive(Transform root, List<DestructableVoxels> resultList) {
+            if(root.childCount <= 0) {
+                return;
+            }
+            for(int i = 0; i < root.childCount; i++) {
+                var child = root.GetChild(i);
+                if(child.TryGetComponent(out VoxelsClustersDestructionContainer _)) {
+                    continue;
+                }
+                if(child.TryGetComponent(out DestructableVoxels voxels)) {
+                    resultList.Add(voxels);
+                }
+                CollectClustersRecursive(child, resultList);
+            }
         }
 #endif
     }

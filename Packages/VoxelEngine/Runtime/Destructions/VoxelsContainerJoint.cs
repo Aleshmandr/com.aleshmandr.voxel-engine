@@ -46,19 +46,30 @@ namespace VoxelEngine.Destructions
             var scaledRadius = radius * transform.lossyScale.x;
             
             var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, scaledRadius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            var parentContainer = FindParentContainer();
             
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
                 if(destructableVoxels != null) {
                     var connectionData = container.GetClusterConnections(destructableVoxels);
                     if(connectionData == null) {
-                        connectedClusters.Add(destructableVoxels);
-                        destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
+                        if(parentContainer != null && parentContainer.ContainsCluster(destructableVoxels)) {
+                            connectedClusters.Add(destructableVoxels);
+                            destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
+                        }
                     } else {
                         connectionData.IsFixed = true;
                     }
                 }
             }
+        }
+
+        private VoxelsClustersDestructionContainer FindParentContainer() {
+            var parent = transform.parent;
+            if(parent == null) {
+                return null;
+            }
+            return parent.GetComponentInParent<VoxelsClustersDestructionContainer>();
         }
 
         private IEnumerator InitFixationRoutine() {
