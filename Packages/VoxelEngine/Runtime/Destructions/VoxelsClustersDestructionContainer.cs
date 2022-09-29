@@ -27,6 +27,8 @@ namespace VoxelEngine.Destructions
         private List<DestructableVoxels> processedClusters;
         private const int ClusterDestructionDelayMilliseconds = 200;
 
+        public ClustersConnectionData[] Connections => connections;
+
         public void Start() {
             lifetimeCts = new CancellationTokenSource();
             connectionsCheckQueue = new List<DestructableVoxels>();
