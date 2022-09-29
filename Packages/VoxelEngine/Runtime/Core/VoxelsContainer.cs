@@ -46,8 +46,7 @@ namespace VoxelEngine
         private async void Start() {
 #if UNITY_EDITOR
             if(Application.isPlaying) {
-                if(IsInitialized)
-                {
+                if(IsInitialized) {
                     return;
                 }
             } else {
@@ -61,6 +60,9 @@ namespace VoxelEngine
 
         private void OnDestroy() {
             Data.Dispose();
+            if (dynamicMesh != null) {
+                Object.Destroy(dynamicMesh);
+            }
             isDestroyed = true;
             colliderUpdateCts?.Cancel();
         }
