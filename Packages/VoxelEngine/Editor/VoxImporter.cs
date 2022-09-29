@@ -172,13 +172,15 @@ namespace VoxelEngine.Editor
 
         private void CreatePartialClusterizedGameObject(List<RawVoxelsData> rawVoxelsDatas, string assetName) {
             GameObject parentObject = null;
+            var generatePartIndex = rawVoxelsDatas.Count > 1;
+            
             for(int partIndex = 0; partIndex < rawVoxelsDatas.Count; partIndex++) {
                 var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsDatas[partIndex]);
                 var clustersAssetsData = new List<GeneratedAssetsData>();
-                EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", (float) partIndex / rawVoxelsDatas.Count);
+                EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", (float)partIndex / rawVoxelsDatas.Count);
                 for(int i = 0; i < clusters.Length; i++) {
                     RecalculateClusterPivot(clusters[i]);
-                    var assetData = GenerateAssets(assetName, clusters[i], partIndex, i);
+                    var assetData = GenerateAssets(assetName, clusters[i], generatePartIndex ? partIndex : -1, i);
                     clustersAssetsData.Add(assetData);
                 }
                 if(rawVoxelsDatas.Count > 1) {
@@ -300,9 +302,7 @@ namespace VoxelEngine.Editor
                 var frameDic = ReadDictionary(stream);
                 VoxMatrixByteToTransform(TryGetByte(frameDic, "_r", 4), out Vector3 rot, out Vector3 scale);
                 frameData[i] = new TransformData.FrameData() {
-                    Position = TryGetVector3(frameDic, "_t", Vector3.zero), 
-                    Rotation = rot, 
-                    Scale = scale,
+                    Position = TryGetVector3(frameDic, "_t", Vector3.zero), Rotation = rot, Scale = scale,
                 };
                 frameData[i].Position = SwipYZ(frameData[i].Position);
             }
@@ -371,8 +371,8 @@ namespace VoxelEngine.Editor
             }
             return str;
         }
-        
-        private GeneratedAssetsData GenerateAssets(string originalAssetName, RawVoxelsData rawData, int partIndex, int clusterIndex = -1) {
+
+        private GeneratedAssetsData GenerateAssets(string originalAssetName, RawVoxelsData rawData, int partIndex = -1, int clusterIndex = -1) {
             if(rawData == null) {
                 return null;
             }
@@ -389,7 +389,13 @@ namespace VoxelEngine.Editor
             var bytes = NativeArray3dSerializer.Serialize(data, compress);
 
             var assetParentFolderName = originalAssetName;
-            var assetName = clusterIndex >= 0 ? $"{originalAssetName}_{partIndex}_{clusterIndex}" : $"{originalAssetName}_{partIndex}";
+
+            string assetName;
+            if(partIndex >= 0) {
+                assetName = clusterIndex >= 0 ? $"{originalAssetName}_{partIndex}_{clusterIndex}" : $"{originalAssetName}_{partIndex}";
+            } else {
+                assetName = clusterIndex >= 0 ? $"{originalAssetName}_{clusterIndex}" : $"{originalAssetName}";
+            }
 
             var localAssetDirectory = $"Imported/{assetParentFolderName}";
             var assetDirectoryPath = Application.dataPath + $"/{localAssetDirectory}";
@@ -414,10 +420,11 @@ namespace VoxelEngine.Editor
             }
 
             var assetsDatas = new List<GeneratedAssetsData>();
-            
+
+            var generatePartIndex = rawDatas.Count > 1;
             for(int partIndex = 0; partIndex < rawDatas.Count; partIndex++) {
                 var rawData = rawDatas[partIndex];
-                assetsDatas.Add(GenerateAssets(originalAssetName, rawData, partIndex));
+                assetsDatas.Add(GenerateAssets(originalAssetName, rawData, generatePartIndex ? partIndex : -1));
             }
 
             return assetsDatas;
@@ -438,7 +445,7 @@ namespace VoxelEngine.Editor
             if(assetsDatas == null || assetsDatas.Count == 0) {
                 return;
             }
-            
+
             if(assetsDatas.Count > 1) {
                 GameObject gameObject = new GameObject(assetsDatas[0].OriginalAssetName);
                 for(int i = 0; i < assetsDatas.Count; i++) {
