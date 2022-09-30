@@ -18,5 +18,13 @@ namespace VoxelEngine.Editor
             ColorCode = stream.ReadByte();
             Color = 0;
         }
+        
+        public RawVoxelData(int x, int y, int z, int color) {
+            X = x;
+            Y = y;
+            Z = z;
+            ColorCode = 0;
+            Color = color;
+        }
     }
 }

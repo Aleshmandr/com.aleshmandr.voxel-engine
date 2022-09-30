@@ -2,7 +2,11 @@
     "name": "com.aleshmandr.voxel-engine-editor",
     "rootNamespace": "",
     "references": [
-        "GUID:e8010f3a7b63c494199f6b3d193c849c"
+        "GUID:e8010f3a7b63c494199f6b3d193c849c",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:8a2eafa29b15f444eb6d74f94a930e1d"
     ],
     "includePlatforms": [
         "Editor"

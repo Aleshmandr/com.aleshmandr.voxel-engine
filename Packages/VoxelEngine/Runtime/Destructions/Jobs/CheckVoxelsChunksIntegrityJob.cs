@@ -14,7 +14,6 @@ namespace VoxelEngine.Destructions.Jobs
         public NativeQueue<int3> Queue;
 
         public void Execute() {
-
             for(int i = 0; i < Voxels.SizeX; i++) {
                 for(int j = 0; j < Voxels.SizeY; j++) {
                     for(int k = 0; k < Voxels.SizeZ; k++) {

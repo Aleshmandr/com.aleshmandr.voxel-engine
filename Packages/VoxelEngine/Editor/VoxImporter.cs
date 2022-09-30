@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using VoxelEngine.Editor.Jobs;
 using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Editor
@@ -123,6 +123,8 @@ namespace VoxelEngine.Editor
         private bool generateMeshAssets;
         private bool clusterize;
         private int clusterVoxelsStep = 20;
+        private int clusterMaxVoxels = 2400;
+        private bool useLegasyClustersGeneration;
         private bool stepBasedDispersion = true;
         private int clusterDispersion;
         private int clusterGenerationSeed = 12345;
@@ -139,12 +141,18 @@ namespace VoxelEngine.Editor
             compress = EditorGUILayout.Toggle("Compress", compress);
             clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
             generateMeshAssets = EditorGUILayout.Toggle("Generate Mesh Assets", generateMeshAssets);
+
             if(clusterize) {
-                clusterVoxelsStep = EditorGUILayout.IntField("Clusters Voxels Step", clusterVoxelsStep);
-                clusterGenerationSeed = EditorGUILayout.IntField("Clusters Generation Seed", clusterGenerationSeed);
-                stepBasedDispersion = EditorGUILayout.Toggle("Step Based Dispersion", stepBasedDispersion);
-                if(!stepBasedDispersion) {
-                    clusterDispersion = EditorGUILayout.IntField("Dispersion", clusterDispersion);
+                useLegasyClustersGeneration = EditorGUILayout.Toggle("Legacy Clusters", useLegasyClustersGeneration);
+                if(useLegasyClustersGeneration) {
+                    clusterVoxelsStep = EditorGUILayout.IntField("Clusters Voxels Step", clusterVoxelsStep);
+                    clusterGenerationSeed = EditorGUILayout.IntField("Clusters Generation Seed", clusterGenerationSeed);
+                    stepBasedDispersion = EditorGUILayout.Toggle("Step Based Dispersion", stepBasedDispersion);
+                    if(!stepBasedDispersion) {
+                        clusterDispersion = EditorGUILayout.IntField("Dispersion", clusterDispersion);
+                    }
+                } else {
+                    clusterMaxVoxels = EditorGUILayout.IntField("Max Voxels Per Cluster", clusterMaxVoxels);
                 }
             }
             EditorGUILayout.LabelField("Import .vox file");
@@ -160,7 +168,6 @@ namespace VoxelEngine.Editor
                     if(clusterize) {
                         CreatePartialClusterizedGameObject(rawVoxelsDatas, assetName);
                     } else {
-                        EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", 0.5f);
                         var assetsDatas = GenerateAssets(assetName, rawVoxelsDatas);
                         CreateGameObject(assetsDatas);
                     }
@@ -175,12 +182,17 @@ namespace VoxelEngine.Editor
         private void CreatePartialClusterizedGameObject(List<RawVoxelsData> rawVoxelsDatas, string assetName) {
             GameObject parentObject = null;
             var generatePartIndex = rawVoxelsDatas.Count > 1;
-            
+
             for(int partIndex = 0; partIndex < rawVoxelsDatas.Count; partIndex++) {
-                var clusters = GenerateClusters(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsDatas[partIndex]);
+                
+                var clusters = useLegasyClustersGeneration ? 
+                    GenerateClustersLeagcy(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsDatas[partIndex]) : 
+                    GenerateClusters(clusterMaxVoxels, rawVoxelsDatas[partIndex]);
+                
                 var clustersAssetsData = new List<GeneratedAssetsData>();
-                EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", (float)partIndex / rawVoxelsDatas.Count);
+               
                 for(int i = 0; i < clusters.Length; i++) {
+                    EditorUtility.DisplayProgressBar("Importing .vox file", "Importing", ((float) (i + 1) / clusters.Length)/rawVoxelsDatas.Count);
                     RecalculateClusterPivot(clusters[i]);
                     var assetData = GenerateAssets(assetName, clusters[i], generatePartIndex ? partIndex : -1, i);
                     clustersAssetsData.Add(assetData);
@@ -391,7 +403,7 @@ namespace VoxelEngine.Editor
                 MeshUtility.Optimize(generatedMesh);
                 MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
             }
-            
+
             var bytes = NativeArray3dSerializer.Serialize(data, compress);
 
             var assetParentFolderName = originalAssetName;
@@ -482,7 +494,7 @@ namespace VoxelEngine.Editor
             }
         }
 
-        private RawVoxelsData[] GenerateClusters(int clusterStep, int seed, RawVoxelsData voxelsData) {
+        private RawVoxelsData[] GenerateClustersLeagcy(int clusterStep, int seed, RawVoxelsData voxelsData) {
             Random.InitState(seed);
             var size = voxelsData.Size;
             Vector3Int boxSize = new Vector3Int(size.x, size.y, size.z);
@@ -531,6 +543,31 @@ namespace VoxelEngine.Editor
             }
 
             return clusters.Values.ToArray();
+        }
+
+        private RawVoxelsData[] GenerateClusters(int maxVoxels, RawVoxelsData voxelsData) {
+            var size = voxelsData.Size;
+            var voxelsArray = new NativeArray3d<int>(size.x, size.y, size.z);
+            foreach(RawVoxelData voxel in voxelsData.Voxels) {
+                voxelsArray[voxel.X, voxel.Y, voxel.Z] = voxel.Color;
+            }
+            var clusters = new List<RawVoxelsData>();
+            var clusterTraceJobsScheduler = new TraceVoxelsClusterJobsScheduler();
+
+            for(int i = 0; i < voxelsArray.SizeX; i++) {
+                for(int j = 0; j < voxelsArray.SizeY; j++) {
+                    for(int k = 0; k < voxelsArray.SizeZ; k++) {
+                        if(voxelsArray[i, j, k] != 0) {
+                            var cluster = new RawVoxelsData();
+                            clusters.Add(cluster);
+                            clusterTraceJobsScheduler.Run(cluster, voxelsArray, i, j, k, maxVoxels);
+                        }
+                    }
+                }
+            }
+
+            voxelsArray.Dispose();
+            return clusters.ToArray();
         }
     }
 }
