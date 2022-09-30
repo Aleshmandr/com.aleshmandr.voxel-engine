@@ -23,6 +23,7 @@ namespace VoxelEngine.Editor
             loadOnStartProperty = serializedObject.FindProperty("loadOnStart");
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
+            voxelsContainer.Data.Dispose();
             voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
         }
 

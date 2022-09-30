@@ -5,6 +5,10 @@ using Unity.Jobs;
 using UnityEngine;
 using VoxelEngine.Jobs;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace VoxelEngine
 {
     [ExecuteInEditMode] [RequireComponent(typeof(MeshFilter))] [RequireComponent(typeof(MeshRenderer))]
@@ -169,6 +173,13 @@ namespace VoxelEngine
         }
 
 #if UNITY_EDITOR
+        
+        public void EditorEnableLoadOnStart() {
+            loadOnStart = true;
+            updateMeshFilterOnStart = true;
+            EditorUtility.SetDirty(this);
+        }
+        
         private async void OnEditorStart() {
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
             if(MeshFilter.sharedMesh != null || !loadOnStart) {

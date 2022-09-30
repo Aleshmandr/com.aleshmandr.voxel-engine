@@ -120,6 +120,7 @@ namespace VoxelEngine.Editor
         };
 
         private bool compress = true;
+        private bool generateMeshAssets;
         private bool clusterize;
         private int clusterVoxelsStep = 20;
         private bool stepBasedDispersion = true;
@@ -137,6 +138,7 @@ namespace VoxelEngine.Editor
 
             compress = EditorGUILayout.Toggle("Compress", compress);
             clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
+            generateMeshAssets = EditorGUILayout.Toggle("Generate Mesh Assets", generateMeshAssets);
             if(clusterize) {
                 clusterVoxelsStep = EditorGUILayout.IntField("Clusters Voxels Step", clusterVoxelsStep);
                 clusterGenerationSeed = EditorGUILayout.IntField("Clusters Generation Seed", clusterGenerationSeed);
@@ -383,9 +385,13 @@ namespace VoxelEngine.Editor
                 data[rawData.Voxels[i].X, rawData.Voxels[i].Z, rawData.Voxels[i].Y] = rawData.Voxels[i].Color;
             }
 
-            var generatedMesh = Utilities.GenerateMesh(data);
-            MeshUtility.Optimize(generatedMesh);
-            MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
+            Mesh generatedMesh = null;
+            if(generateMeshAssets) {
+                generatedMesh = Utilities.GenerateMesh(data);
+                MeshUtility.Optimize(generatedMesh);
+                MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
+            }
+            
             var bytes = NativeArray3dSerializer.Serialize(data, compress);
 
             var assetParentFolderName = originalAssetName;
@@ -403,7 +409,9 @@ namespace VoxelEngine.Editor
                 Directory.CreateDirectory(assetDirectoryPath);
             }
             File.WriteAllBytes($"{assetDirectoryPath}/{assetName}.bytes", bytes);
-            AssetDatabase.CreateAsset(generatedMesh, $"Assets/{localAssetDirectory}/{assetName}.asset");
+            if(generatedMesh != null) {
+                AssetDatabase.CreateAsset(generatedMesh, $"Assets/{localAssetDirectory}/{assetName}.asset");
+            }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -469,6 +477,9 @@ namespace VoxelEngine.Editor
             gameObject.AddComponent<MeshCollider>().sharedMesh = assetsData.MeshAsset;
             var container = gameObject.AddComponent<VoxelsContainer>();
             container.Asset = assetsData.DataAsset;
+            if(assetsData.MeshAsset == null) {
+                container.EditorEnableLoadOnStart();
+            }
         }
 
         private RawVoxelsData[] GenerateClusters(int clusterStep, int seed, RawVoxelsData voxelsData) {
