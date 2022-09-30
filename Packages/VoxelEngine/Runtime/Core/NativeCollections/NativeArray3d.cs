@@ -9,6 +9,7 @@ namespace VoxelEngine
         public readonly int SizeX;
         public readonly int SizeY;
         public readonly int SizeZ;
+        private readonly int Size;
 
         public NativeArray<T> NativeArray;
 
@@ -21,20 +22,23 @@ namespace VoxelEngine
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
-            NativeArray = new NativeArray<T>(sizeX * sizeY * sizeZ, Allocator.Persistent);
+            Size = sizeX * sizeY * sizeZ;
+            NativeArray = new NativeArray<T>(Size, Allocator.Persistent);
         }
         
         public NativeArray3d(int sizeX, int sizeY, int sizeZ, T[] array) {
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
-            NativeArray = new NativeArray<T>(sizeX * sizeY * sizeZ, Allocator.Persistent);
+            Size = sizeX * sizeY * sizeZ;
+            NativeArray = new NativeArray<T>(array, Allocator.Persistent);
         }
         
         public NativeArray3d(int sizeX, int sizeY, int sizeZ, NativeArray<T> array) {
             SizeX = sizeX;
             SizeY = sizeY;
             SizeZ = sizeZ;
+            Size = sizeX * sizeY * sizeZ;
             NativeArray = array;
         }
 
