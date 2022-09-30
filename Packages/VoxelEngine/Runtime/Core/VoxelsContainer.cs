@@ -26,9 +26,9 @@ namespace VoxelEngine
         private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
         private CancellationTokenSource colliderUpdateCts;
-        private const float ColliderUpdateCooldown = 0.2f;//TODO: Move to global config
+        private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
-        
+
         public MeshRenderer MeshRenderer
         { get {
             if(meshRenderer == null) {
@@ -36,7 +36,7 @@ namespace VoxelEngine
             }
             return meshRenderer;
         } }
-        
+
         private MeshFilter MeshFilter
         { get {
             if(meshFilter == null) {
@@ -44,7 +44,7 @@ namespace VoxelEngine
             }
             return meshFilter;
         } }
-        
+
         public bool IsInitialized { get; private set; }
 
         private async void Start() {
@@ -64,8 +64,16 @@ namespace VoxelEngine
 
         private void OnDestroy() {
             Data.Dispose();
-            if (dynamicMesh != null) {
-                Object.Destroy(dynamicMesh);
+            if(dynamicMesh != null) {
+#if UNITY_EDITOR
+                if(Application.isPlaying) {
+                    Destroy(dynamicMesh);
+                } else {
+                    DestroyImmediate(dynamicMesh);
+                }
+#else
+                Destroy(dynamicMesh);
+#endif
             }
             isDestroyed = true;
             colliderUpdateCts?.Cancel();
@@ -87,7 +95,7 @@ namespace VoxelEngine
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
                 meshCollider = gameObject.AddComponent<MeshCollider>();
             }
-            
+
             if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel();
                 if(dynamicMesh.vertexCount > 0) {
@@ -97,16 +105,16 @@ namespace VoxelEngine
                         meshIds[0] = dynamicMesh.GetInstanceID();
                         bakeMeshJobHandle = new BakeMeshJob {
                             MeshIds = meshIds, Convex = meshCollider.convex
-                        }.Schedule(1,1, bakeMeshJobHandle);
+                        }.Schedule(1, 1, bakeMeshJobHandle);
                         bakeMeshJobHandle.Complete();
                     }
-                    
+
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
                 } else {
                     meshCollider.enabled = false;
                 }
-            } else if(colliderUpdateCts == null){
+            } else if(colliderUpdateCts == null) {
                 colliderUpdateCts = new CancellationTokenSource();
                 await UpdateColliderAsync(colliderUpdateCts.Token);
             }
@@ -128,12 +136,12 @@ namespace VoxelEngine
                     meshIds[0] = MeshFilter.sharedMesh.GetInstanceID();
                     bakeMeshJobHandle = new BakeMeshJob {
                         MeshIds = meshIds, Convex = meshCollider.convex
-                    }.Schedule(1,1, bakeMeshJobHandle);
+                    }.Schedule(1, 1, bakeMeshJobHandle);
 
                     while(!bakeMeshJobHandle.IsCompleted) {
                         await Task.Yield();
                     }
-                
+
                     if(cancellationToken.IsCancellationRequested) {
                         return;
                     }
@@ -173,13 +181,13 @@ namespace VoxelEngine
         }
 
 #if UNITY_EDITOR
-        
+
         public void EditorEnableLoadOnStart() {
             loadOnStart = true;
             updateMeshFilterOnStart = true;
             EditorUtility.SetDirty(this);
         }
-        
+
         private async void OnEditorStart() {
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
             if(MeshFilter.sharedMesh != null || !loadOnStart) {
