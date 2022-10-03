@@ -92,8 +92,16 @@ namespace VoxelEngine
             if(updateMeshFilter) {
                 MeshFilter.mesh = dynamicMesh;
             }
+
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
+#if UNITY_EDITOR
+                if(Application.isPlaying) {
+                    return;
+                }
                 meshCollider = gameObject.AddComponent<MeshCollider>();
+#else
+                return;
+#endif
             }
 
             if(forceUpdateCollider) {
