@@ -137,27 +137,22 @@ namespace VoxelEngine.Jobs
                                 vertices.Add(new Vector3(x + maxX, y - 1, z + maxZ));
                                 vertices.Add(new Vector3(x - 1, y - 1, z - 1));
                                 vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
+                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
 
                                 // Add triangle indices
                                 triangles.Add(idx + 2);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx);
-
-                                idx = vertices.Length;
-
-                                vertices.Add(new Vector3(x + maxX, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-
-                                triangles.Add(idx + 2);
+                                
                                 triangles.Add(idx + 1);
+                                triangles.Add(idx + 3);
                                 triangles.Add(idx);
 
-                                for(int n = 0; n < 6; n++) {
+                                for(int n = 0; n < 4; n++) {
                                     colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
+                                                           255
                                                ));
                                 }
                             }
@@ -204,28 +199,22 @@ namespace VoxelEngine.Jobs
                                 vertices.Add(new Vector3(x + maxX, y, z + maxZ));
                                 vertices.Add(new Vector3(x - 1, y, z - 1));
                                 vertices.Add(new Vector3(x - 1, y, z + maxZ));
+                                vertices.Add(new Vector3(x + maxX, y, z - 1));
 
                                 // Add triangle indices
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
 
-                                idx = vertices.Length;
-
-                                vertices.Add(new Vector3(x + maxX, y, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y, z - 1));
-                                vertices.Add(new Vector3(x - 1, y, z - 1));
-
-
                                 triangles.Add(idx);
+                                triangles.Add(idx + 3);
                                 triangles.Add(idx + 1);
-                                triangles.Add(idx + 2);
 
-                                for(int n = 0; n < 6; n++) {
+                                for(int n = 0; n < 4; n++) {
                                     colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
+                                                           255
                                                ));
                                 }
                             }
@@ -272,27 +261,21 @@ namespace VoxelEngine.Jobs
                                 vertices.Add(new Vector3(x + maxX, y + maxY, z - 1));
                                 vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
                                 vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-
-                                triangles.Add(idx);
-                                triangles.Add(idx + 1);
-                                triangles.Add(idx + 2);
-
-                                idx = vertices.Length;
-
-
-                                vertices.Add(new Vector3(x + maxX, y + maxY, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
                                 vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
+                                
+                                triangles.Add(idx + 3);
+                                triangles.Add(idx);
+                                triangles.Add(idx + 2);
 
-                                for(int n = 0; n < 6; n++) {
+                                for(int n = 0; n < 4; n++) {
                                     colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
+                                                           255
                                                ));
                                 }
                             }
@@ -339,26 +322,21 @@ namespace VoxelEngine.Jobs
                                 vertices.Add(new Vector3(x + maxX, y + maxY, z));
                                 vertices.Add(new Vector3(x - 1, y + maxY, z));
                                 vertices.Add(new Vector3(x + maxX, y - 1, z));
-
-                                triangles.Add(idx);
-                                triangles.Add(idx + 1);
-                                triangles.Add(idx + 2);
-
-                                idx = vertices.Length;
-                                vertices.Add(new Vector3(x - 1, y + maxY, z));
                                 vertices.Add(new Vector3(x - 1, y - 1, z));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z));
 
-                                // Add triangle indices
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
+                                
+                                triangles.Add(idx + 1);
+                                triangles.Add(idx + 3);
+                                triangles.Add(idx + 2);
 
-                                for(int n = 0; n < 6; n++) {
+                                for(int n = 0; n < 4; n++) {
                                     colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
+                                                           255
                                                ));
                                 }
                             }
@@ -409,23 +387,18 @@ namespace VoxelEngine.Jobs
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
-
-                                idx = vertices.Length;
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z + maxZ));
+                                
                                 vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
-
-                                // Add triangle indices
+                                
+                                triangles.Add(idx + 3);
                                 triangles.Add(idx);
-                                triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
 
-
-                                for(int n = 0; n < 6; n++) {
+                                for(int n = 0; n < 4; n++) {
                                     colors.Add(new Color32((byte)((Voxels[indexXYZ] >> 24) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 16) & 0xFF),
                                                            (byte)((Voxels[indexXYZ] >> 8) & 0xFF),
-                                                           (byte)255
+                                                           255
                                                ));
                                 }
                             }
@@ -471,22 +444,18 @@ namespace VoxelEngine.Jobs
                                 vertices.Add(new Vector3(x, y - 1, z - 1));
                                 vertices.Add(new Vector3(x, y + maxY, z + maxZ));
                                 vertices.Add(new Vector3(x, y - 1, z + maxZ));
-                                triangles.Add(idx);
-                                triangles.Add(idx + 1);
-                                triangles.Add(idx + 2);
-
-                                idx = vertices.Length;
-                                vertices.Add(new Vector3(x, y + maxY, z + maxZ));
-                                vertices.Add(new Vector3(x, y - 1, z - 1));
                                 vertices.Add(new Vector3(x, y + maxY, z - 1));
-
-                                // Add triangle indices
+                                
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
+                                
+                                triangles.Add(idx);
+                                triangles.Add(idx + 3);
+                                triangles.Add(idx + 1);
 
-                                for(int n = 0; n < 6; n++) {
-                                    colors.Add(Utilities.VoxelColor(Voxels[indexXYZ] ));
+                                for(int n = 0; n < 4; n++) {
+                                    colors.Add(Utilities.VoxelColor(Voxels[indexXYZ]));
                                 }
                             }
                         }
