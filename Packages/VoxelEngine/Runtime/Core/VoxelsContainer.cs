@@ -37,7 +37,7 @@ namespace VoxelEngine
             return meshRenderer;
         } }
 
-        private MeshFilter MeshFilter
+        public MeshFilter MeshFilter
         { get {
             if(meshFilter == null) {
                 meshFilter = GetComponent<MeshFilter>();

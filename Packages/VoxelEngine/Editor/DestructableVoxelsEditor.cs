@@ -11,12 +11,14 @@ namespace VoxelEngine.Editor
         private SerializedProperty collapseThreshProperty;
         private SerializedProperty makePhysicalOnCollapseProperty;
         private SerializedProperty interpolationProperty;
+        private SerializedProperty destructionColliderProperty;
     
         private void OnEnable() {
             voxelContainerProperty = serializedObject.FindProperty("voxelsContainer");
             collapseThreshProperty = serializedObject.FindProperty("collapsePercentsThresh");
             makePhysicalOnCollapseProperty = serializedObject.FindProperty("makePhysicalOnCollapse");
             interpolationProperty = serializedObject.FindProperty("interpolation");
+            destructionColliderProperty = serializedObject.FindProperty("destructionCollider");
         }
 
         public override void OnInspectorGUI() {
@@ -26,6 +28,9 @@ namespace VoxelEngine.Editor
             if(makePhysicalOnCollapseProperty.boolValue) {
                 collapseThreshProperty.floatValue = EditorGUILayout.Slider(collapseThreshProperty.displayName, collapseThreshProperty.floatValue, 0f, 100f);
                 EditorGUILayout.PropertyField(interpolationProperty);
+
+                var destructionColliderType = (DestructionColliderType) destructionColliderProperty.enumValueIndex;
+                destructionColliderProperty.enumValueIndex = (int)(DestructionColliderType) EditorGUILayout.EnumPopup(destructionColliderProperty.displayName, destructionColliderType);
             }
             serializedObject.ApplyModifiedProperties();
         }

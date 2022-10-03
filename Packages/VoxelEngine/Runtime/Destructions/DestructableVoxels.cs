@@ -13,7 +13,8 @@ namespace VoxelEngine.Destructions
         [SerializeField] private VoxelsContainer voxelsContainer;
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
-        [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.Interpolate;
+        [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.None;
+        [SerializeField] private DestructionColliderType destructionCollider = DestructionColliderType.Box;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
@@ -141,11 +142,8 @@ namespace VoxelEngine.Destructions
 
         private void MakePhysical() {
             UnRoot();
-            MeshCollider meshCollider = GetComponent<MeshCollider>();
-            if(meshCollider != null) {
-                meshCollider.convex = true;
-            }
-
+            GenerateDestructionCollider();
+          
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
@@ -164,6 +162,26 @@ namespace VoxelEngine.Destructions
             var root = transform.GetComponentInParent<DestructableVoxelsRoot>();
             if(root != null) {
                 transform.SetParent(root.transform.parent);
+            }
+        }
+
+        private void GenerateDestructionCollider() {
+            MeshCollider meshCollider = GetComponent<MeshCollider>();
+            switch(destructionCollider) {
+                case DestructionColliderType.Box:
+                    if(meshCollider != null) {
+                        Destroy(meshCollider);
+                    }
+                    var boxCollider = gameObject.AddComponent<BoxCollider>();
+                    var mesh = voxelsContainer.MeshFilter.sharedMesh;
+                    boxCollider.center = mesh.bounds.center;
+                    boxCollider.size = mesh.bounds.size;
+                    break;
+                default:
+                    if(meshCollider != null) {
+                        meshCollider.convex = true;
+                    }
+                    break;
             }
         }
 
