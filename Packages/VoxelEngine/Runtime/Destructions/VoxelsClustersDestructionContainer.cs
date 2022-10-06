@@ -141,7 +141,7 @@ namespace VoxelEngine.Destructions
                 if(cancellationToken.IsCancellationRequested) {
                     return;
                 }
-                if(result) {
+                if(result || i >= connectionsData.Connections.Count) {
                     continue;
                 }
                 var notConnectedCluster = connectionsData.Connections[i];
