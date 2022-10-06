@@ -40,7 +40,7 @@ namespace VoxelEngine.Destructions
                 connectionData.Root.IntegrityChanged += HandleClusterDamage;
             }
         }
-        
+
         private void OnDestroy() {
             lifetimeCts?.Cancel();
             foreach(var connectionData in connections) {
@@ -59,8 +59,7 @@ namespace VoxelEngine.Destructions
 
         public void BreakFixedConnections() {
             for(int i = 0; i < connections.Length; i++) {
-                if (connections[i].IsFixed)
-                {
+                if(connections[i].IsFixed) {
                     connections[i].IsFixed = false;
                     connections[i].Root.Collapse();
                 }
@@ -85,7 +84,7 @@ namespace VoxelEngine.Destructions
                 CheckStructureAsync(connectionsData, lifetimeCts.Token);
                 return;
             }
-            
+
             if(updateConnectionsInRuntime) {
                 if(!connectionsCheckQueue.Contains(cluster)) {
                     UpdateConnections(cluster, lifetimeCts.Token);
@@ -103,12 +102,12 @@ namespace VoxelEngine.Destructions
             integrityCheckQueue.Add(cluster);
             await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
             integrityCheckQueue.Remove(cluster);
-            
+
             var isIntegral = await integrityJobsScheduler.Run(cluster.VoxelsContainer.Data, cluster.VoxelsCount);
             if(cancellationToken.IsCancellationRequested) {
                 return;
             }
-            
+
             if(!isIntegral) {
                 cluster.Collapse();
             }
@@ -119,7 +118,7 @@ namespace VoxelEngine.Destructions
             await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
 
             await UpdateConnectionsAsync(cluster, cancellationToken);
-            
+
             if(cancellationToken.IsCancellationRequested) {
                 return;
             }
@@ -129,27 +128,28 @@ namespace VoxelEngine.Destructions
 
         private async Task UpdateConnectionsAsync(DestructableVoxels cluster, CancellationToken cancellationToken) {
             var connectionsData = GetClusterConnections(cluster);
-            for(int i = connectionsData.Connections.Count-1; i >=0; i--) {
+            for(int i = connectionsData.Connections.Count - 1; i >= 0; i--) {
                 if(cluster.IsCollapsed) {
                     break;
                 }
-                if(connectionsData.Connections[i].IsCollapsed) {
+
+                if(i >= connectionsData.Connections.Count || connectionsData.Connections[i].IsCollapsed) {
                     continue;
                 }
-                
+
                 var result = await neighboursScheduler.Run(cluster, connectionsData.Connections[i], false);
                 if(cancellationToken.IsCancellationRequested) {
                     return;
                 }
                 if(result) {
-                   continue;
+                    continue;
                 }
                 var notConnectedCluster = connectionsData.Connections[i];
                 var notConnectedClusterConnectionsData = GetClusterConnections(notConnectedCluster);
                 notConnectedClusterConnectionsData.Connections.Remove(cluster);
                 connectionsData.Connections.RemoveAt(i);
             }
-            
+
             CheckStructureAsync(connectionsData, cancellationToken);
         }
 
@@ -157,7 +157,7 @@ namespace VoxelEngine.Destructions
             if(connectionsData == null) {
                 return;
             }
-            
+
             foreach(var neighbour in connectionsData.Connections) {
                 if(neighbour == null || neighbour.IsCollapsed) {
                     continue;
@@ -165,7 +165,7 @@ namespace VoxelEngine.Destructions
 
                 processedClusters.Clear();
                 processedClusters.Add(neighbour);
-                
+
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
                     await Task.Delay(ClusterDestructionDelayMilliseconds, cancellationToken);
                     if(cancellationToken.IsCancellationRequested) {
@@ -177,12 +177,12 @@ namespace VoxelEngine.Destructions
         }
 
         private bool CheckIfClusterConnected(DestructableVoxels cluster, List<DestructableVoxels> processedClusters) {
-            
+
             var connectionsData = GetClusterConnections(cluster);
             if(connectionsData == null) {
                 return false;
             }
-            
+
             if(connectionsData.IsFixed) {
                 return true;
             }
@@ -205,7 +205,7 @@ namespace VoxelEngine.Destructions
             return connectionsData != null && connectionsData.Connections.Contains(b);
         }
 
-        
+
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
@@ -312,20 +312,20 @@ namespace VoxelEngine.Destructions
         private bool CheckIfNeighboursFast(DestructableVoxels cluster, DestructableVoxels otherCluster) {
             var clusterVoxels = cluster.VoxelsContainer;
             var otherClusterVoxels = otherCluster.VoxelsContainer;
-            
+
             if(otherClusterVoxels == null || clusterVoxels == null) {
                 return false;
             }
 
             var clustersDelta = otherCluster.transform.localPosition - cluster.transform.localPosition;
 
-            var dx = clustersDelta.x > 0f ? clustersDelta.x - cluster.VoxelsContainer.Data.SizeX 
+            var dx = clustersDelta.x > 0f ? clustersDelta.x - cluster.VoxelsContainer.Data.SizeX
                 : Mathf.Abs(clustersDelta.x) - otherCluster.VoxelsContainer.Data.SizeX;
-            
-            var dy = clustersDelta.y > 0f ? clustersDelta.y - cluster.VoxelsContainer.Data.SizeY 
+
+            var dy = clustersDelta.y > 0f ? clustersDelta.y - cluster.VoxelsContainer.Data.SizeY
                 : Mathf.Abs(clustersDelta.y) - otherCluster.VoxelsContainer.Data.SizeY;
-            
-            var dz = clustersDelta.z > 0f ? clustersDelta.z - cluster.VoxelsContainer.Data.SizeZ 
+
+            var dz = clustersDelta.z > 0f ? clustersDelta.z - cluster.VoxelsContainer.Data.SizeZ
                 : Mathf.Abs(clustersDelta.z) - otherCluster.VoxelsContainer.Data.SizeZ;
 
             return dx < Epsilon && dy < Epsilon && dz < Epsilon;
@@ -341,7 +341,7 @@ namespace VoxelEngine.Destructions
             connectionsB.Connections.Add(a);
             EditorUtility.SetDirty(this);
         }
-        
+
         private DestructableVoxels[] GetClustersInChildren() {
             var result = new List<DestructableVoxels>();
             CollectClustersRecursive(transform, result);
