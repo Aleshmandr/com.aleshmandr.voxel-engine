@@ -209,8 +209,7 @@ namespace VoxelEngine.Destructions
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
-
-        [ContextMenu("Bake Connections (Low Precision)")]
+        
         public void BakeConnections() {
             EditorUtility.ClearProgressBar();
             var clusters = GetClustersInChildren();
