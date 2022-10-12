@@ -8,10 +8,19 @@ namespace VoxelEngine.Destructions
     [RequireComponent(typeof(VoxelsClustersDestructionContainer))][ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
+        [Serializable]
+        private struct JointData
+        {
+            [field: SerializeField] public float Radius { get; private set; }
+            [field: SerializeField] public Vector3 Center { get; private set; }
+        }
+        
         private const int CheckCollidersCount = 10;
         
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
+        [SerializeField] private JointData[] joints = new JointData[1];
+        
         [SerializeField] private bool parentOnlyMode = true;
         [NonSerialized] private VoxelsClustersDestructionContainer container;
         [NonSerialized] private Collider[] colliders;
@@ -42,14 +51,16 @@ namespace VoxelEngine.Destructions
             if(colliders == null || colliders.Length == 0) {
                 colliders = new Collider[CheckCollidersCount];
             }
-            
-            var pos = transform.TransformPoint(center);
-            var scaledRadius = radius * transform.lossyScale.x;
 
-            if(parentOnlyMode) {
-                JoinToParentContainer(pos, scaledRadius);
-            } else {
-                JoinToAllContainers(pos, scaledRadius);
+            for(int i = 0; i < joints.Length; i++) {
+                var pos = transform.TransformPoint(joints[i].Center);
+                var scaledRadius = joints[i].Radius * transform.lossyScale.x;
+                
+                if(parentOnlyMode) {
+                    JoinToParentContainer(pos, scaledRadius);
+                } else {
+                    JoinToAllContainers(pos, scaledRadius);
+                }
             }
         }
 
@@ -121,9 +132,15 @@ namespace VoxelEngine.Destructions
         private static readonly Color GizmoColor = new Color(0f, 1f, 0f, 0.5f);
 
         private void OnDrawGizmos() {
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.color = GizmoColor;
-            Gizmos.DrawSphere(center, radius);
+            if(joints == null) {
+                return;
+            }
+            
+            for(int i = 0; i < joints.Length; i++) {
+                Gizmos.matrix = transform.localToWorldMatrix;
+                Gizmos.color = GizmoColor;
+                Gizmos.DrawSphere(joints[i].Center, joints[i].Radius);
+            }
         }
   #endif
     }
