@@ -12,11 +12,11 @@ namespace VoxelEngine.Editor
         private SerializedProperty loadOnStartProperty;
         private SerializedProperty updateMeshOnStartProperty;
         private SerializedProperty useBakeJobProperty;
-        private const string CenterToParentIconName = "d_ToolHandleCenter@2x";
+        private const string CenterToParentIconName = "d_ToolHandleCenter";
 
         private void OnEnable() {
             voxelsContainer = target as VoxelsContainer;
-            if(voxelsContainer == null || voxelsContainer.Asset == null) {
+            if(voxelsContainer == null) {
                 return;
             }
             assetProperty = serializedObject.FindProperty("Asset");
@@ -24,7 +24,9 @@ namespace VoxelEngine.Editor
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
             voxelsContainer.Data.Dispose();
-            voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
+            if(voxelsContainer.Asset != null) {
+                voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
+            }
         }
 
         private void OnDisable() {
@@ -33,7 +35,7 @@ namespace VoxelEngine.Editor
 
         public override void OnInspectorGUI() {
             serializedObject.Update();
-            EditorGUILayout.PropertyField(assetProperty);
+            EditorGUILayout.ObjectField(assetProperty);
             loadOnStartProperty.boolValue = EditorGUILayout.Toggle(loadOnStartProperty.displayName, loadOnStartProperty.boolValue);
             if(loadOnStartProperty.boolValue) {
                 updateMeshOnStartProperty.boolValue = EditorGUILayout.Toggle(updateMeshOnStartProperty.displayName, updateMeshOnStartProperty.boolValue);
