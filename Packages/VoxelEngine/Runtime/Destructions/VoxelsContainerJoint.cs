@@ -26,8 +26,6 @@ namespace VoxelEngine.Destructions
 
         private const int CheckCollidersCount = 10;
 
-        [SerializeField] private float radius;
-        [SerializeField] private Vector3 center;
         [SerializeField] private JointData[] joints = new JointData[1];
 
         [SerializeField] private bool parentOnlyMode = true;
