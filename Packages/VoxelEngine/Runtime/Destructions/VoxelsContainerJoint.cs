@@ -12,6 +12,7 @@ namespace VoxelEngine.Destructions
         
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
+        [SerializeField] private bool parentOnlyMode = true;
         [NonSerialized] private VoxelsClustersDestructionContainer container;
         [NonSerialized] private Collider[] colliders;
         [NonSerialized] private DestructableVoxelsRoot root;
@@ -44,8 +45,16 @@ namespace VoxelEngine.Destructions
             
             var pos = transform.TransformPoint(center);
             var scaledRadius = radius * transform.lossyScale.x;
-            
-            var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, scaledRadius, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+
+            if(parentOnlyMode) {
+                JoinToParentContainer(pos, scaledRadius);
+            } else {
+                JoinToAllContainers(pos, scaledRadius);
+            }
+        }
+
+        private void JoinToParentContainer(Vector3 pos, float rad) {
+            var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
             var parentContainer = FindParentContainer();
             
             for(int i = 0; i < overlaps; i++) {
@@ -57,6 +66,23 @@ namespace VoxelEngine.Destructions
                             connectedClusters.Add(destructableVoxels);
                             destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
                         }
+                    } else {
+                        connectionData.IsFixed = true;
+                    }
+                }
+            }
+        }
+        
+        private void JoinToAllContainers(Vector3 pos, float rad) {
+            var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            
+            for(int i = 0; i < overlaps; i++) {
+                var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
+                if(destructableVoxels != null) {
+                    var connectionData = container.GetClusterConnections(destructableVoxels);
+                    if(connectionData == null) {
+                        connectedClusters.Add(destructableVoxels);
+                        destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
                     } else {
                         connectionData.IsFixed = true;
                     }
