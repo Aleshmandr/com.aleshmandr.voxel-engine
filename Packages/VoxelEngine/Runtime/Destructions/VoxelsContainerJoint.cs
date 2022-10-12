@@ -3,9 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace VoxelEngine.Destructions
 {
-    [RequireComponent(typeof(VoxelsClustersDestructionContainer))][ExecuteAlways]
+    [RequireComponent(typeof(VoxelsClustersDestructionContainer))] [ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
         [Serializable]
@@ -13,14 +17,19 @@ namespace VoxelEngine.Destructions
         {
             [field: SerializeField] public float Radius { get; private set; }
             [field: SerializeField] public Vector3 Center { get; private set; }
+
+            public JointData(float radius, Vector3 center) {
+                Radius = radius;
+                Center = center;
+            }
         }
-        
+
         private const int CheckCollidersCount = 10;
-        
+
         [SerializeField] private float radius;
         [SerializeField] private Vector3 center;
         [SerializeField] private JointData[] joints = new JointData[1];
-        
+
         [SerializeField] private bool parentOnlyMode = true;
         [NonSerialized] private VoxelsClustersDestructionContainer container;
         [NonSerialized] private Collider[] colliders;
@@ -55,7 +64,7 @@ namespace VoxelEngine.Destructions
             for(int i = 0; i < joints.Length; i++) {
                 var pos = transform.TransformPoint(joints[i].Center);
                 var scaledRadius = joints[i].Radius * transform.lossyScale.x;
-                
+
                 if(parentOnlyMode) {
                     JoinToParentContainer(pos, scaledRadius);
                 } else {
@@ -67,7 +76,7 @@ namespace VoxelEngine.Destructions
         private void JoinToParentContainer(Vector3 pos, float rad) {
             var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
             var parentContainer = FindParentContainer();
-            
+
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
                 if(destructableVoxels != null) {
@@ -83,10 +92,10 @@ namespace VoxelEngine.Destructions
                 }
             }
         }
-        
+
         private void JoinToAllContainers(Vector3 pos, float rad) {
             var overlaps = gameObject.scene.GetPhysicsScene().OverlapSphere(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
-            
+
             for(int i = 0; i < overlaps; i++) {
                 var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
                 if(destructableVoxels != null) {
@@ -135,12 +144,20 @@ namespace VoxelEngine.Destructions
             if(joints == null) {
                 return;
             }
-            
+
             for(int i = 0; i < joints.Length; i++) {
                 Gizmos.matrix = transform.localToWorldMatrix;
                 Gizmos.color = GizmoColor;
                 Gizmos.DrawSphere(joints[i].Center, joints[i].Radius);
             }
+        }
+
+        [ContextMenu("FixLegacyJount")]
+        public void FixLegacyJount() {
+            joints = new[] {
+                new JointData(radius, center)
+            };
+            EditorUtility.SetDirty(this.gameObject);
         }
   #endif
     }
