@@ -82,7 +82,7 @@ namespace VoxelEngine.Destructions
         private void HandleClusterDamage(DestructableVoxels cluster) {
             if(cluster.IsCollapsed) {
                 var connectionsData = GetClusterConnections(cluster);
-                CheckStructureAsync(connectionsData, lifetimeCts.Token).Forget();
+                CheckStructure(connectionsData, lifetimeCts.Token);
                 return;
             }
 
@@ -151,30 +151,35 @@ namespace VoxelEngine.Destructions
                 connectionsData.Connections.RemoveAt(i);
             }
 
-            CheckStructureAsync(connectionsData, cancellationToken).Forget();
+            CheckStructure(connectionsData, cancellationToken);
         }
 
-        private async UniTaskVoid CheckStructureAsync(ClustersConnectionData connectionsData, CancellationToken cancellationToken) {
+        private void CheckStructure(ClustersConnectionData connectionsData, CancellationToken cancellationToken) {
             if(connectionsData == null) {
                 return;
             }
 
-            foreach(var neighbour in connectionsData.Connections) {
+            for(int i = 0; i < connectionsData.Connections.Count; i++) {
+                var neighbour = connectionsData.Connections[i];
                 if(neighbour == null || neighbour.IsCollapsed) {
                     continue;
                 }
 
                 processedClusters.Clear();
                 processedClusters.Add(neighbour);
-
+                
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
-                    await UniTask.Delay(ClusterDestructionDelayMilliseconds, cancellationToken: cancellationToken);
-                    if(cancellationToken.IsCancellationRequested) {
-                        return;
-                    }
-                    neighbour.Collapse();
+                   CollapseWithDelayAsync(neighbour, cancellationToken).Forget();
                 }
             }
+        }
+
+        private async UniTaskVoid CollapseWithDelayAsync(DestructableVoxels neighbour, CancellationToken cancellationToken) {
+            await UniTask.Delay(ClusterDestructionDelayMilliseconds, cancellationToken: cancellationToken);
+            if(cancellationToken.IsCancellationRequested) {
+                return;
+            }
+            neighbour.Collapse();
         }
 
         private bool CheckIfClusterConnected(DestructableVoxels cluster, List<DestructableVoxels> processedClusters) {
