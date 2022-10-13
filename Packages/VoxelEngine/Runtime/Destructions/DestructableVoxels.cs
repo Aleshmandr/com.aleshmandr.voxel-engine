@@ -170,7 +170,11 @@ namespace VoxelEngine.Destructions
             switch(destructionCollider) {
                 case DestructionColliderType.Box:
                     if(meshCollider != null) {
+#if UNITY_EDITOR
+                        DestroyImmediate(meshCollider);
+#else
                         Destroy(meshCollider);
+#endif
                     }
                     var boxCollider = gameObject.AddComponent<BoxCollider>();
                     var mesh = voxelsContainer.MeshFilter.sharedMesh;
