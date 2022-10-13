@@ -1,5 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
+using System;
 using Unity.Collections;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
@@ -65,7 +65,7 @@ namespace VoxelEngine.Destructions
             IntegrityChanged?.Invoke(this);
         }
 
-        public async Task<NativeList<VoxelData>> RunDamageJob(Vector3 worldPoint, float radius, Allocator allocator) {
+        public async UniTask<NativeList<VoxelData>> RunDamageJob(Vector3 worldPoint, float radius, Allocator allocator) {
             int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
@@ -74,7 +74,7 @@ namespace VoxelEngine.Destructions
             var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
             VoxelsCount -= damageVoxels.Length;
 
-            voxelsContainer.RebuildMesh(true);
+            voxelsContainer.RebuildMesh(true).Forget();
             HandleVoxelsRemove();
 
             return damageVoxels;

@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -9,7 +9,7 @@ namespace VoxelEngine.Jobs
     {
         private JobHandle lastJobHandle;
 
-        public async Task<Mesh> Run(NativeArray3d<int> voxels, Mesh mesh = null) {
+        public async UniTask<Mesh> Run(NativeArray3d<int> voxels, Mesh mesh = null) {
 
             // Allocate mesh data for one mesh.
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
@@ -28,7 +28,7 @@ namespace VoxelEngine.Jobs
             lastJobHandle = jobHandle;
 
             while(!jobHandle.IsCompleted) {
-                await Task.Yield();
+                await UniTask.Yield();
             }
 
             jobHandle.Complete();

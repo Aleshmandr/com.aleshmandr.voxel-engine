@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Unity.Collections;
 using Unity.Jobs;
 
@@ -8,7 +8,7 @@ namespace VoxelEngine.Destructions.Jobs
     {
         private JobHandle lastJobHandle;
 
-        public async Task<bool> Run(DestructableVoxels clusterA, DestructableVoxels clusterB, bool waitPrevious) {
+        public async UniTask<bool> Run(DestructableVoxels clusterA, DestructableVoxels clusterB, bool waitPrevious) {
 
             var result = new NativeArray<bool>(1, Allocator.TempJob);
 
@@ -22,13 +22,12 @@ namespace VoxelEngine.Destructions.Jobs
                 ChunkTwoPos = clusterB.transform.localPosition,
                 Result = result
             };
-
             
             var jobHandle = lastJobHandle.IsCompleted || !waitPrevious ? job.Schedule() : job.Schedule(lastJobHandle);
             lastJobHandle = jobHandle;
 
             while(!jobHandle.IsCompleted) {
-                await Task.Yield();
+                await UniTask.Yield();
             }
 
             jobHandle.Complete();

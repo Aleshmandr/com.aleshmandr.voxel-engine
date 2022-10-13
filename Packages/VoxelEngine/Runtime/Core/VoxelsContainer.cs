@@ -1,5 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
+using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -76,14 +76,15 @@ namespace VoxelEngine
 #endif
             }
             isDestroyed = true;
-            colliderUpdateCts?.Cancel();
+            colliderUpdateCts?.Cancel(false);
+            colliderUpdateCts?.Dispose();
         }
 
-        public async Task Reload() {
+        public async UniTask Reload() {
             await Deserialize(Asset.bytes, true, true);
         }
 
-        public async Task RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
+        public async UniTask RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
             meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
@@ -105,7 +106,11 @@ namespace VoxelEngine
             }
 
             if(forceUpdateCollider) {
-                colliderUpdateCts?.Cancel();
+                
+                colliderUpdateCts?.Cancel(false);
+                colliderUpdateCts?.Dispose();
+                colliderUpdateCts = null;
+                
                 if(dynamicMesh.vertexCount > 0) {
 
                     if(useBakeJob) {
@@ -116,7 +121,7 @@ namespace VoxelEngine
                         }.Schedule(1, 1, bakeMeshJobHandle);
                         bakeMeshJobHandle.Complete();
                     }
-
+                    
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
                 } else {
@@ -128,10 +133,10 @@ namespace VoxelEngine
             }
         }
 
-        private async Task UpdateColliderAsync(CancellationToken cancellationToken) {
+        private async UniTask UpdateColliderAsync(CancellationToken cancellationToken) {
             var updateEndTime = Time.unscaledTime + ColliderUpdateCooldown;
             while(Time.unscaledTime < updateEndTime) {
-                await Task.Yield();
+                await UniTask.Yield();
                 if(cancellationToken.IsCancellationRequested) {
                     return;
                 }
@@ -147,7 +152,7 @@ namespace VoxelEngine
                     }.Schedule(1, 1, bakeMeshJobHandle);
 
                     while(!bakeMeshJobHandle.IsCompleted) {
-                        await Task.Yield();
+                        await UniTask.Yield();
                     }
 
                     if(cancellationToken.IsCancellationRequested) {
@@ -155,11 +160,18 @@ namespace VoxelEngine
                     }
                 }
 
-                meshCollider.sharedMesh = MeshFilter.sharedMesh;
-                meshCollider.enabled = true;
+                if(meshCollider != null) {
+                    meshCollider.sharedMesh = MeshFilter.sharedMesh;
+                    meshCollider.enabled = true;
+                }
             } else {
-                meshCollider.enabled = false;
+                if(meshCollider != null) {
+                    meshCollider.enabled = false;
+                }
             }
+            
+            colliderUpdateCts?.Cancel(false);
+            colliderUpdateCts?.Dispose();
             colliderUpdateCts = null;
         }
 
@@ -173,7 +185,7 @@ namespace VoxelEngine
                 && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
         }
 
-        public async Task Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
+        public async UniTask Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
             if(bytes == null) {
                 return;
             }

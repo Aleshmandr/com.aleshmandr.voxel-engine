@@ -2,12 +2,12 @@
 using UnityEditor;
 #endif
 
+using Cysharp.Threading.Tasks;
 using System;
 using Unity.Jobs;
 using VoxelEngine.Destructions.Jobs;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
 
@@ -42,7 +42,8 @@ namespace VoxelEngine.Destructions
         }
 
         private void OnDestroy() {
-            lifetimeCts?.Cancel();
+            lifetimeCts?.Cancel(false);
+            lifetimeCts?.Dispose();
             foreach(var connectionData in connections) {
                 connectionData.Root.IntegrityChanged -= HandleClusterDamage;
             }
@@ -81,26 +82,26 @@ namespace VoxelEngine.Destructions
         private void HandleClusterDamage(DestructableVoxels cluster) {
             if(cluster.IsCollapsed) {
                 var connectionsData = GetClusterConnections(cluster);
-                CheckStructureAsync(connectionsData, lifetimeCts.Token);
+                CheckStructureAsync(connectionsData, lifetimeCts.Token).Forget();
                 return;
             }
 
             if(updateConnectionsInRuntime) {
                 if(!connectionsCheckQueue.Contains(cluster)) {
-                    UpdateConnections(cluster, lifetimeCts.Token);
+                    UpdateConnections(cluster, lifetimeCts.Token).Forget();
                 }
             }
 
             if(updateIntegrityInRuntime) {
                 if(!integrityCheckQueue.Contains(cluster)) {
-                    UpdateIntegrity(cluster, lifetimeCts.Token);
+                    UpdateIntegrity(cluster, lifetimeCts.Token).Forget();
                 }
             }
         }
 
-        private async void UpdateIntegrity(DestructableVoxels cluster, CancellationToken cancellationToken) {
+        private async UniTask UpdateIntegrity(DestructableVoxels cluster, CancellationToken cancellationToken) {
             integrityCheckQueue.Add(cluster);
-            await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
+            await UniTask.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken: cancellationToken);
             integrityCheckQueue.Remove(cluster);
 
             var isIntegral = await integrityJobsScheduler.Run(cluster.VoxelsContainer.Data, cluster.VoxelsCount);
@@ -113,9 +114,9 @@ namespace VoxelEngine.Destructions
             }
         }
 
-        private async void UpdateConnections(DestructableVoxels cluster, CancellationToken cancellationToken) {
+        private async UniTask UpdateConnections(DestructableVoxels cluster, CancellationToken cancellationToken) {
             connectionsCheckQueue.Add(cluster);
-            await Task.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken);
+            await UniTask.Delay(TimeSpan.FromSeconds(connectionsUpdateDelay), cancellationToken: cancellationToken);
 
             await UpdateConnectionsAsync(cluster, cancellationToken);
 
@@ -126,7 +127,7 @@ namespace VoxelEngine.Destructions
             connectionsCheckQueue.Remove(cluster);
         }
 
-        private async Task UpdateConnectionsAsync(DestructableVoxels cluster, CancellationToken cancellationToken) {
+        private async UniTask UpdateConnectionsAsync(DestructableVoxels cluster, CancellationToken cancellationToken) {
             var connectionsData = GetClusterConnections(cluster);
             for(int i = connectionsData.Connections.Count - 1; i >= 0; i--) {
                 if(cluster.IsCollapsed) {
@@ -150,10 +151,10 @@ namespace VoxelEngine.Destructions
                 connectionsData.Connections.RemoveAt(i);
             }
 
-            CheckStructureAsync(connectionsData, cancellationToken);
+            CheckStructureAsync(connectionsData, cancellationToken).Forget();
         }
 
-        private async void CheckStructureAsync(ClustersConnectionData connectionsData, CancellationToken cancellationToken) {
+        private async UniTaskVoid CheckStructureAsync(ClustersConnectionData connectionsData, CancellationToken cancellationToken) {
             if(connectionsData == null) {
                 return;
             }
@@ -167,7 +168,7 @@ namespace VoxelEngine.Destructions
                 processedClusters.Add(neighbour);
 
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
-                    await Task.Delay(ClusterDestructionDelayMilliseconds, cancellationToken);
+                    await UniTask.Delay(ClusterDestructionDelayMilliseconds, cancellationToken: cancellationToken);
                     if(cancellationToken.IsCancellationRequested) {
                         return;
                     }

@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -7,7 +7,7 @@ namespace VoxelEngine.Destructions.Jobs
 {
     public class VoxelsIntegrityJobsScheduler
     {
-        public async Task<bool> Run(NativeArray3d<int> voxels, int integralCount) {
+        public async UniTask<bool> Run(NativeArray3d<int> voxels, int integralCount) {
             var voxelsDataCopy = voxels.Copy(Allocator.TempJob);
             var result = new NativeArray<int>(1, Allocator.TempJob);
             var taskQueue = new NativeQueue<int3>(Allocator.TempJob);
@@ -21,7 +21,7 @@ namespace VoxelEngine.Destructions.Jobs
             var jobHandle = job.Schedule();
             
             while(!jobHandle.IsCompleted) {
-                await Task.Yield();
+                await UniTask.Yield();
             }
             
             jobHandle.Complete();
