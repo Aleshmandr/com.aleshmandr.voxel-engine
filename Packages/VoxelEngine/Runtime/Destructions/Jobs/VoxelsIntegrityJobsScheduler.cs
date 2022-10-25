@@ -8,9 +8,9 @@ namespace VoxelEngine.Destructions.Jobs
     public class VoxelsIntegrityJobsScheduler
     {
         public async UniTask<bool> Run(NativeArray3d<int> voxels, int integralCount) {
-            var voxelsDataCopy = voxels.Copy(Allocator.TempJob);
-            var result = new NativeArray<int>(1, Allocator.TempJob);
-            var taskQueue = new NativeQueue<int3>(Allocator.TempJob);
+            var voxelsDataCopy = voxels.Copy(Allocator.Persistent);
+            var result = new NativeArray<int>(1, Allocator.Persistent);
+            var taskQueue = new NativeQueue<int3>(Allocator.Persistent);
             
             var job = new CheckVoxelsChunksIntegrityJob {
                 Voxels = voxelsDataCopy,

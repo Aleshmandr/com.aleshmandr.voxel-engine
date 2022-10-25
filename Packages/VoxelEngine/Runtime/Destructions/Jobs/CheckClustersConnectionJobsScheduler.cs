@@ -10,10 +10,10 @@ namespace VoxelEngine.Destructions.Jobs
 
         public async UniTask<bool> Run(DestructableVoxels clusterA, DestructableVoxels clusterB, bool waitPrevious) {
 
-            var result = new NativeArray<bool>(1, Allocator.TempJob);
+            var result = new NativeArray<bool>(1, Allocator.Persistent);
 
-            var clusterADataCopy = clusterA.VoxelsContainer.Data.Copy(Allocator.TempJob);
-            var clusterBDataCopy = clusterB.VoxelsContainer.Data.Copy(Allocator.TempJob);
+            var clusterADataCopy = clusterA.VoxelsContainer.Data.Copy(Allocator.Persistent);
+            var clusterBDataCopy = clusterB.VoxelsContainer.Data.Copy(Allocator.Persistent);
 
             var job = new CheckClustersConnectionJob {
                 ChunkOneData = clusterADataCopy,
