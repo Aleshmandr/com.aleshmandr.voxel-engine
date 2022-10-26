@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 using VoxelEngine.Destructions;
@@ -8,9 +9,11 @@ namespace VoxelEngine.Editor
     [CanEditMultipleObjects]
     public class VoxelsContainerJointEditor : UnityEditor.Editor
     {
+        private const float HandlesScale = 0.6f;
         private VoxelsContainerJoint joint;
         private SerializedProperty jointsProperty;
         private SerializedProperty parentOnlyModeProperty;
+        private JointData[] joints;
 
         private void OnEnable() {
             joint = target as VoxelsContainerJoint;
@@ -19,6 +22,7 @@ namespace VoxelEngine.Editor
             }
             jointsProperty = serializedObject.FindProperty("joints");
             parentOnlyModeProperty = serializedObject.FindProperty("parentOnlyMode");
+            joints = joint.GetJointsEditor();
         }
 
         public override void OnInspectorGUI() {
@@ -31,6 +35,28 @@ namespace VoxelEngine.Editor
                 joint.FixJoint();
             }
             GUILayout.EndHorizontal();
+        }
+
+        private void OnSceneGUI() {
+            if(joint == null) {
+                return;
+            }
+            EditorGUI.BeginChangeCheck();
+            var startMatrix = Handles.matrix;
+            Handles.matrix = Matrix4x4.Scale(Vector3.one * HandlesScale) * startMatrix;
+            for(int i = 0; i < joints.Length; i++) {
+
+                var j = joints[i];
+                var jointPos = joint.transform.TransformPoint(j.Center);
+
+                Vector3 newJointPos = Handles.PositionHandle(jointPos / HandlesScale, joint.transform.rotation) *  HandlesScale;
+                if(EditorGUI.EndChangeCheck()) {
+                    Undo.RecordObject(joint, "Change Joint");
+                    joints[i] = new JointData(j.Radius, joint.transform.InverseTransformPoint(newJointPos));
+                }
+
+            }
+            Handles.matrix = startMatrix;
         }
     }
 }

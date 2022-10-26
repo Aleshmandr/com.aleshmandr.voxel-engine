@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace VoxelEngine.Destructions
@@ -8,18 +9,6 @@ namespace VoxelEngine.Destructions
     [RequireComponent(typeof(VoxelsClustersDestructionContainer))] [ExecuteAlways]
     public class VoxelsContainerJoint : MonoBehaviour
     {
-        [Serializable]
-        private struct JointData
-        {
-            [field: SerializeField] public float Radius { get; private set; }
-            [field: SerializeField] public Vector3 Center { get; private set; }
-
-            public JointData(float radius, Vector3 center) {
-                Radius = radius;
-                Center = center;
-            }
-        }
-
         private const int CheckCollidersCount = 10;
 
         [SerializeField] private JointData[] joints = new JointData[1];
@@ -133,6 +122,10 @@ namespace VoxelEngine.Destructions
 
 #if UNITY_EDITOR
         private static readonly Color GizmoColor = new Color(0f, 1f, 0f, 0.5f);
+
+        public JointData[] GetJointsEditor() {
+            return joints;
+        }
 
         private void OnDrawGizmos() {
             if(joints == null) {
