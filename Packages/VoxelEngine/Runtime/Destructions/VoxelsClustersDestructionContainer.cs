@@ -37,6 +37,10 @@ namespace VoxelEngine.Destructions
             processedClusters = new List<DestructableVoxels>();
             integrityJobsScheduler = new VoxelsIntegrityJobsScheduler();
             foreach(var connectionData in connections) {
+                if(connectionData.Root == null) {
+                    Debug.LogError($"Connection root is null: {gameObject.name}");
+                    continue;
+                }
                 connectionData.Root.IntegrityChanged += HandleClusterDamage;
             }
         }
@@ -45,6 +49,9 @@ namespace VoxelEngine.Destructions
             lifetimeCts?.Cancel(false);
             lifetimeCts?.Dispose();
             foreach(var connectionData in connections) {
+                if(connectionData.Root == null) {
+                    continue;
+                }
                 connectionData.Root.IntegrityChanged -= HandleClusterDamage;
             }
         }
@@ -167,9 +174,9 @@ namespace VoxelEngine.Destructions
 
                 processedClusters.Clear();
                 processedClusters.Add(neighbour);
-                
+
                 if(!CheckIfClusterConnected(neighbour, processedClusters)) {
-                   CollapseWithDelayAsync(neighbour, cancellationToken).Forget();
+                    CollapseWithDelayAsync(neighbour, cancellationToken).Forget();
                 }
             }
         }
@@ -215,7 +222,7 @@ namespace VoxelEngine.Destructions
 #if UNITY_EDITOR
 
         private const float Epsilon = 0.01f;
-        
+
         public void BakeConnections() {
             EditorUtility.ClearProgressBar();
             var clusters = GetClustersInChildren();
