@@ -263,7 +263,6 @@ namespace VoxelEngine.Destructions
             }
         }
 
-        [ContextMenu("Bake Connections (High Precision)")]
         public void BakeConnectionsWithJobs() {
             EditorUtility.ClearProgressBar();
             var clusters = GetClustersInChildren();

@@ -122,12 +122,10 @@ namespace VoxelEngine.Editor
         private bool compress = true;
         private bool generateMeshAssets;
         private bool clusterize;
-        private int clusterVoxelsStep = 20;
         private int clusterMaxVoxels = 2400;
-        private bool useLegasyClustersGeneration;
+        private bool optimizeVertices;
         private bool stepBasedDispersion = true;
         private int clusterDispersion;
-        private int clusterGenerationSeed = 12345;
 
         [MenuItem("Tools/VoxelEngine/Magica Voxel Importer (.vox)", false)]
         public static void ShowWindow() {
@@ -141,19 +139,11 @@ namespace VoxelEngine.Editor
             compress = EditorGUILayout.Toggle("Compress", compress);
             clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
             generateMeshAssets = EditorGUILayout.Toggle("Generate Mesh Assets", generateMeshAssets);
-
+            if(generateMeshAssets) {
+                optimizeVertices = EditorGUILayout.Toggle("Optimize Vertices", optimizeVertices);
+            }
             if(clusterize) {
-                useLegasyClustersGeneration = EditorGUILayout.Toggle("Legacy Clusters", useLegasyClustersGeneration);
-                if(useLegasyClustersGeneration) {
-                    clusterVoxelsStep = EditorGUILayout.IntField("Clusters Voxels Step", clusterVoxelsStep);
-                    clusterGenerationSeed = EditorGUILayout.IntField("Clusters Generation Seed", clusterGenerationSeed);
-                    stepBasedDispersion = EditorGUILayout.Toggle("Step Based Dispersion", stepBasedDispersion);
-                    if(!stepBasedDispersion) {
-                        clusterDispersion = EditorGUILayout.IntField("Dispersion", clusterDispersion);
-                    }
-                } else {
-                    clusterMaxVoxels = EditorGUILayout.IntField("Max Voxels Per Cluster", clusterMaxVoxels);
-                }
+                clusterMaxVoxels = EditorGUILayout.IntField("Max Voxels Per Cluster", clusterMaxVoxels);
             }
             EditorGUILayout.LabelField("Import .vox file");
             if(GUILayout.Button("Import")) {
@@ -185,9 +175,7 @@ namespace VoxelEngine.Editor
 
             for(int partIndex = 0; partIndex < rawVoxelsDatas.Count; partIndex++) {
                 
-                var clusters = useLegasyClustersGeneration ? 
-                    GenerateClustersLeagcy(clusterVoxelsStep, clusterGenerationSeed, rawVoxelsDatas[partIndex]) : 
-                    GenerateClusters(clusterMaxVoxels, rawVoxelsDatas[partIndex]);
+                var clusters = GenerateClusters(clusterMaxVoxels, rawVoxelsDatas[partIndex]);
                 
                 var clustersAssetsData = new List<GeneratedAssetsData>();
                
@@ -399,7 +387,7 @@ namespace VoxelEngine.Editor
 
             Mesh generatedMesh = null;
             if(generateMeshAssets) {
-                generatedMesh = Utilities.GenerateMesh(data);
+                generatedMesh = optimizeVertices ? Utilities.GenerateOptimizedMesh(data) : Utilities.GenerateMesh(data);
                 MeshUtility.Optimize(generatedMesh);
                 MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
             }
