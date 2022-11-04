@@ -104,12 +104,13 @@ namespace VoxelEngine.Destructions
                     }
                 }
             }
-            voxelsContainer.RebuildMesh(true);
+            voxelsContainer.RebuildMesh(true).Forget();
             HandleVoxelsRemove();
         }
 
         public async void Recover() {
             await voxelsContainer.Reload();
+            IsCollapsed = false;
             MarkDirty();
         }
 
