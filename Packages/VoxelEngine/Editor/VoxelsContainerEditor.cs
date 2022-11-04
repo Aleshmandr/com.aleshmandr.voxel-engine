@@ -23,14 +23,18 @@ namespace VoxelEngine.Editor
             loadOnStartProperty = serializedObject.FindProperty("loadOnStart");
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
-            voxelsContainer.Data.Dispose();
-            if(voxelsContainer.Asset != null) {
-                voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
+            if(!Application.isPlaying) {
+                voxelsContainer.Data.Dispose();
+                if(voxelsContainer.Asset != null) {
+                    voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
+                }
             }
         }
 
         private void OnDisable() {
-            voxelsContainer.Data.Dispose();
+            if(!Application.isPlaying) {
+                voxelsContainer.Data.Dispose();
+            }
         }
 
         public override void OnInspectorGUI() {
