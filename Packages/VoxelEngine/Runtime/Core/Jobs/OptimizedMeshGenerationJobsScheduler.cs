@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace VoxelEngine.Jobs
 {
-    public class MeshGenerationJobsScheduler : IMeshGenerationJobScheduler
+    public class OptimizedMeshGenerationJobsScheduler : IMeshGenerationJobScheduler
     {
         private JobHandle lastJobHandle;
         
@@ -16,7 +16,7 @@ namespace VoxelEngine.Jobs
             var meshData = meshDataArray[0];
             var voxelsDataCopy = voxels.AllocateNativeDataCopy(Allocator.TempJob);
 
-            var meshGenerationJob = new VoxelMeshGenerationJob {
+            var meshGenerationJob = new VoxelOptimizedMeshGenerationJob() {
                 SizeX = voxels.SizeX,
                 SizeY = voxels.SizeY,
                 SizeZ = voxels.SizeZ,

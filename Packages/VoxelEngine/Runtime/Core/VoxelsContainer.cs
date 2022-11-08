@@ -23,7 +23,7 @@ namespace VoxelEngine
         private MeshRenderer meshRenderer;
         private MeshCollider meshCollider;
         private Mesh dynamicMesh;
-        private MeshGenerationJobsScheduler meshGenerationJobsScheduler;
+        private IMeshGenerationJobScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
         private CancellationTokenSource colliderUpdateCts;
         private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
@@ -85,7 +85,14 @@ namespace VoxelEngine
         }
 
         public async UniTask RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
-            meshGenerationJobsScheduler ??= new MeshGenerationJobsScheduler();
+            if(meshGenerationJobsScheduler == null) {
+                if(VoxelEngineConfig.UseOptimizedMeshGenerationAtRuntime) {
+                    meshGenerationJobsScheduler = new OptimizedMeshGenerationJobsScheduler();
+                } else {
+                    meshGenerationJobsScheduler = new MeshGenerationJobsScheduler();
+                }
+            }
+            
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
                 return;
@@ -106,11 +113,11 @@ namespace VoxelEngine
             }
 
             if(forceUpdateCollider) {
-                
+
                 colliderUpdateCts?.Cancel(false);
                 colliderUpdateCts?.Dispose();
                 colliderUpdateCts = null;
-                
+
                 if(dynamicMesh.vertexCount > 0) {
 
                     if(useBakeJob) {
@@ -121,7 +128,7 @@ namespace VoxelEngine
                         }.Schedule(1, 1, bakeMeshJobHandle);
                         bakeMeshJobHandle.Complete();
                     }
-                    
+
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
                 } else {
@@ -169,7 +176,7 @@ namespace VoxelEngine
                     meshCollider.enabled = false;
                 }
             }
-            
+
             colliderUpdateCts?.Cancel(false);
             colliderUpdateCts?.Dispose();
             colliderUpdateCts = null;
