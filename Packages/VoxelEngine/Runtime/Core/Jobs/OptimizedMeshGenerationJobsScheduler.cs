@@ -41,7 +41,6 @@ namespace VoxelEngine.Jobs
             }
 
             Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, mesh);
-            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;
         }
