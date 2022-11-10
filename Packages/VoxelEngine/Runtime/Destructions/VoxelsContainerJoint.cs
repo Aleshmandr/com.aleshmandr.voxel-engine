@@ -19,6 +19,7 @@ namespace VoxelEngine.Destructions
         [NonSerialized] private Collider[] colliders;
         [NonSerialized] private DestructableVoxelsRoot root;
         private List<DestructableVoxels> connectedClusters;
+        private List<DestructableVoxels> selfConnectedClusters;
         private CancellationTokenSource jointCts;
         private bool isConnectionDirty;
         private bool isConnectionCheckTaskRun;
@@ -29,6 +30,7 @@ namespace VoxelEngine.Destructions
             jointCts = new CancellationTokenSource();
             container = GetComponent<VoxelsClustersDestructionContainer>();
             connectedClusters = new List<DestructableVoxels>();
+            selfConnectedClusters = new List<DestructableVoxels>();
             root = this.GetComponentInParent<DestructableVoxelsRoot>();
             InitFixationRoutineAsync(jointCts.Token).Forget();
         }
@@ -39,11 +41,15 @@ namespace VoxelEngine.Destructions
         }
 
         private void UnsubscribeFromConnectedClusters() {
-            if(connectedClusters == null) {
-                return;
+            if(connectedClusters != null) {
+                for(int i = 0; i < connectedClusters.Count; i++) {
+                    connectedClusters[i].IntegrityChanged -= HandleConnectionIntegrityChange;
+                }
             }
-            for(int i = 0; i < connectedClusters.Count; i++) {
-                connectedClusters[i].IntegrityChanged -= HandleConnectionIntegrityChange;
+            if(selfConnectedClusters != null) {
+                for(int i = 0; i < selfConnectedClusters.Count; i++) {
+                    selfConnectedClusters[i].IntegrityChanged -= HandleSelfConnectionIntegrityChange;
+                }
             }
         }
 
@@ -85,6 +91,8 @@ namespace VoxelEngine.Destructions
                         }
                     } else {
                         connectionData.IsFixed = true;
+                        selfConnectedClusters.Add(destructableVoxels);
+                        destructableVoxels.IntegrityChanged += HandleSelfConnectionIntegrityChange;
                     }
                 }
             }
@@ -102,6 +110,8 @@ namespace VoxelEngine.Destructions
                         destructableVoxels.IntegrityChanged += HandleConnectionIntegrityChange;
                     } else {
                         connectionData.IsFixed = true;
+                        selfConnectedClusters.Add(destructableVoxels);
+                        destructableVoxels.IntegrityChanged += HandleSelfConnectionIntegrityChange;
                     }
                 }
             }
@@ -144,13 +154,30 @@ namespace VoxelEngine.Destructions
             }
         }
 
+        private void HandleSelfConnectionIntegrityChange(DestructableVoxels connectedCluster) {
+            if(connectedCluster.IsCollapsed) {
+                connectedCluster.IntegrityChanged -= HandleConnectionIntegrityChange;
+                selfConnectedClusters.Remove(connectedCluster);
+            }
+            if(selfConnectedClusters.Count == 0) {
+                BreakJoint();
+            } else {
+                isConnectionDirty = true;
+                if(VoxelEngineConfig.RunJointsCheckTask && !isConnectionCheckTaskRun) {
+                    isConnectionCheckTaskRun = true;
+                    CheckConnectionAsync(jointCts.Token).Forget();
+                }
+            }
+        }
+
         private async UniTaskVoid CheckConnectionAsync(CancellationToken cancellationToken) {
             var parentContainer = parentOnlyMode ? FindParentContainer() : null;
 
             while(!cancellationToken.IsCancellationRequested) {
                 if(isConnectionDirty) {
                     isConnectionDirty = false;
-                    var hasOverlaps = false;
+                    var hasConnectedOverlaps = false;
+                    var hasSelfOverlaps = false;
 
                     for(int i = 0; i < joints.Length; i++) {
                         var pos = transform.TransformPoint(joints[i].Center);
@@ -166,13 +193,14 @@ namespace VoxelEngine.Destructions
                             var connectionData = container.GetClusterConnections(destructableVoxels);
                             if(connectionData == null) {
                                 if(parentContainer == null || parentContainer.ContainsCluster(destructableVoxels)) {
-                                    hasOverlaps = true;
-                                    break;
+                                    hasConnectedOverlaps = true;
                                 }
+                            } else {
+                                hasSelfOverlaps = true;
                             }
                         }
 
-                        if(hasOverlaps) {
+                        if(hasConnectedOverlaps && hasSelfOverlaps) {
                             break;
                         }
 
@@ -183,7 +211,7 @@ namespace VoxelEngine.Destructions
                         return;
                     }
 
-                    if(!hasOverlaps) {
+                    if(!hasConnectedOverlaps) {
                         BreakJoint();
                         return;
                     }
