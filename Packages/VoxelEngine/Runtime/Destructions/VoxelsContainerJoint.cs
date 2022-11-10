@@ -23,6 +23,8 @@ namespace VoxelEngine.Destructions
         private bool isConnectionDirty;
         private bool isConnectionCheckTaskRun;
 
+        public bool IsInitialized { get; private set; }
+
         private void Start() {
             jointCts = new CancellationTokenSource();
             container = GetComponent<VoxelsClustersDestructionContainer>();
@@ -61,7 +63,7 @@ namespace VoxelEngine.Destructions
                 }
             }
         }
-        
+
         private void BreakJoint() {
             UnsubscribeFromConnectedClusters();
             container.BreakFixedConnections();
@@ -123,6 +125,7 @@ namespace VoxelEngine.Destructions
                 }
             }
             FixJoint();
+            IsInitialized = false;
         }
 
         private void HandleConnectionIntegrityChange(DestructableVoxels connectedCluster) {
@@ -143,9 +146,10 @@ namespace VoxelEngine.Destructions
 
         private async UniTaskVoid CheckConnectionAsync(CancellationToken cancellationToken) {
             var parentContainer = parentOnlyMode ? FindParentContainer() : null;
-            
+
             while(!cancellationToken.IsCancellationRequested) {
                 if(isConnectionDirty) {
+                    isConnectionDirty = false;
                     var hasOverlaps = false;
 
                     for(int i = 0; i < joints.Length; i++) {
@@ -154,15 +158,16 @@ namespace VoxelEngine.Destructions
                         var overlaps = Physics.OverlapSphereNonAlloc(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
 
                         for(int j = 0; j < overlaps; j++) {
-                            var destructableVoxels = colliders[i].GetComponent<DestructableVoxels>();
+                            var destructableVoxels = colliders[j].GetComponent<DestructableVoxels>();
+                            if(destructableVoxels == null || destructableVoxels.IsCollapsed) {
+                                continue;
+                            }
                             
-                            if(destructableVoxels != null) {
-                                var connectionData = container.GetClusterConnections(destructableVoxels);
-                                if(connectionData == null) {
-                                    if(parentContainer == null || parentContainer.ContainsCluster(destructableVoxels)) {
-                                        hasOverlaps = true;
-                                        break;
-                                    }
+                            var connectionData = container.GetClusterConnections(destructableVoxels);
+                            if(connectionData == null) {
+                                if(parentContainer == null || parentContainer.ContainsCluster(destructableVoxels)) {
+                                    hasOverlaps = true;
+                                    break;
                                 }
                             }
                         }
@@ -177,13 +182,13 @@ namespace VoxelEngine.Destructions
                     if(cancellationToken.IsCancellationRequested) {
                         return;
                     }
-                    
+
                     if(!hasOverlaps) {
                         BreakJoint();
                         return;
                     }
                 }
-                
+
                 await UniTask.Delay(CheckConnectionDelta, cancellationToken: cancellationToken);
             }
         }

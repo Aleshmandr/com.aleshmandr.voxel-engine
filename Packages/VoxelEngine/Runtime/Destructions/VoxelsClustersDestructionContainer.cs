@@ -36,6 +36,20 @@ namespace VoxelEngine.Destructions
             neighboursScheduler = new CheckClustersConnectionJobsScheduler();
             processedClusters = new List<DestructableVoxels>();
             integrityJobsScheduler = new VoxelsIntegrityJobsScheduler();
+            InitAsync(lifetimeCts.Token).Forget();
+        }
+
+        private async UniTaskVoid InitAsync(CancellationToken cancellationToken) {
+            var joint = GetComponent<VoxelsContainerJoint>();
+            if(joint != null) {
+                while(!joint.IsInitialized) {
+                    await UniTask.Yield();
+                    if(cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
+                }
+            }
+
             foreach(var connectionData in connections) {
                 if(connectionData.Root == null) {
                     Debug.LogError($"Connection root is null: {gameObject.name}");
