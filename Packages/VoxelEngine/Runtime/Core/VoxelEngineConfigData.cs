@@ -6,5 +6,6 @@ namespace VoxelEngine
     public class VoxelEngineConfigData : ScriptableObject
     {
         public bool UseOptimizedMeshGenerationAtRuntime;
+        public bool RunJointsCheckTask;
     }
 }
