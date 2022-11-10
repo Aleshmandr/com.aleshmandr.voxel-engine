@@ -135,7 +135,7 @@ namespace VoxelEngine.Destructions
                 }
             }
             FixJoint();
-            IsInitialized = false;
+            IsInitialized = true;
         }
 
         private void HandleConnectionIntegrityChange(DestructableVoxels connectedCluster) {
