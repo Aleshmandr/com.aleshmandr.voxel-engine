@@ -211,7 +211,8 @@ namespace VoxelEngine.Destructions
                         return;
                     }
 
-                    if(!hasConnectedOverlaps) {
+                    var hasBothOverlaps = hasConnectedOverlaps && hasSelfOverlaps;
+                    if(!hasBothOverlaps) {
                         BreakJoint();
                         return;
                     }
