@@ -176,10 +176,13 @@ namespace VoxelEngine.Destructions
             while(!cancellationToken.IsCancellationRequested) {
                 if(isConnectionDirty) {
                     isConnectionDirty = false;
-                    var hasConnectedOverlaps = false;
-                    var hasSelfOverlaps = false;
-
+                    
+                    await UniTask.Yield();
+                    bool hasValidConnection = false;
                     for(int i = 0; i < joints.Length; i++) {
+                        var hasConnectedOverlaps = false;
+                        var hasSelfOverlaps = false;
+                        
                         var pos = transform.TransformPoint(joints[i].Center);
                         var rad = joints[i].Radius * transform.lossyScale.x;
                         var overlaps = Physics.OverlapSphereNonAlloc(pos, rad, colliders, Physics.AllLayers, QueryTriggerInteraction.Ignore);
@@ -200,7 +203,9 @@ namespace VoxelEngine.Destructions
                             }
                         }
 
-                        if(hasConnectedOverlaps && hasSelfOverlaps) {
+                        hasValidConnection = hasConnectedOverlaps && hasSelfOverlaps;
+
+                        if(hasValidConnection) {
                             break;
                         }
 
@@ -211,8 +216,7 @@ namespace VoxelEngine.Destructions
                         return;
                     }
 
-                    var hasBothOverlaps = hasConnectedOverlaps && hasSelfOverlaps;
-                    if(!hasBothOverlaps) {
+                    if(!hasValidConnection) {
                         BreakJoint();
                         return;
                     }
