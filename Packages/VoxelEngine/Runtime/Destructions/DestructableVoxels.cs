@@ -10,6 +10,7 @@ namespace VoxelEngine.Destructions
     public class DestructableVoxels : MonoBehaviour
     {
         public event Action<DestructableVoxels> IntegrityChanged;
+        public event Action<DamageEventData<IDamageData>> Damaged;
         [SerializeField] private VoxelsContainer voxelsContainer;
         [SerializeField] private bool makePhysicalOnCollapse;
         [SerializeField] private float collapsePercentsThresh = 50f;
@@ -65,9 +66,9 @@ namespace VoxelEngine.Destructions
             IntegrityChanged?.Invoke(this);
         }
 
-        public async UniTask<NativeList<VoxelData>> RunDamageJob(Vector3 worldPoint, float radius, Allocator allocator) {
-            int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
-            var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
+        public async UniTask<NativeList<VoxelData>> RunDamageJob<T>(T damageData, Allocator allocator) where T : IDamageData {
+            int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
+            var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             damageJobsScheduler ??= new VoxelsDamageJobsScheduler();
@@ -75,14 +76,14 @@ namespace VoxelEngine.Destructions
             VoxelsCount -= damageVoxels.Length;
 
             voxelsContainer.RebuildMesh(true).Forget();
-            HandleVoxelsRemove();
+            HandleDamage(damageData);
 
             return damageVoxels;
         }
 
-        public void Damage(Vector3 worldPoint, float radius, ref NativeList<VoxelData> damagedVoxels) {
-            int intRad = Mathf.CeilToInt(radius / voxelsContainer.transform.lossyScale.x);
-            var localPoint = voxelsContainer.transform.InverseTransformPoint(worldPoint);
+        public void Damage<T>(T damageData, ref NativeList<VoxelData> damagedVoxels) where T : IDamageData {
+            int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
+            var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
             for(int i = -intRad; i <= intRad; i++) {
                 for(int j = -intRad; j <= intRad; j++) {
@@ -105,7 +106,7 @@ namespace VoxelEngine.Destructions
                 }
             }
             voxelsContainer.RebuildMesh(true).Forget();
-            HandleVoxelsRemove();
+            HandleDamage(damageData);
         }
 
         public async void Recover() {
@@ -123,16 +124,18 @@ namespace VoxelEngine.Destructions
             IntegrityChanged?.Invoke(this);
         }
 
-        private void HandleVoxelsRemove() {
+        private void HandleDamage<T>(T damageData) where T : IDamageData {
             if(IsCollapsed) {
                 return;
             }
 
             if(CheckIfNeedCollapse()) {
+                Damaged?.Invoke(new DamageEventData<IDamageData>(this, damageData));
                 Collapse();
                 return;
             }
 
+            Damaged?.Invoke(new DamageEventData<IDamageData>(this, damageData));
             IntegrityChanged?.Invoke(this);
         }
 
@@ -144,7 +147,7 @@ namespace VoxelEngine.Destructions
         private void MakePhysical() {
             UnRoot();
             GenerateDestructionCollider();
-          
+
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
                     rigidbody = gameObject.AddComponent<Rigidbody>();
