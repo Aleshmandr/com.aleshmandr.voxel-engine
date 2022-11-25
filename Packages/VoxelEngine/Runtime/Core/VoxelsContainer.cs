@@ -45,6 +45,8 @@ namespace VoxelEngine
             return meshFilter;
         } }
 
+        public MeshCollider MeshCollider => meshCollider;
+
         public bool IsInitialized { get; private set; }
 
         private async void Start() {

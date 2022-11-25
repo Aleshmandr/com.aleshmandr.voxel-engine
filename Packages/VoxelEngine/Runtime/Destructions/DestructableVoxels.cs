@@ -110,6 +110,18 @@ namespace VoxelEngine.Destructions
         }
 
         public async void Recover() {
+            if(IsCollapsed && makePhysicalOnCollapse) {
+                if(rigidbody == null) {
+                    Destroy(rigidbody);
+                }
+                if(destructionCollider == DestructionColliderType.Box) {
+                    BoxCollider bc = this.GetComponent<BoxCollider>();
+                    if(bc != null) {
+                        Destroy(bc);
+                    }
+                }
+            }
+            
             await voxelsContainer.Reload();
             IsCollapsed = false;
             MarkDirty();
@@ -170,12 +182,10 @@ namespace VoxelEngine.Destructions
         }
 
         private void GenerateDestructionCollider() {
-            MeshCollider meshCollider = GetComponent<MeshCollider>();
             switch(destructionCollider) {
                 case DestructionColliderType.Box:
-                    if(meshCollider != null) {
-                        meshCollider.enabled = false;
-                        Destroy(meshCollider);
+                    if(voxelsContainer.MeshCollider != null) {
+                        voxelsContainer.MeshCollider.enabled = false;
                     }
                     var boxCollider = gameObject.AddComponent<BoxCollider>();
                     var mesh = voxelsContainer.MeshFilter.sharedMesh;
@@ -183,8 +193,8 @@ namespace VoxelEngine.Destructions
                     boxCollider.size = mesh.bounds.size;
                     break;
                 default:
-                    if(meshCollider != null) {
-                        meshCollider.convex = true;
+                    if(voxelsContainer.MeshCollider != null) {
+                        voxelsContainer.MeshCollider.convex = true;
                     }
                     break;
             }
