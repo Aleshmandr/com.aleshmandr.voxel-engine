@@ -121,10 +121,7 @@ namespace VoxelEngine.Destructions
                     if(bc != null) {
                         Destroy(bc);
                     }
-                    if(voxelsContainer.MeshCollider != null) {
-                        voxelsContainer.MeshCollider.convex = restoreConvexCollider;
-                        voxelsContainer.MeshCollider.enabled = true;
-                    }
+                    voxelsContainer.SetMeshColliderActive(true);
                 }
             }
             
@@ -192,11 +189,7 @@ namespace VoxelEngine.Destructions
         private void GenerateDestructionCollider() {
             switch(destructionCollider) {
                 case DestructionColliderType.Box:
-                    if(voxelsContainer.MeshCollider != null) {
-                        restoreConvexCollider = voxelsContainer.MeshCollider.convex;
-                        voxelsContainer.MeshCollider.convex = true;
-                        voxelsContainer.MeshCollider.enabled = false;
-                    }
+                    voxelsContainer.SetMeshColliderActive(false);
                     var boxCollider = gameObject.AddComponent<BoxCollider>();
                     var mesh = voxelsContainer.MeshFilter.sharedMesh;
                     boxCollider.center = mesh.bounds.center;
