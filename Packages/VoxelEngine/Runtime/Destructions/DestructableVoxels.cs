@@ -30,24 +30,23 @@ namespace VoxelEngine.Destructions
         public int InitialVoxelsCount { get; private set; }
 
         public bool IsInitialized { get; private set; }
-        
-        public int VoxelsCount {
-            get {
-                if(voxelsCount < 0) {
-                    voxelsCount = 0;
-                    for(int i = 0; i < voxelsContainer.Data.NativeArray.Length; i++) {
-                        if(voxelsContainer.Data.NativeArray[i] == 0) {
-                            continue;
-                        }
-                        voxelsCount++;
-                    }
-                }
-                return voxelsCount;
-            }
-            private set {
-                voxelsCount = value;
-            }
-        }
+
+        public int VoxelsCount
+        { get {
+              if(voxelsCount < 0) {
+                  voxelsCount = 0;
+                  for(int i = 0; i < voxelsContainer.Data.NativeArray.Length; i++) {
+                      if(voxelsContainer.Data.NativeArray[i] == 0) {
+                          continue;
+                      }
+                      voxelsCount++;
+                  }
+              }
+              return voxelsCount;
+          }
+          private set {
+              voxelsCount = value;
+          } }
 
         private void Start() {
             InitialVoxelsCount = VoxelsCount;
@@ -62,7 +61,7 @@ namespace VoxelEngine.Destructions
                 return;
             }
             if(makePhysicalOnCollapse) {
-                MakePhysicalAsync().Forget();
+                MakePhysical();
             }
             IsCollapsed = true;
             IntegrityChanged?.Invoke(this);
@@ -121,10 +120,13 @@ namespace VoxelEngine.Destructions
                     if(bc != null) {
                         Destroy(bc);
                     }
+                    if(voxelsContainer.MeshCollider != null) {
+                        voxelsContainer.MeshCollider.convex = restoreConvexCollider;
+                    }
                     voxelsContainer.SetMeshColliderActive(true);
                 }
             }
-            
+
             await voxelsContainer.Reload();
             IsCollapsed = false;
             MarkDirty();
@@ -159,11 +161,9 @@ namespace VoxelEngine.Destructions
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
         }
 
-        private async UniTaskVoid MakePhysicalAsync() {
+        private void MakePhysical() {
             UnRoot();
             GenerateDestructionCollider();
-
-            await UniTask.WaitForFixedUpdate();
 
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
@@ -190,6 +190,10 @@ namespace VoxelEngine.Destructions
             switch(destructionCollider) {
                 case DestructionColliderType.Box:
                     voxelsContainer.SetMeshColliderActive(false);
+                    if(voxelsContainer.MeshCollider != null) {
+                        voxelsContainer.MeshCollider.convex = true;
+                        restoreConvexCollider = voxelsContainer.MeshCollider.convex;
+                    }
                     var boxCollider = gameObject.AddComponent<BoxCollider>();
                     var mesh = voxelsContainer.MeshFilter.sharedMesh;
                     boxCollider.center = mesh.bounds.center;
