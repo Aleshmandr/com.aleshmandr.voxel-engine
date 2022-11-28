@@ -16,6 +16,7 @@ namespace VoxelEngine.Destructions
         [SerializeField] private float collapsePercentsThresh = 50f;
         [SerializeField] private RigidbodyInterpolation interpolation = RigidbodyInterpolation.None;
         [SerializeField] private DestructionColliderType destructionCollider = DestructionColliderType.Box;
+        private bool restoreConvexCollider;
         private int destructionVoxelsCountThresh;
         private new Rigidbody rigidbody;
         private int voxelsCount = -1;
@@ -52,6 +53,7 @@ namespace VoxelEngine.Destructions
             InitialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
             IsInitialized = true;
+            restoreConvexCollider = voxelsContainer.MeshCollider != null && voxelsContainer.MeshCollider.convex;
         }
 
         [ContextMenu("Collapse")]
@@ -119,6 +121,10 @@ namespace VoxelEngine.Destructions
                     if(bc != null) {
                         Destroy(bc);
                     }
+                    if(voxelsContainer.MeshCollider != null) {
+                        voxelsContainer.MeshCollider.convex = restoreConvexCollider;
+                        voxelsContainer.MeshCollider.enabled = true;
+                    }
                 }
             }
             
@@ -185,6 +191,8 @@ namespace VoxelEngine.Destructions
             switch(destructionCollider) {
                 case DestructionColliderType.Box:
                     if(voxelsContainer.MeshCollider != null) {
+                        restoreConvexCollider = voxelsContainer.MeshCollider.convex;
+                        voxelsContainer.MeshCollider.convex = true;
                         voxelsContainer.MeshCollider.enabled = false;
                     }
                     var boxCollider = gameObject.AddComponent<BoxCollider>();
