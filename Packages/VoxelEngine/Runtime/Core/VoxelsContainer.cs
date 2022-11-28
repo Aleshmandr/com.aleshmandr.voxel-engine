@@ -28,6 +28,7 @@ namespace VoxelEngine
         private CancellationTokenSource colliderUpdateCts;
         private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
+        private bool isColliderDisabled;
 
         public MeshRenderer MeshRenderer
         { get {
@@ -86,6 +87,13 @@ namespace VoxelEngine
             await Deserialize(Asset.bytes, true, true);
         }
 
+        public void SetMeshColliderActive(bool active) {
+            isColliderDisabled = !active;
+            if(meshCollider != null) {
+                meshCollider.enabled = active;
+            }
+        }
+
         public async UniTask RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
             if(meshGenerationJobsScheduler == null) {
                 if(VoxelEngineConfig.UseOptimizedMeshGenerationAtRuntime) {
@@ -102,6 +110,10 @@ namespace VoxelEngine
             if(updateMeshFilter) {
                 MeshFilter.mesh = dynamicMesh;
             }
+            
+            if(isColliderDisabled) {
+                return;
+            }
 
             if(meshCollider == null && !TryGetComponent(out meshCollider)) {
 #if UNITY_EDITOR
@@ -114,8 +126,11 @@ namespace VoxelEngine
 #endif
             }
 
-            if(forceUpdateCollider) {
+            await UpdateCollider(forceUpdateCollider);
+        }
 
+        private async UniTask UpdateCollider(bool forceUpdateCollider = false) {
+            if(forceUpdateCollider) {
                 colliderUpdateCts?.Cancel(false);
                 colliderUpdateCts?.Dispose();
                 colliderUpdateCts = null;
@@ -152,7 +167,6 @@ namespace VoxelEngine
             }
 
             if(MeshFilter.sharedMesh.vertexCount > 0) {
-
                 if(useBakeJob) {
                     var meshIds = new NativeArray<int>(1, Allocator.TempJob);
                     meshIds[0] = MeshFilter.sharedMesh.GetInstanceID();

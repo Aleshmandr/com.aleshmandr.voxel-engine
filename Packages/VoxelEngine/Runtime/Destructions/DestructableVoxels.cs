@@ -62,7 +62,7 @@ namespace VoxelEngine.Destructions
                 return;
             }
             if(makePhysicalOnCollapse) {
-                MakePhysical();
+                MakePhysicalAsync().Forget();
             }
             IsCollapsed = true;
             IntegrityChanged?.Invoke(this);
@@ -162,9 +162,11 @@ namespace VoxelEngine.Destructions
             return destroyedVoxelsCount >= destructionVoxelsCountThresh;
         }
 
-        private void MakePhysical() {
+        private async UniTaskVoid MakePhysicalAsync() {
             UnRoot();
             GenerateDestructionCollider();
+
+            await UniTask.WaitForFixedUpdate();
 
             if(rigidbody == null) {
                 if(!TryGetComponent(out rigidbody)) {
