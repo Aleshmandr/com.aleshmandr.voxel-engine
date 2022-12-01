@@ -102,7 +102,7 @@ namespace VoxelEngine
                     meshGenerationJobsScheduler = new MeshGenerationJobsScheduler();
                 }
             }
-            
+
             dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
             if(isDestroyed) {
                 return;
@@ -110,7 +110,7 @@ namespace VoxelEngine
             if(updateMeshFilter) {
                 MeshFilter.mesh = dynamicMesh;
             }
-            
+
             if(isColliderDisabled) {
                 return;
             }
@@ -165,6 +165,10 @@ namespace VoxelEngine
                     return;
                 }
             }
+            
+            if(isColliderDisabled) {
+                return;
+            }
 
             if(MeshFilter.sharedMesh.vertexCount > 0) {
                 if(useBakeJob) {
@@ -181,6 +185,10 @@ namespace VoxelEngine
                     if(cancellationToken.IsCancellationRequested) {
                         return;
                     }
+                }
+
+                if(isColliderDisabled) {
+                    return;
                 }
 
                 if(meshCollider != null) {
