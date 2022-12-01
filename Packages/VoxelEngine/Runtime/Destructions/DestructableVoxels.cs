@@ -29,6 +29,14 @@ namespace VoxelEngine.Destructions
 
         public int InitialVoxelsCount { get; private set; }
 
+        public float CollapsePercentsThresh
+        { get => collapsePercentsThresh;
+          set {
+              collapsePercentsThresh = value;
+              collapsePercentsThresh = Mathf.Clamp(collapsePercentsThresh, 0f, 100f);
+              RecalculateDestructionThresh();
+          } }
+
         public bool IsInitialized { get; private set; }
 
         public int VoxelsCount
@@ -49,10 +57,14 @@ namespace VoxelEngine.Destructions
           } }
 
         private void Start() {
-            InitialVoxelsCount = VoxelsCount;
-            destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
+            RecalculateDestructionThresh();
             IsInitialized = true;
             restoreConvexCollider = voxelsContainer.MeshCollider != null && voxelsContainer.MeshCollider.convex;
+        }
+
+        private void RecalculateDestructionThresh() {
+            InitialVoxelsCount = VoxelsCount;
+            destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
         }
 
         [ContextMenu("Collapse")]
