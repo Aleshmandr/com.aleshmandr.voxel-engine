@@ -1,4 +1,3 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 using VoxelEngine.Destructions;
@@ -13,7 +12,6 @@ namespace VoxelEngine.Editor
         private VoxelsContainerJoint joint;
         private SerializedProperty jointsProperty;
         private SerializedProperty parentOnlyModeProperty;
-        private JointData[] joints;
 
         private void OnEnable() {
             joint = target as VoxelsContainerJoint;
@@ -22,7 +20,6 @@ namespace VoxelEngine.Editor
             }
             jointsProperty = serializedObject.FindProperty("joints");
             parentOnlyModeProperty = serializedObject.FindProperty("parentOnlyMode");
-            joints = joint.GetJointsEditor();
         }
 
         public override void OnInspectorGUI() {
@@ -38,6 +35,7 @@ namespace VoxelEngine.Editor
         }
 
         private void OnSceneGUI() {
+            JointData[] joints = joint.GetJointsEditor();
             if(joint == null) {
                 return;
             }
