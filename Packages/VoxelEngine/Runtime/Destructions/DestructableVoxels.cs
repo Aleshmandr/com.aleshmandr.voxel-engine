@@ -34,7 +34,9 @@ namespace VoxelEngine.Destructions
           set {
               collapsePercentsThresh = value;
               collapsePercentsThresh = Mathf.Clamp(collapsePercentsThresh, 0f, 100f);
-              RecalculateDestructionThresh();
+              if(IsInitialized) {
+                  RecalculateDestructionThresh();
+              }
           } }
 
         public bool IsInitialized { get; private set; }
@@ -57,13 +59,13 @@ namespace VoxelEngine.Destructions
           } }
 
         private void Start() {
+            InitialVoxelsCount = VoxelsCount;
             RecalculateDestructionThresh();
             IsInitialized = true;
             restoreConvexCollider = voxelsContainer.MeshCollider != null && voxelsContainer.MeshCollider.convex;
         }
 
         private void RecalculateDestructionThresh() {
-            InitialVoxelsCount = VoxelsCount;
             destructionVoxelsCountThresh = (int)(collapsePercentsThresh * InitialVoxelsCount / 100);
         }
 
