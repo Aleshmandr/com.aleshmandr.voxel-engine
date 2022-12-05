@@ -91,6 +91,11 @@ namespace VoxelEngine
             isColliderDisabled = !active;
             if(meshCollider != null) {
                 meshCollider.enabled = active;
+                if(isColliderDisabled) {
+                    meshCollider.sharedMesh = null;
+                } else {
+                    UpdateCollider(true).Forget();
+                }
             }
         }
 
