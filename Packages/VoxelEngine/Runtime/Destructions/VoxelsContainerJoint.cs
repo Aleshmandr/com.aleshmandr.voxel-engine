@@ -229,9 +229,9 @@ namespace VoxelEngine.Destructions
 #if UNITY_EDITOR
         private static readonly Color GizmoColor = new Color(0f, 1f, 0f, 0.5f);
 
-        public JointData[] GetJointsEditor() {
-            return joints;
-        }
+        public JointData[] EditorJoints
+        { get => joints;
+          set => joints = value; }
 
         private void OnDrawGizmos() {
             if(joints == null) {

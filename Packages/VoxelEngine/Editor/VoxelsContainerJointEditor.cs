@@ -35,22 +35,21 @@ namespace VoxelEngine.Editor
         }
 
         private void OnSceneGUI() {
-            JointData[] joints = joint.GetJointsEditor();
-            if(joint == null) {
+            if(joint.EditorJoints == null) {
                 return;
             }
             EditorGUI.BeginChangeCheck();
             var startMatrix = Handles.matrix;
             Handles.matrix = Matrix4x4.Scale(Vector3.one * HandlesScale) * startMatrix;
-            for(int i = 0; i < joints.Length; i++) {
+            for(int i = 0; i < joint.EditorJoints.Length; i++) {
 
-                var j = joints[i];
+                var j = joint.EditorJoints[i];
                 var jointPos = joint.transform.TransformPoint(j.Center);
 
                 Vector3 newJointPos = Handles.PositionHandle(jointPos / HandlesScale, joint.transform.rotation) *  HandlesScale;
                 if(EditorGUI.EndChangeCheck()) {
                     Undo.RecordObject(joint, "Change Joint");
-                    joints[i] = new JointData(j.Radius, joint.transform.InverseTransformPoint(newJointPos));
+                    joint.EditorJoints[i] = new JointData(j.Radius, joint.transform.InverseTransformPoint(newJointPos));
                 }
 
             }
