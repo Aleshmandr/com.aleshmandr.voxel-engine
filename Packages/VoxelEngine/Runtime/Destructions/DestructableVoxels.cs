@@ -25,10 +25,12 @@ namespace VoxelEngine.Destructions
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
-        public bool MakePhysicalOnCollapse => makePhysicalOnCollapse;
-        
+        public bool MakePhysicalOnCollapse
+        { get => makePhysicalOnCollapse;
+          set => makePhysicalOnCollapse = value; }
+
         public bool IsCollapsed { get; private set; }
-        
+
         public int InitialVoxelsCount { get; private set; }
 
         public float CollapsePercentsThresh
