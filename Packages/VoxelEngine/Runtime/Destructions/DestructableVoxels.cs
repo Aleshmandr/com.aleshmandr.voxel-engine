@@ -129,6 +129,7 @@ namespace VoxelEngine.Destructions
         public async void Recover() {
             if(IsCollapsed && makePhysicalOnCollapse) {
                 if(rigidbody != null) {
+                    rigidbody.isKinematic = true;
                     Destroy(rigidbody);
                 }
                 if(destructionCollider == DestructionColliderType.Box) {
