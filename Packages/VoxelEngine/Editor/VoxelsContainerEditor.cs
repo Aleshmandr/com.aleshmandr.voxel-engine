@@ -12,6 +12,7 @@ namespace VoxelEngine.Editor
         private SerializedProperty loadOnStartProperty;
         private SerializedProperty updateMeshOnStartProperty;
         private SerializedProperty useBakeJobProperty;
+        private SerializedProperty isColliderDisabledProperty;
         private const string CenterToParentIconName = "d_ToolHandleCenter";
 
         private void OnEnable() {
@@ -23,6 +24,7 @@ namespace VoxelEngine.Editor
             loadOnStartProperty = serializedObject.FindProperty("loadOnStart");
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
+            isColliderDisabledProperty = serializedObject.FindProperty("isColliderDisabled");
             if(!Application.isPlaying) {
                 voxelsContainer.Data.Dispose();
                 if(voxelsContainer.Asset != null) {
@@ -45,6 +47,7 @@ namespace VoxelEngine.Editor
                 updateMeshOnStartProperty.boolValue = EditorGUILayout.Toggle(updateMeshOnStartProperty.displayName, updateMeshOnStartProperty.boolValue);
             }
             useBakeJobProperty.boolValue = EditorGUILayout.Toggle(useBakeJobProperty.displayName, useBakeJobProperty.boolValue);
+            isColliderDisabledProperty.boolValue = EditorGUILayout.Toggle(isColliderDisabledProperty.displayName, isColliderDisabledProperty.boolValue);
             serializedObject.ApplyModifiedProperties();
             GUILayout.BeginHorizontal();
             if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {

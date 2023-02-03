@@ -19,6 +19,7 @@ namespace VoxelEngine
         [SerializeField] private bool loadOnStart;
         [SerializeField] private bool updateMeshFilterOnStart;
         [SerializeField] private bool useBakeJob;
+        [SerializeField] private bool isColliderDisabled;
         private MeshFilter meshFilter;
         private MeshRenderer meshRenderer;
         private MeshCollider meshCollider;
@@ -28,7 +29,6 @@ namespace VoxelEngine
         private CancellationTokenSource colliderUpdateCts;
         private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
-        private bool isColliderDisabled;
 
         public MeshRenderer MeshRenderer
         { get {
