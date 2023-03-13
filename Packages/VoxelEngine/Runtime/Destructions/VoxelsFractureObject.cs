@@ -35,7 +35,7 @@ namespace VoxelEngine.Destructions
                 totalClusters++;
             }
             
-            Debug.Log($"Total clusters:{totalClusters}");
+            Debug.Log($"Total clusters:{totalClusters}, arrl:{fractureData.Length}");
 
             fractureData.Dispose();
         }

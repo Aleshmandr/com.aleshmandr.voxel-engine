@@ -17,7 +17,8 @@ namespace VoxelEngine.Destructions.Jobs
         public Vector3Int LocalPoint;
         public NativeArray3d<int> Voxels;
         public NativeList<int> Result; //First number is cluster length, then cluster voxels, then next cluster length and so on...
-
+        private int currentDirection;
+        
         public void Execute() {
             var random = new Random((uint)(Radius + LocalPoint.x + LocalPoint.y + LocalPoint.z));
             int r2 = Radius * Radius;
@@ -31,27 +32,43 @@ namespace VoxelEngine.Destructions.Jobs
                             int y = j + LocalPoint.y;
                             int z = k + LocalPoint.z;
                             if(Voxels.IsCoordsValid(x, y, z) && Voxels[x, y, z] != 0) {
-                                int clusterSize = random.NextInt(MinSize, MaxSize);
+                                
+                                int targetClusterSize = random.NextInt(MinSize, MaxSize);
                                 int3 neighbourVoxel = new int3(x, y, z);
+                                int3 sucNeeghbour = neighbourVoxel;
                                 int clusterLengthIndex = Result.Length;
                                 //Reserve place for cluster length
                                 Result.Add(0);
-                                int clisterSize = 0;
                                 MoveVoxelToCluster(neighbourVoxel);
-                                clisterSize++;
+                                int clusterSize = 1;
 
-                                for(int c = 0; c < clusterSize; c++) {
+                                currentDirection = random.NextInt(0, 6);
 
-                                    neighbourVoxel = GetRandomNeighbourIndex(neighbourVoxel, random.NextInt(0, 6));
-                                    if(neighbourVoxel.x < 0) {
-                                        
+                                int triesNum = 0;
+                                int skipNumThresh = 0;
+                                while(clusterSize < targetClusterSize) {
+                                    skipNumThresh++;
+                                    if(skipNumThresh > 11) {
+                                        break;
+                                    }
+                                    
+                                    if(triesNum > 5) {
+                                        neighbourVoxel = sucNeeghbour;
+                                        triesNum = 0;
+                                    }
+                                    var tempNeighbourVoxel = GetRandomNeighbourIndex(neighbourVoxel);
+                                    if(tempNeighbourVoxel.x < 0) {
+                                        currentDirection++;
+                                        triesNum++;
                                         continue;
                                     }
-                                    MoveVoxelToCluster(neighbourVoxel);
-                                    clisterSize++;
+                                    skipNumThresh = 0;
+                                    sucNeeghbour = tempNeighbourVoxel;
+                                    MoveVoxelToCluster(sucNeeghbour);
+                                    clusterSize++;
                                 }
 
-                                Result[clusterLengthIndex] = clisterSize;
+                                Result[clusterLengthIndex] = clusterSize;
                             }
                         }
                     }
@@ -63,16 +80,20 @@ namespace VoxelEngine.Destructions.Jobs
         private void MoveVoxelToCluster(int3 voxelPos) {
             int voxelIndex = Voxels.CoordToIndex(voxelPos.x, voxelPos.y, voxelPos.z);
             Result.Add(voxelIndex);
-            Voxels.NativeArray[voxelIndex] = 0;
+            Voxels[voxelPos.x, voxelPos.y, voxelPos.z] = 0;
         }
 
-        private int3 GetRandomNeighbourIndex(int3 voxelPos, int direction) {
+        private int3 GetRandomNeighbourIndex(int3 voxelPos) {
             for(int i = 0; i < 6; i++) {
+                if(currentDirection > 5) {
+                    currentDirection = 0;
+                }
+                
                 int3 dir = new int3(0, 0, 0) {
-                    [direction % 3] = 1
+                    [currentDirection % 3] = 1
                 };
 
-                if(direction > 2) {
+                if(currentDirection > 2) {
                     dir = -dir;
                 }
 
@@ -82,13 +103,10 @@ namespace VoxelEngine.Destructions.Jobs
                     return neighbourPos;
                 }
 
-                direction++;
-                if(direction > 5) {
-                    direction = 0;
-                }
+                currentDirection++;
             }
 
-            return -1;
+            return new int3(-1, -1, -1);
         }
     }
 }
