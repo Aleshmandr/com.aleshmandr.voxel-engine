@@ -14,14 +14,17 @@ namespace VoxelEngine.Destructions.Jobs
         public NativeList<VoxelData> Result;
 
         public void Execute() {
+            int r2 = Radius * Radius;
             for(int i = -Radius; i <= Radius; i++) {
+                int i2 = i * i;
                 for(int j = -Radius; j <= Radius; j++) {
+                    int i2j2 = i2 + j * j;
                     for(int k = -Radius; k <= Radius; k++) {
-                        if(i * i + j * j + k * k <= Radius * Radius) {
+                        if(i2j2 + k * k <= r2) {
                             int x = i + LocalPoint.x;
                             int y = j + LocalPoint.y;
                             int z = k + LocalPoint.z;
-                            if(x >= 0 && x < Voxels.SizeX && y >= 0 && Voxels.SizeY > y && z >= 0 && Voxels.SizeZ > z) {
+                            if(Voxels.IsCoordsValid(x, y, z)) {
                                 if(Voxels[x, y, z] != 0) {
                                     Result.Add(new VoxelData {
                                         Position = new Vector3(x, y, z),
@@ -36,6 +39,5 @@ namespace VoxelEngine.Destructions.Jobs
                 }
             }
         }
-
     }
 }

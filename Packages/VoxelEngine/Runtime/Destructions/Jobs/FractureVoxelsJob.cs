@@ -16,7 +16,8 @@ namespace VoxelEngine.Destructions.Jobs
         public int MaxSize;
         public Vector3Int LocalPoint;
         public NativeArray3d<int> Voxels;
-        public NativeList<int> Result; //First number is cluster length, then cluster voxels, then next cluster length and so on...
+        public NativeList<int> ResultClusters;
+        public NativeList<FractureVoxelData> ResultVoxels;
         private int currentDirection;
         
         public void Execute() {
@@ -36,9 +37,6 @@ namespace VoxelEngine.Destructions.Jobs
                                 int targetClusterSize = random.NextInt(MinSize, MaxSize);
                                 int3 neighbourVoxel = new int3(x, y, z);
                                 int3 sucNeeghbour = neighbourVoxel;
-                                int clusterLengthIndex = Result.Length;
-                                //Reserve place for cluster length
-                                Result.Add(0);
                                 MoveVoxelToCluster(neighbourVoxel);
                                 int clusterSize = 1;
 
@@ -68,7 +66,7 @@ namespace VoxelEngine.Destructions.Jobs
                                     clusterSize++;
                                 }
 
-                                Result[clusterLengthIndex] = clusterSize;
+                                ResultClusters.Add(clusterSize);
                             }
                         }
                     }
@@ -79,8 +77,11 @@ namespace VoxelEngine.Destructions.Jobs
         [BurstCompile] [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void MoveVoxelToCluster(int3 voxelPos) {
             int voxelIndex = Voxels.CoordToIndex(voxelPos.x, voxelPos.y, voxelPos.z);
-            Result.Add(voxelIndex);
-            Voxels[voxelPos.x, voxelPos.y, voxelPos.z] = 0;
+            ResultVoxels.Add(new FractureVoxelData {
+                Position = voxelPos,
+                Color = Voxels.NativeArray[voxelIndex]
+            });
+            Voxels.NativeArray[voxelIndex] = 0;
         }
 
         private int3 GetRandomNeighbourIndex(int3 voxelPos) {

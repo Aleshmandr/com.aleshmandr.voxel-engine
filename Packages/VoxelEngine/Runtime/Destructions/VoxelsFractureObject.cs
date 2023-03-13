@@ -24,33 +24,93 @@ namespace VoxelEngine.Destructions
             DrawDebugSphere(pos, dmgRadius, new Color(0f, 1f, 0f, 0.3f), 1f);
             var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent);
 
-            int totalClusters = 0;
-            for(int i = 0; i < fractureData.Length; i++) {
-                int clusterSize = fractureData[i];
-                int clusterStartIndex = i + 1;
-                Debug.Log($"Closter:{clusterSize}");
-                for(int j = clusterStartIndex; j < clusterStartIndex+clusterSize; j++) {
-                    i++;
-                }
-                totalClusters++;
-            }
-            
-            Debug.Log($"Total clusters:{totalClusters}, arrl:{fractureData.Length}");
+
+            Debug.Log($"Total clusters:{fractureData.ClustersLengths.Length}, arrl:{fractureData.Voxels.Length}");
 
             fractureData.Dispose();
         }
-        
-        
-        public async UniTask<NativeList<int>> RunDamageJob<T>(T damageData, Allocator allocator) where T : IDamageData {
+
+
+        public async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator) where T : IDamageData {
             int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             fractureJobsScheduler ??= new VoxelsFractureJobsScheduler();
-            var damageVoxels = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator);
+            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator);
 
             voxelsContainer.RebuildMesh(true).Forget();
-            return damageVoxels;
+            
+            int totalSize = 0;
+            for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
+                GameObject cluster = new GameObject {
+                    transform = {
+                        parent = this.transform.parent
+                    }
+                };
+                var dynamicVoxelsObject = cluster.AddComponent<DynamicVoxelsObject>();
+                int currentSize = fractureData.ClustersLengths[f];
+
+                int maxX = 0;
+                int maxZ = 0;
+                int maxY = 0;
+
+                int minX = int.MaxValue;
+                int minZ = int.MaxValue;
+                int minY = int.MaxValue;
+
+                for(int i = totalSize; i < totalSize + currentSize; i++) {
+                    var pos = fractureData.Voxels[i].Position;
+                    if(pos.x > maxX) {
+                        maxX = pos.x;
+                    }
+                    if(pos.x < minX) {
+                        minX = pos.x;
+                    }
+
+                    if(pos.y > maxY) {
+                        maxY = pos.y;
+                    }
+                    if(pos.y < minY) {
+                        minY = pos.y;
+                    }
+
+                    if(pos.z > maxZ) {
+                        maxZ = pos.z;
+                    }
+                    if(pos.z < minZ) {
+                        minZ = pos.z;
+                    }
+                }
+
+                int sizeX = maxX - minX + 1;
+                int sizeY = maxY - minY + 1;
+                int sizeZ = maxZ - minZ + 1;
+
+                dynamicVoxelsObject.transform.position = transform.TransformPoint(minX, minY, minZ);
+                dynamicVoxelsObject.transform.rotation = transform.rotation;
+                dynamicVoxelsObject.transform.localScale = transform.localScale;
+
+                dynamicVoxelsObject.Data = new NativeArray3d<int>(sizeX, sizeY, sizeZ);
+
+                for(int i = totalSize; i < totalSize + currentSize; i++) {
+                    var pos = fractureData.Voxels[i].Position;
+                    dynamicVoxelsObject.Data[pos.x - minX, pos.y - minY, pos.z - minZ] = fractureData.Voxels[i].Color;
+                }
+
+                totalSize += currentSize;
+                dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
+                await dynamicVoxelsObject.RebuildMesh();
+
+                var bc = dynamicVoxelsObject.gameObject.AddComponent<BoxCollider>();
+                bc.size = dynamicVoxelsObject.MeshFilter.sharedMesh.bounds.size;
+                var rb = dynamicVoxelsObject.gameObject.AddComponent<Rigidbody>();
+                
+                rb.AddExplosionForce(5, damageData.WorldPoint, 10, 1f, ForceMode.VelocityChange);
+                rb.AddTorque(UnityEngine.Random.onUnitSphere * 2, ForceMode.VelocityChange);
+            }
+
+            return fractureData;
         }
 
 #if UNITY_EDITOR
