@@ -7,10 +7,12 @@ namespace VoxelEngine.Destructions.Jobs
 {
     public class VoxelsFractureJobsScheduler
     {
-        public async UniTask<NativeList<VoxelData>> Run(NativeArray3d<int> voxels, int radius, Vector3Int localPoint, Allocator allocator) {
-            var damagedVoxels = new NativeList<VoxelData>(allocator);
+        public async UniTask<NativeList<int>> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator) {
+            var damagedVoxels = new NativeList<int>(allocator);
             var damageJob = new FractureVoxelsJob {
                 Radius = radius,
+                MinSize = minSize,
+                MaxSize = maxSize,
                 LocalPoint = localPoint,
                 Voxels = voxels,
                 Result = damagedVoxels
