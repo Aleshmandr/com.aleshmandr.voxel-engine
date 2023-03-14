@@ -14,6 +14,7 @@ namespace VoxelEngine.Editor
         private SerializedProperty useBakeJobProperty;
         private SerializedProperty isColliderDisabledProperty;
         private const string CenterToParentIconName = "d_ToolHandleCenter";
+        private const string RefreshIconName = "d_Refresh";
 
         private void OnEnable() {
             voxelsContainer = target as VoxelsContainer;
@@ -52,6 +53,9 @@ namespace VoxelEngine.Editor
             GUILayout.BeginHorizontal();
             if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {
                 AlignCenterWithParent();
+            }
+            if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
+                voxelsContainer.EditorRefresh();
             }
             GUILayout.EndHorizontal();
         }

@@ -1,9 +1,10 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
+using System.Threading;
 using Unity.Collections;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
+using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Destructions
 {
@@ -14,34 +15,42 @@ namespace VoxelEngine.Destructions
         [SerializeField] private int minFractureSize = 3;
         [SerializeField] private int maxFractureSize = 10;
         private VoxelsFractureJobsScheduler fractureJobsScheduler;
+        private CancellationTokenSource lifeTimeCts;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
+
+        private void Awake() {
+            lifeTimeCts = new CancellationTokenSource();
+        }
 
         public async UniTaskVoid Hit(Vector3 pos, Vector3 force) {
             Debug.Log($"Hit p:{pos}, f:{force}");
             Debug.DrawRay(pos, force, Color.green, 1f);
             float dmgRadius = force.magnitude / toughness;
             DrawDebugSphere(pos, dmgRadius, new Color(0f, 1f, 0f, 0.3f), 1f);
-            var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent);
-
-
-            Debug.Log($"Total clusters:{fractureData.ClustersLengths.Length}, arrl:{fractureData.Voxels.Length}");
-
+            var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent, lifeTimeCts.Token);
+            
+            if(lifeTimeCts.IsCancellationRequested) {
+                return;
+            }
+            
             fractureData.Dispose();
         }
 
 
-        public async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator) where T : IDamageData {
+        private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IDamageData {
             int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
             var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             fractureJobsScheduler ??= new VoxelsFractureJobsScheduler();
-            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator);
-
-            voxelsContainer.RebuildMesh(true).Forget();
+            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator, lifeTimeCts.Token);
+            if(cancellationToken.IsCancellationRequested) {
+                return FractureData.Empty;
+            }
             
             int totalSize = 0;
+            var c = new List<DynamicVoxelsObject>();
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
                 GameObject cluster = new GameObject {
                     transform = {
@@ -49,6 +58,7 @@ namespace VoxelEngine.Destructions
                     }
                 };
                 var dynamicVoxelsObject = cluster.AddComponent<DynamicVoxelsObject>();
+                c.Add(dynamicVoxelsObject);
                 int currentSize = fractureData.ClustersLengths[f];
 
                 int maxX = 0;
@@ -58,7 +68,7 @@ namespace VoxelEngine.Destructions
                 int minX = int.MaxValue;
                 int minZ = int.MaxValue;
                 int minY = int.MaxValue;
-
+                
                 for(int i = totalSize; i < totalSize + currentSize; i++) {
                     var pos = fractureData.Voxels[i].Position;
                     if(pos.x > maxX) {
@@ -101,16 +111,28 @@ namespace VoxelEngine.Destructions
                 totalSize += currentSize;
                 dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
                 await dynamicVoxelsObject.RebuildMesh();
-
-                var bc = dynamicVoxelsObject.gameObject.AddComponent<BoxCollider>();
-                bc.size = dynamicVoxelsObject.MeshFilter.sharedMesh.bounds.size;
-                var rb = dynamicVoxelsObject.gameObject.AddComponent<Rigidbody>();
-                
-                rb.AddExplosionForce(5, damageData.WorldPoint, 10, 1f, ForceMode.VelocityChange);
-                rb.AddTorque(UnityEngine.Random.onUnitSphere * 2, ForceMode.VelocityChange);
+                if(cancellationToken.IsCancellationRequested) {
+                    return FractureData.Empty;
+                }
             }
 
+            for(int i = 0; i < c.Count; i++) {
+                var bc = c[i].gameObject.AddComponent<BoxCollider>();
+                bc.size = c[i].MeshFilter.sharedMesh.bounds.size;
+                var rb = c[i].gameObject.AddComponent<Rigidbody>();
+                
+                rb.AddExplosionForce(5, damageData.WorldPoint, 10, 1f, ForceMode.VelocityChange);
+                rb.AddTorque(Random.onUnitSphere * 2, ForceMode.VelocityChange);
+            }
+            
+            voxelsContainer.RebuildMesh(true).Forget();
+
             return fractureData;
+        }
+
+        private void OnDestroy() {
+            lifeTimeCts?.Cancel(false);
+            lifeTimeCts?.Dispose();
         }
 
 #if UNITY_EDITOR

@@ -21,7 +21,6 @@ namespace VoxelEngine
         private Mesh dynamicMesh;
         private IMeshGenerationJobScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
-        private JobHandle bakeMeshJobHandle;
 
         public MeshRenderer MeshRenderer
         { get {
@@ -60,7 +59,7 @@ namespace VoxelEngine
                 }
             }
 
-            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
+            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, CancellationToken.None, dynamicMesh);
             if(isDestroyed) {
                 return;
             }

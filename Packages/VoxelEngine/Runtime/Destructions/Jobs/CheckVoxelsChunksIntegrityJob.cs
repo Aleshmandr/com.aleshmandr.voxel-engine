@@ -28,11 +28,13 @@ namespace VoxelEngine.Destructions.Jobs
             }
         }
 
+        [BurstCompile]
         private void StartTrace(int i, int j, int k, ref int sum) {
-            TryEnqueue(i, j, k, ref sum);
+            TryEnqueue(i, j, k);
             TraceWithStack(ref sum);
         }
 
+        [BurstCompile]
         private void TraceWithStack(ref int sum) {
             while(!Queue.IsEmpty()) {
                 var voxel = Queue.Dequeue();
@@ -54,42 +56,43 @@ namespace VoxelEngine.Destructions.Jobs
                 int forward = k + 1;
                 int back = k - 1;
 
-                TryEnqueue(left, j, k, ref sum);
-                TryEnqueue(left, up, k, ref sum);
-                TryEnqueue(left, down, k, ref sum);
-                TryEnqueue(right, j, k, ref sum);
-                TryEnqueue(right, up, k, ref sum);
-                TryEnqueue(right, down, k, ref sum);
-                TryEnqueue(i, up, k, ref sum);
-                TryEnqueue(i, up, forward, ref sum);
-                TryEnqueue(i, up, back, ref sum);
-                TryEnqueue(i, down, k, ref sum);
-                TryEnqueue(i, down, forward, ref sum);
-                TryEnqueue(i, down, back, ref sum);
-                TryEnqueue(i, j, forward, ref sum);
-                TryEnqueue(left, j, forward, ref sum);
-                TryEnqueue(right, j, forward, ref sum);
-                TryEnqueue(i, j, back, ref sum);
-                TryEnqueue(left, j, back, ref sum);
-                TryEnqueue(right, j, back, ref sum);
-                TryEnqueue(left, up, forward, ref sum);
-                TryEnqueue(left, down, forward, ref sum);
-                TryEnqueue(left, down, back, ref sum);
-                TryEnqueue(left, up, back, ref sum);
-                TryEnqueue(right, up, forward, ref sum);
-                TryEnqueue(right, down, forward, ref sum);
-                TryEnqueue(right, down, back, ref sum);
-                TryEnqueue(right, up, back, ref sum);
+                TryEnqueue(left, j, k);
+                TryEnqueue(left, up, k);
+                TryEnqueue(left, down, k);
+                TryEnqueue(right, j, k);
+                TryEnqueue(right, up, k);
+                TryEnqueue(right, down, k);
+                TryEnqueue(i, up, k);
+                TryEnqueue(i, up, forward);
+                TryEnqueue(i, up, back);
+                TryEnqueue(i, down, k);
+                TryEnqueue(i, down, forward);
+                TryEnqueue(i, down, back);
+                TryEnqueue(i, j, forward);
+                TryEnqueue(left, j, forward);
+                TryEnqueue(right, j, forward);
+                TryEnqueue(i, j, back);
+                TryEnqueue(left, j, back);
+                TryEnqueue(right, j, back);
+                TryEnqueue(left, up, forward);
+                TryEnqueue(left, down, forward);
+                TryEnqueue(left, down, back);
+                TryEnqueue(left, up, back);
+                TryEnqueue(right, up, forward);
+                TryEnqueue(right, down, forward);
+                TryEnqueue(right, down, back);
+                TryEnqueue(right, up, back);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void TryEnqueue(int i, int j, int k, ref int sum) {
+        private void TryEnqueue(int i, int j, int k) {
             if(Voxels.IsCoordsValid(i, j, k) && Voxels[i, j, k] != 0) {
                 Queue.Enqueue(new int3(i, j, k));
             }
         }
 
+        [BurstCompile]
         private void TraceRecursively(int i, int j, int k, ref int sum) {
             if(Voxels.IsCoordsValid(i, j, k) && Voxels[i, j, k] != 0) {
                 sum++;

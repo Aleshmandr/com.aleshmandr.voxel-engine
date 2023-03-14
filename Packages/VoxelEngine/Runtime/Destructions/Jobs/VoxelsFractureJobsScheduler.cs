@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -9,21 +10,29 @@ namespace VoxelEngine.Destructions.Jobs
 {
     public class VoxelsFractureJobsScheduler
     {
-        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator) {
+        private JobHandle currentJobHandle;
+        
+        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator, CancellationToken cancellationToken) {
             var result = new FractureData(allocator);
+            var intergrityCheckQueue = new NativeQueue<int3>(Allocator.Persistent);
             var damageJob = new FractureVoxelsJob {
                 Radius = radius,
                 MinSize = minSize,
                 MaxSize = maxSize,
+                CollapseHangingVoxels = true,
                 LocalPoint = localPoint,
                 Voxels = voxels,
+                IntergrityCheck = new NativeArray<bool>(voxels.NativeArray.Length, Allocator.TempJob),
+                IntegrityQueue = intergrityCheckQueue,
                 ResultClusters = result.ClustersLengths,
                 ResultVoxels = result.Voxels
             };
 
-            //TODO: Jobs scheduling
-            damageJob.Schedule().Complete();
-
+            currentJobHandle = damageJob.Schedule(currentJobHandle);
+            await currentJobHandle.WaitAsync(PlayerLoopTiming.Update, cancellationToken);
+            currentJobHandle.Complete();
+            intergrityCheckQueue.Dispose();
+            
             return result;
         }
     }
@@ -36,6 +45,8 @@ namespace VoxelEngine.Destructions.Jobs
     
     public struct FractureData : IDisposable
     {
+        public static readonly FractureData Empty = new FractureData();
+        
         public NativeList<int> ClustersLengths;
         public NativeList<FractureVoxelData> Voxels;
 
