@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections;
+using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
 using Random = UnityEngine.Random;
@@ -20,6 +21,7 @@ namespace VoxelEngine.Destructions
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
         private void Awake() {
+            
             lifeTimeCts = new CancellationTokenSource();
         }
 
@@ -50,15 +52,8 @@ namespace VoxelEngine.Destructions
             }
             
             int totalSize = 0;
-            var c = new List<DynamicVoxelsObject>();
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
-                GameObject cluster = new GameObject {
-                    transform = {
-                        parent = this.transform.parent
-                    }
-                };
-                var dynamicVoxelsObject = cluster.AddComponent<DynamicVoxelsObject>();
-                c.Add(dynamicVoxelsObject);
+               
                 int currentSize = fractureData.ClustersLengths[f];
 
                 int maxX = 0;
@@ -96,35 +91,28 @@ namespace VoxelEngine.Destructions
                 int sizeX = maxX - minX + 1;
                 int sizeY = maxY - minY + 1;
                 int sizeZ = maxZ - minZ + 1;
-
+                
+                var data = new NativeArray3d<int>(sizeX, sizeY, sizeZ);
+                for(int i = totalSize; i < totalSize + currentSize; i++) {
+                    var pos = fractureData.Voxels[i].Position;
+                    data[pos.x - minX, pos.y - minY, pos.z - minZ] = fractureData.Voxels[i].Color;
+                }
+                totalSize += currentSize;
+                
+                GameObject cluster = new GameObject {
+                    transform = {
+                        parent = this.transform.parent
+                    }
+                };
+                var dynamicVoxelsObject = cluster.AddComponent<DynamicVoxelsObject>();
                 dynamicVoxelsObject.transform.position = transform.TransformPoint(minX, minY, minZ);
                 dynamicVoxelsObject.transform.rotation = transform.rotation;
                 dynamicVoxelsObject.transform.localScale = transform.localScale;
-
-                dynamicVoxelsObject.Data = new NativeArray3d<int>(sizeX, sizeY, sizeZ);
-
-                for(int i = totalSize; i < totalSize + currentSize; i++) {
-                    var pos = fractureData.Voxels[i].Position;
-                    dynamicVoxelsObject.Data[pos.x - minX, pos.y - minY, pos.z - minZ] = fractureData.Voxels[i].Color;
-                }
-
-                totalSize += currentSize;
+                dynamicVoxelsObject.Data = data;
                 dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
-                await dynamicVoxelsObject.RebuildMesh();
-                if(cancellationToken.IsCancellationRequested) {
-                    return FractureData.Empty;
-                }
+                dynamicVoxelsObject.RebuildMesh().Forget();
             }
 
-            for(int i = 0; i < c.Count; i++) {
-                var bc = c[i].gameObject.AddComponent<BoxCollider>();
-                bc.size = c[i].MeshFilter.sharedMesh.bounds.size;
-                var rb = c[i].gameObject.AddComponent<Rigidbody>();
-                
-                rb.AddExplosionForce(5, damageData.WorldPoint, 10, 1f, ForceMode.VelocityChange);
-                rb.AddTorque(Random.onUnitSphere * 2, ForceMode.VelocityChange);
-            }
-            
             voxelsContainer.RebuildMesh(true).Forget();
 
             return fractureData;

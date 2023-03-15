@@ -33,8 +33,6 @@ namespace VoxelEngine.Jobs
                 return null;
             }
             
-            lastJobHandle.Complete();
-
             if(mesh == null) {
                 mesh = new Mesh();
                 mesh.MarkDynamic();

@@ -29,8 +29,8 @@ namespace VoxelEngine.Destructions.Jobs
             };
 
             currentJobHandle = damageJob.Schedule(currentJobHandle);
+
             await currentJobHandle.WaitAsync(PlayerLoopTiming.Update, cancellationToken);
-            currentJobHandle.Complete();
             intergrityCheckQueue.Dispose();
             
             return result;

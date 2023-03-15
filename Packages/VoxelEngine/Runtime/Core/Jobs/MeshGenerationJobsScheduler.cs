@@ -25,16 +25,13 @@ namespace VoxelEngine.Jobs
                 MeshData = meshData
             };
             
-            var jobHandle = lastJobHandle.IsCompleted ? meshGenerationJob.Schedule() : meshGenerationJob.Schedule(lastJobHandle);
-            lastJobHandle = jobHandle;
+            lastJobHandle = meshGenerationJob.Schedule(lastJobHandle);
 
-            await jobHandle.WaitAsync(PlayerLoopTiming.Update, cancellationToken);
+            await lastJobHandle.WaitAsync(PlayerLoopTiming.Update, cancellationToken);
             
             if(cancellationToken.IsCancellationRequested) {
                 return null;
             }
-
-            jobHandle.Complete();
 
             if(mesh == null) {
                 mesh = new Mesh();

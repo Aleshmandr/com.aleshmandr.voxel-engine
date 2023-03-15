@@ -1,18 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
-using System;
 using System.Threading;
-using Unity.Collections;
-using Unity.Jobs;
 using UnityEngine;
 using VoxelEngine.Jobs;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 namespace VoxelEngine
 {
-    [RequireComponent(typeof(MeshFilter))] [RequireComponent(typeof(MeshRenderer))]
     public class DynamicVoxelsObject : MonoBehaviour
     {
         public NativeArray3d<int> Data;
@@ -25,7 +17,7 @@ namespace VoxelEngine
         public MeshRenderer MeshRenderer
         { get {
             if(meshRenderer == null) {
-                meshRenderer = GetComponent<MeshRenderer>();
+                meshRenderer = gameObject.AddComponent<MeshRenderer>();
             }
             return meshRenderer;
         } }
@@ -33,7 +25,7 @@ namespace VoxelEngine
         public MeshFilter MeshFilter
         { get {
             if(meshFilter == null) {
-                meshFilter = GetComponent<MeshFilter>();
+                meshFilter = gameObject.AddComponent<MeshFilter>();
             }
             return meshFilter;
         } }
@@ -64,6 +56,14 @@ namespace VoxelEngine
                 return;
             }
             MeshFilter.mesh = dynamicMesh;
+
+            var bc = gameObject.AddComponent<BoxCollider>();
+            bc.size = MeshFilter.sharedMesh.bounds.size;
+            var rb = gameObject.AddComponent<Rigidbody>();
+            rb.mass = bc.size.x * bc.size.y * bc.size.z;
+            
+            rb.AddExplosionForce(5000, transform.position, 10, 0f, ForceMode.Force);
+            rb.AddTorque(Random.onUnitSphere * 2000, ForceMode.Force);
         }
     }
 }
