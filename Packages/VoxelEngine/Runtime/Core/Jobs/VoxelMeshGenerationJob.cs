@@ -13,7 +13,6 @@ namespace VoxelEngine.Jobs
         public int SizeY;
         public int SizeZ;
         public Mesh.MeshData MeshData;
-        [DeallocateOnJobCompletion]
         public NativeArray<int> Voxels;
 
         public void Execute() {

@@ -92,8 +92,7 @@ namespace VoxelEngine.Destructions
             damageJobsScheduler ??= new VoxelsDamageJobsScheduler();
             var damageVoxels = await damageJobsScheduler.Run(voxelsContainer.Data, intRad, localPointInt, allocator);
             VoxelsCount -= damageVoxels.Length;
-
-            voxelsContainer.RebuildMesh(true).Forget();
+            await voxelsContainer.RebuildMesh(true);
             HandleDamage(damageData);
 
             return damageVoxels;

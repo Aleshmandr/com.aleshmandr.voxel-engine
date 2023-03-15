@@ -10,11 +10,13 @@ namespace VoxelEngine.Destructions.Jobs
 {
     public class VoxelsFractureJobsScheduler
     {
-        private JobHandle currentJobHandle;
-        
-        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator, CancellationToken cancellationToken) {
+        private JobHandle lastJobHandle;
+
+        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator) {
+            
             var result = new FractureData(allocator);
             var intergrityCheckQueue = new NativeQueue<int3>(Allocator.Persistent);
+            var intergrityCheck = new NativeArray<bool>(voxels.NativeArray.Length, Allocator.Persistent);
             var damageJob = new FractureVoxelsJob {
                 Radius = radius,
                 MinSize = minSize,
@@ -22,16 +24,22 @@ namespace VoxelEngine.Destructions.Jobs
                 CollapseHangingVoxels = true,
                 LocalPoint = localPoint,
                 Voxels = voxels,
-                IntergrityCheck = new NativeArray<bool>(voxels.NativeArray.Length, Allocator.TempJob),
+                IntergrityCheck = intergrityCheck,
                 IntegrityQueue = intergrityCheckQueue,
                 ResultClusters = result.ClustersLengths,
                 ResultVoxels = result.Voxels
             };
-
-            currentJobHandle = damageJob.Schedule(currentJobHandle);
-
-            await currentJobHandle.WaitAsync(PlayerLoopTiming.Update, cancellationToken);
+            
+            var jobHandle = damageJob.Schedule(lastJobHandle);
+            lastJobHandle = jobHandle;
+            
+            while(!lastJobHandle.IsCompleted) {
+                await UniTask.Yield();
+            }
+            
+            lastJobHandle.Complete();
             intergrityCheckQueue.Dispose();
+            intergrityCheck.Dispose();
             
             return result;
         }

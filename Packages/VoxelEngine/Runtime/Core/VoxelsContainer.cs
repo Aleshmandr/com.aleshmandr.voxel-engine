@@ -27,7 +27,6 @@ namespace VoxelEngine
         private IMeshGenerationJobScheduler meshGenerationJobsScheduler;
         private bool isDestroyed;
         private CancellationTokenSource colliderUpdateCts;
-        private CancellationTokenSource lifeTimeCts;
         private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
 
@@ -62,7 +61,6 @@ namespace VoxelEngine
                 return;
             }
 #endif
-            lifeTimeCts = new CancellationTokenSource();
             await Deserialize(Asset.bytes, loadOnStart, updateMeshFilterOnStart);
             IsInitialized = true;
         }
@@ -83,8 +81,6 @@ namespace VoxelEngine
             isDestroyed = true;
             colliderUpdateCts?.Cancel(false);
             colliderUpdateCts?.Dispose();
-            lifeTimeCts?.Cancel(false);
-            lifeTimeCts?.Dispose();
         }
 
         public async UniTask Reload() {
@@ -112,8 +108,8 @@ namespace VoxelEngine
                 }
             }
 
-            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, lifeTimeCts.Token, dynamicMesh);
-            if(isDestroyed || lifeTimeCts.IsCancellationRequested) {
+            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
+            if(isDestroyed) {
                 return;
             }
             if(updateMeshFilter) {
@@ -135,7 +131,7 @@ namespace VoxelEngine
 #endif
             }
 
-            await UpdateCollider(forceUpdateCollider);
+            UpdateCollider(forceUpdateCollider).Forget();
         }
 
         private async UniTask UpdateCollider(bool forceUpdateCollider = false) {
@@ -253,7 +249,6 @@ namespace VoxelEngine
         }
 
         private void OnEditorStart() {
-            lifeTimeCts = new CancellationTokenSource();
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
             if(MeshFilter.sharedMesh != null || !loadOnStart) {
                 return;

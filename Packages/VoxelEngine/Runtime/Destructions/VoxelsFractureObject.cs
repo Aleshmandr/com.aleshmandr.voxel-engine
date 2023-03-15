@@ -26,15 +26,10 @@ namespace VoxelEngine.Destructions
         }
 
         public async UniTaskVoid Hit(Vector3 pos, Vector3 force) {
-            Debug.Log($"Hit p:{pos}, f:{force}");
             Debug.DrawRay(pos, force, Color.green, 1f);
             float dmgRadius = force.magnitude / toughness;
             DrawDebugSphere(pos, dmgRadius, new Color(0f, 1f, 0f, 0.3f), 1f);
             var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent, lifeTimeCts.Token);
-            
-            if(lifeTimeCts.IsCancellationRequested) {
-                return;
-            }
             
             fractureData.Dispose();
         }
@@ -46,11 +41,12 @@ namespace VoxelEngine.Destructions
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             fractureJobsScheduler ??= new VoxelsFractureJobsScheduler();
-            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator, lifeTimeCts.Token);
+            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator);
             if(cancellationToken.IsCancellationRequested) {
                 return FractureData.Empty;
             }
             
+            /*
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
                
@@ -111,7 +107,7 @@ namespace VoxelEngine.Destructions
                 dynamicVoxelsObject.Data = data;
                 dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
                 dynamicVoxelsObject.RebuildMesh().Forget();
-            }
+            }*/
 
             voxelsContainer.RebuildMesh(true).Forget();
 

@@ -21,7 +21,7 @@ namespace VoxelEngine.Destructions.Jobs
         public NativeList<FractureVoxelData> ResultVoxels;
         
         public NativeQueue<int3> IntegrityQueue;
-        [DeallocateOnJobCompletion]
+        
         public NativeArray<bool> IntergrityCheck;
         
         private int currentDirection;
