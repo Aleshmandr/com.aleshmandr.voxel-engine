@@ -1,4 +1,7 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -8,8 +11,8 @@ namespace VoxelEngine.Jobs
     public class MeshGenerationJobsScheduler : IMeshGenerationJobScheduler
     {
         private JobHandle lastJobHandle;
-        
-        public async UniTask<Mesh> Run(NativeArray3d<int> voxels, Mesh mesh = null) {
+
+        public async UniTask<Mesh> Run(NativeArray3d<int> voxels, CancellationToken cancellationToken, Mesh mesh = null) {
 
             // Allocate mesh data for one mesh.
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
@@ -23,13 +26,23 @@ namespace VoxelEngine.Jobs
                 Voxels = voxelsDataCopy,
                 MeshData = meshData
             };
-            
-            
+
             var jobHandle = lastJobHandle.IsCompleted ? meshGenerationJob.Schedule() : meshGenerationJob.Schedule(lastJobHandle);
             lastJobHandle = jobHandle;
             
-            while(!jobHandle.IsCompleted) {
+            
+            while(true) {
+                if(jobHandle.IsCompleted || cancellationToken.IsCancellationRequested) {
+                    break;
+                }
                 await UniTask.Yield();
+            }
+
+            if(cancellationToken.IsCancellationRequested) {
+                jobHandle.Complete();
+                voxelsDataCopy.Dispose();
+                meshDataArray.Dispose();
+                return null;
             }
             
             jobHandle.Complete();

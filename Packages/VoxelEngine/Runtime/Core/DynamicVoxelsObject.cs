@@ -51,7 +51,7 @@ namespace VoxelEngine
                 }
             }
 
-            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, dynamicMesh);
+            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, CancellationToken.None, dynamicMesh);
             if(isDestroyed) {
                 return;
             }

@@ -11,7 +11,7 @@ namespace VoxelEngine.Jobs
     {
         private JobHandle lastJobHandle;
 
-        public async UniTask<Mesh> Run(NativeArray3d<int> voxels, Mesh mesh = null) {
+        public async UniTask<Mesh> Run(NativeArray3d<int> voxels, CancellationToken cancellationToken, Mesh mesh = null) {
 
             // Allocate mesh data for one mesh.
             var meshDataArray = Mesh.AllocateWritableMeshData(1);
