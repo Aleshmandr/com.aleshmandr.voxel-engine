@@ -46,7 +46,6 @@ namespace VoxelEngine.Destructions
                 return FractureData.Empty;
             }
             
-            /*
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
                
@@ -107,7 +106,7 @@ namespace VoxelEngine.Destructions
                 dynamicVoxelsObject.Data = data;
                 dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
                 dynamicVoxelsObject.RebuildMesh().Forget();
-            }*/
+            }
 
             voxelsContainer.RebuildMesh(true).Forget();
 
