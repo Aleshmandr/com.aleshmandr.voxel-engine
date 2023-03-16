@@ -7,7 +7,8 @@
   "description": "Simple Voxel Engine for Unity",
   "dependencies": {
     "com.unity.jobs": "0.51.0-preview.32",
-    "com.unity.burst": "1.8.1"
+    "com.unity.burst": "1.8.1",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
   },
   "repository": {
     "type": "git",
