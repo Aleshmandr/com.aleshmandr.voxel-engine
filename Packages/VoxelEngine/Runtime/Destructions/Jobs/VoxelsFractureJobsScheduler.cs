@@ -1,6 +1,5 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -12,7 +11,7 @@ namespace VoxelEngine.Destructions.Jobs
     {
         private JobHandle lastJobHandle;
 
-        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, Vector3Int localPoint, Allocator allocator) {
+        public async UniTask<FractureData> Run(NativeArray3d<int> voxels, int radius, int minSize, int maxSize, bool collapseHangingParts, Vector3Int localPoint, Allocator allocator) {
             
             var result = new FractureData(allocator);
             var intergrityCheckQueue = new NativeQueue<int3>(Allocator.Persistent);
@@ -21,7 +20,7 @@ namespace VoxelEngine.Destructions.Jobs
                 Radius = radius,
                 MinSize = minSize,
                 MaxSize = maxSize,
-                CollapseHangingVoxels = true,
+                CollapseHangingVoxels = collapseHangingParts,
                 LocalPoint = localPoint,
                 Voxels = voxels,
                 IntergrityCheck = intergrityCheck,

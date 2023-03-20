@@ -12,6 +12,8 @@ namespace VoxelEngine
 
         public NativeArray<T> NativeArray;
 
+        public bool IsCreated => NativeArray.IsCreated;
+
         public T this[int x, int y, int z] {
             get => NativeArray[x + SizeX * (y + SizeY * z)];
             set => NativeArray[x + SizeX * (y + SizeY * z)] = value;

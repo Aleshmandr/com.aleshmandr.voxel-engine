@@ -1,5 +1,4 @@
 using Cysharp.Threading.Tasks;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections;
@@ -14,6 +13,7 @@ namespace VoxelEngine.Destructions
         [SerializeField] [Min(0)] private float toughness = 1f;
         [SerializeField] [Min(1)] private int minFractureSize = 3;
         [SerializeField] [Min(1)] private int maxFractureSize = 10;
+        [SerializeField] private bool collapseHangingParts = true;
         private VoxelsFractureJobsScheduler fractureJobsScheduler;
         private CancellationTokenSource lifeTimeCts;
 
@@ -39,7 +39,7 @@ namespace VoxelEngine.Destructions
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             fractureJobsScheduler ??= new VoxelsFractureJobsScheduler();
-            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, localPointInt, allocator);
+            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, collapseHangingParts, localPointInt, allocator);
             if(cancellationToken.IsCancellationRequested) {
                 return FractureData.Empty;
             }
@@ -92,18 +92,8 @@ namespace VoxelEngine.Destructions
                 }
                 totalSize += currentSize;
 
-                GameObject cluster = new GameObject {
-                    transform = {
-                        parent = this.transform.parent
-                    }
-                };
-                var dynamicVoxelsObject = cluster.AddComponent<DynamicVoxelsObject>();
-                dynamicVoxelsObject.transform.position = transform.TransformPoint(minX, minY, minZ);
-                dynamicVoxelsObject.transform.rotation = transform.rotation;
-                dynamicVoxelsObject.transform.localScale = transform.localScale;
-                dynamicVoxelsObject.Data = data;
-                dynamicVoxelsObject.MeshRenderer.sharedMaterial = VoxelsContainer.MeshRenderer.sharedMaterial;
-                dynamicVoxelsObject.RebuildMesh().Forget();
+                Vector3 worldPos = transform.TransformPoint(minX, minY, minZ);
+                VoxelsFractureEngine.FractureFactory.Create(this, data, worldPos, damageData);
             }
 
             voxelsContainer.RebuildMesh(true).Forget();
