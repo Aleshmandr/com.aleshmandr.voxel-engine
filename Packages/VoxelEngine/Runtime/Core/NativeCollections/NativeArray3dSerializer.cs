@@ -23,7 +23,7 @@ namespace VoxelEngine
             }
         }
 
-        public static byte[] Serialize<T>(NativeArray3d<T> nativeArray, bool zip) where T : struct, IComparable {
+        public static byte[] Serialize<T>(NativeArray3d<T> nativeArray, bool zip = true) where T : struct, IComparable {
             var obj = new NativeArray3dSerializationData<T>(nativeArray);
 
             //Write 1 to the first byte in case of compression, otherwise write 0

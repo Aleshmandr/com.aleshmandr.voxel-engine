@@ -101,7 +101,7 @@ namespace VoxelEngine.Jobs
                                 int maxZ = 0;
 
                                 for(int xi = x; xi < SizeX; xi++) {
-                                    int indexXiYZ = xi + SizeX * (y + SizeY * z); 
+                                    int indexXiYZ = xi + SizeX * (y + SizeY * z);
                                     // Check not drawn + same color
                                     if((Voxels[indexXiYZ] & 0x20) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
@@ -110,7 +110,7 @@ namespace VoxelEngine.Jobs
                                     }
                                     int tmpZ = 0;
                                     for(int zi = z; zi < SizeZ; zi++) {
-                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
+                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi);
                                         if((Voxels[indexXiYZi] & 0x20) == 0 && Utilities.IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
                                             tmpZ++;
                                         } else {
@@ -124,7 +124,7 @@ namespace VoxelEngine.Jobs
 
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int zi = z; zi < z + maxZ; zi++) {
-                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
+                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi);
                                         Voxels[indexXiYZi] |= 0x20;
                                     }
                                 }
@@ -133,16 +133,16 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x + maxX, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z));
 
                                 // Add triangle indices
                                 triangles.Add(idx + 2);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx);
-                                
+
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx);
@@ -164,7 +164,7 @@ namespace VoxelEngine.Jobs
                                 int maxZ = 0;
 
                                 for(int xi = x; xi < SizeX; xi++) {
-                                    int indexXiYZ = xi + SizeX * (y + SizeY * z); 
+                                    int indexXiYZ = xi + SizeX * (y + SizeY * z);
                                     // Check not drawn + same color
                                     if((Voxels[indexXiYZ] & 0x2) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
@@ -173,7 +173,7 @@ namespace VoxelEngine.Jobs
                                     }
                                     int tmpZ = 0;
                                     for(int zi = z; zi < SizeZ; zi++) {
-                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
+                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi);
                                         if((Voxels[indexXiYZi] & 0x2) == 0 && Utilities.IsSameColor(Voxels[indexXiYZi], Voxels[indexXYZ])) {
                                             tmpZ++;
                                         } else {
@@ -186,7 +186,7 @@ namespace VoxelEngine.Jobs
                                 }
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int zi = z; zi < z + maxZ; zi++) {
-                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi); 
+                                        int indexXiYZi = xi + SizeX * (y + SizeY * zi);
                                         Voxels[indexXiYZi] |= 0x2;
                                     }
                                 }
@@ -195,10 +195,10 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x + maxX, y, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y, z - 1));
-                                vertices.Add(new Vector3(x - 1, y, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + 1, z));
+                                vertices.Add(new Vector3(x, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z));
 
                                 // Add triangle indices
                                 triangles.Add(idx);
@@ -226,7 +226,7 @@ namespace VoxelEngine.Jobs
                                 int maxY = 0;
 
                                 for(int xi = x; xi < SizeX; xi++) {
-                                    int indexXiYZ = xi + SizeX * (y + SizeY * z); 
+                                    int indexXiYZ = xi + SizeX * (y + SizeY * z);
                                     // Check not drawn + same color
                                     if((Voxels[indexXiYZ] & 0x10) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
@@ -235,7 +235,7 @@ namespace VoxelEngine.Jobs
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
-                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
+                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z);
                                         if((Voxels[indexXiYiZ] & 0x10) == 0 && Utilities.IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
@@ -248,7 +248,7 @@ namespace VoxelEngine.Jobs
                                 }
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int yi = y; yi < y + maxY; yi++) {
-                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
+                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z);
                                         Voxels[indexXiYiZ] |= 0x10;
                                     }
                                 }
@@ -257,15 +257,15 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x + maxX, y + maxY, z - 1));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
-                                
+
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx);
                                 triangles.Add(idx + 2);
@@ -287,7 +287,7 @@ namespace VoxelEngine.Jobs
                                 int maxY = 0;
 
                                 for(int xi = x; xi < SizeX; xi++) {
-                                    int indexXiYZ = xi + SizeX * (y + SizeY * z); 
+                                    int indexXiYZ = xi + SizeX * (y + SizeY * z);
                                     // Check not drawn + same color
                                     if((Voxels[indexXiYZ] & 0x1) == 0 && Utilities.IsSameColor(Voxels[indexXiYZ], Voxels[indexXYZ])) {
                                         maxX++;
@@ -296,7 +296,7 @@ namespace VoxelEngine.Jobs
                                     }
                                     int tmpY = 0;
                                     for(int yi = y; yi < SizeY; yi++) {
-                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
+                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z);
                                         if((Voxels[indexXiYiZ] & 0x1) == 0 && Utilities.IsSameColor(Voxels[indexXiYiZ], Voxels[indexXYZ])) {
                                             tmpY++;
                                         } else {
@@ -309,7 +309,7 @@ namespace VoxelEngine.Jobs
                                 }
                                 for(int xi = x; xi < x + maxX; xi++) {
                                     for(int yi = y; yi < y + maxY; yi++) {
-                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z); 
+                                        int indexXiYiZ = xi + SizeX * (yi + SizeY * z);
                                         Voxels[indexXiYiZ] |= 0x1;
                                     }
                                 }
@@ -318,15 +318,15 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x + maxX, y + maxY, z));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z));
-                                vertices.Add(new Vector3(x - 1, y - 1, z));
+                                vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z + 1));
+                                vertices.Add(new Vector3(x, y, z + 1));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
-                                
+
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx + 2);
@@ -379,16 +379,15 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z + maxZ));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
-                                
-                                vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
-                                
+
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx);
                                 triangles.Add(idx + 2);
@@ -440,15 +439,15 @@ namespace VoxelEngine.Jobs
 
                                 int idx = vertices.Length;
 
-                                vertices.Add(new Vector3(x, y - 1, z - 1));
-                                vertices.Add(new Vector3(x, y + maxY, z + maxZ));
-                                vertices.Add(new Vector3(x, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x, y + maxY, z - 1));
-                                
+                                vertices.Add(new Vector3(x + 1, y, z));
+                                vertices.Add(new Vector3(x + 1, y + maxY + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + 1, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + 1, y + maxY + 1, z));
+
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
-                                
+
                                 triangles.Add(idx);
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx + 1);

@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
@@ -237,10 +238,17 @@ namespace VoxelEngine
         }
 
         public byte[] Serialize() {
-            return NativeArray3dSerializer.Serialize(Data, true);
+            return NativeArray3dSerializer.Serialize(Data);
         }
 
 #if UNITY_EDITOR
+
+        public void OnDrawGizmosSelected() {
+            Vector3 size = new Vector3(Data.SizeX, Data.SizeY, Data.SizeZ);
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(size * 0.5f, size);
+        }
 
         public void EditorEnableLoadOnStart() {
             loadOnStart = true;

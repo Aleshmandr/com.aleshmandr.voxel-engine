@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,6 +16,7 @@ namespace VoxelEngine.Editor
         private SerializedProperty isColliderDisabledProperty;
         private const string CenterToParentIconName = "d_ToolHandleCenter";
         private const string RefreshIconName = "d_Refresh";
+        private const string TrimIconName = "d_ContentSizeFitter Icon";
 
         private void OnEnable() {
             voxelsContainer = target as VoxelsContainer;
@@ -54,10 +56,22 @@ namespace VoxelEngine.Editor
             if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {
                 AlignCenterWithParent();
             }
+            if(GUILayout.Button(EditorGUIUtility.IconContent(TrimIconName), GUILayout.Height(20))) {
+                TrimAndRecenter();
+            }
             if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
                 voxelsContainer.EditorRefresh();
             }
             GUILayout.EndHorizontal();
+        }
+
+        private void TrimAndRecenter() {
+            Utils.Trim(voxelsContainer.Asset, out int3 offset);
+            voxelsContainer.EditorRefresh();
+            
+            Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Recenter");
+            var voxelsCenterWorldPos = voxelsContainer.transform.TransformVector(new Vector3(offset.x, offset.y, offset.z));
+            voxelsContainer.transform.position += voxelsCenterWorldPos;
         }
 
         private void AlignCenterWithParent() {
@@ -95,7 +109,7 @@ namespace VoxelEngine.Editor
 
             Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Align Center With Parent");
             var targetWorldPos = voxelsContainer.transform.parent == null ? Vector3.zero : voxelsContainer.transform.parent.position;
-            var voxelsCenterWorldPos = voxelsContainer.transform.TransformPoint(new Vector3(minX + maxX - 1, minY + maxY - 1, minZ + maxZ - 1) * 0.5f);
+            var voxelsCenterWorldPos = voxelsContainer.transform.TransformPoint(new Vector3(minX + maxX, minY + maxY, minZ + maxZ) * 0.5f);
             var worldMoveVector = targetWorldPos - voxelsCenterWorldPos;
             voxelsContainer.transform.position += worldMoveVector;
         }

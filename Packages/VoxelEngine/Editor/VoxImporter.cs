@@ -119,7 +119,6 @@ namespace VoxelEngine.Editor
             },
         };
 
-        private bool compress = true;
         private bool generateMeshAssets;
         private bool clusterize;
         private int clusterMaxVoxels = 2400;
@@ -136,7 +135,6 @@ namespace VoxelEngine.Editor
             titleContent.text = "Magica Voxel Importer";
             EditorGUILayout.BeginVertical("Box");
 
-            compress = EditorGUILayout.Toggle("Compress", compress);
             clusterize = EditorGUILayout.Toggle("Clusterize", clusterize);
             generateMeshAssets = EditorGUILayout.Toggle("Generate Mesh Assets", generateMeshAssets);
             if(generateMeshAssets) {
@@ -392,7 +390,7 @@ namespace VoxelEngine.Editor
                 MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
             }
 
-            var bytes = NativeArray3dSerializer.Serialize(data, compress);
+            var bytes = NativeArray3dSerializer.Serialize(data);
 
             var assetParentFolderName = originalAssetName;
 
