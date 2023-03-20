@@ -1,27 +1,26 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Unity.Collections;
-using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
-using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Destructions
 {
     public class VoxelsFractureObject : MonoBehaviour
     {
         [SerializeField] private VoxelsContainer voxelsContainer;
-        [SerializeField] private float toughness = 1f;
-        [SerializeField] private int minFractureSize = 3;
-        [SerializeField] private int maxFractureSize = 10;
+        [SerializeField] [Min(0)] private float toughness = 1f;
+        [SerializeField] [Min(1)] private int minFractureSize = 3;
+        [SerializeField] [Min(1)] private int maxFractureSize = 10;
         private VoxelsFractureJobsScheduler fractureJobsScheduler;
         private CancellationTokenSource lifeTimeCts;
 
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
         private void Awake() {
-            
+
             lifeTimeCts = new CancellationTokenSource();
         }
 
@@ -30,10 +29,9 @@ namespace VoxelEngine.Destructions
             float dmgRadius = force.magnitude / toughness;
             DrawDebugSphere(pos, dmgRadius, new Color(0f, 1f, 0f, 0.3f), 1f);
             var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent, lifeTimeCts.Token);
-            
+
             fractureData.Dispose();
         }
-
 
         private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IDamageData {
             int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
@@ -45,10 +43,10 @@ namespace VoxelEngine.Destructions
             if(cancellationToken.IsCancellationRequested) {
                 return FractureData.Empty;
             }
-            
+
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
-               
+
                 int currentSize = fractureData.ClustersLengths[f];
 
                 int maxX = 0;
@@ -58,7 +56,7 @@ namespace VoxelEngine.Destructions
                 int minX = int.MaxValue;
                 int minZ = int.MaxValue;
                 int minY = int.MaxValue;
-                
+
                 for(int i = totalSize; i < totalSize + currentSize; i++) {
                     var pos = fractureData.Voxels[i].Position;
                     if(pos.x > maxX) {
@@ -86,14 +84,14 @@ namespace VoxelEngine.Destructions
                 int sizeX = maxX - minX + 1;
                 int sizeY = maxY - minY + 1;
                 int sizeZ = maxZ - minZ + 1;
-                
+
                 var data = new NativeArray3d<int>(sizeX, sizeY, sizeZ);
                 for(int i = totalSize; i < totalSize + currentSize; i++) {
                     var pos = fractureData.Voxels[i].Position;
                     data[pos.x - minX, pos.y - minY, pos.z - minZ] = fractureData.Voxels[i].Color;
                 }
                 totalSize += currentSize;
-                
+
                 GameObject cluster = new GameObject {
                     transform = {
                         parent = this.transform.parent
@@ -155,6 +153,12 @@ namespace VoxelEngine.Destructions
         private void Reset() {
             if(voxelsContainer == null) {
                 voxelsContainer = GetComponent<VoxelsContainer>();
+            }
+        }
+
+        private void OnValidate() {
+            if(maxFractureSize < minFractureSize) {
+                maxFractureSize = minFractureSize;
             }
         }
 #endif
