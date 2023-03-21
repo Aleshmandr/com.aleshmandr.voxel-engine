@@ -10,7 +10,7 @@ namespace VoxelEngine.Destructions
 
     public class DefaultFracturFactory : IFractureFactory
     {
-        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IDamageData damageData) {
+        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IForceDamageData damageData) {
             Transform parentTransform = fractureObject.transform;
             GameObject cluster = new GameObject {
                 transform = {
@@ -19,7 +19,7 @@ namespace VoxelEngine.Destructions
             };
 
             var dynamicVoxelsObject = cluster.AddComponent<DefaultDynamicVoxelsObject>();
-            dynamicVoxelsObject.Init(data);
+            TestAsync(dynamicVoxelsObject, data, damageData).Forget();
             dynamicVoxelsObject.transform.position = worldPos;
             dynamicVoxelsObject.transform.rotation = parentTransform.rotation;
             dynamicVoxelsObject.transform.localScale = parentTransform.localScale;
@@ -27,6 +27,11 @@ namespace VoxelEngine.Destructions
             dynamicVoxelsObject.MeshRenderer.sharedMaterial = fractureObject.VoxelsContainer.MeshRenderer.sharedMaterial;
 
             return dynamicVoxelsObject;
+        }
+
+        private async UniTaskVoid TestAsync(DefaultDynamicVoxelsObject dynamicVoxelsObject, NativeArray3d<int> data, IForceDamageData damageData) {
+            await dynamicVoxelsObject.InitAsync(data);
+            dynamicVoxelsObject.Rigidbody.AddExplosionForce(damageData.Force.magnitude, damageData.WorldPoint, damageData.Radius);
         }
     }
 
@@ -37,6 +42,6 @@ namespace VoxelEngine.Destructions
 
     public interface IFractureFactory
     {
-        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IDamageData damageData);
+        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IForceDamageData damageData);
     }
 }

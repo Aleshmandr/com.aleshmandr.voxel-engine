@@ -62,14 +62,15 @@ namespace VoxelEngine
         }
         
         public void Init(NativeArray3d<int> voxelsData) {
+            
+            InitAsync(voxelsData).Forget();
+        }
+
+        public async UniTask InitAsync(NativeArray3d<int> voxelsData) {
             if(data.IsCreated) {
                 data.Dispose();
             }
             data = voxelsData;
-            InitAsync().Forget();
-        }
-
-        private async UniTask InitAsync() {
             if(meshGenerationJobsScheduler == null) {
                 if(VoxelEngineConfig.UseOptimizedMeshGenerationAtRuntime) {
                     meshGenerationJobsScheduler = new OptimizedMeshGenerationJobsScheduler();

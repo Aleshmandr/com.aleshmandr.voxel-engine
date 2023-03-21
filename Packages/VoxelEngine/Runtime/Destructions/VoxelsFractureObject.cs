@@ -20,21 +20,22 @@ namespace VoxelEngine.Destructions
         public VoxelsContainer VoxelsContainer => voxelsContainer;
 
         private void Awake() {
-
             lifeTimeCts = new CancellationTokenSource();
         }
 
-        public async UniTaskVoid Hit(Vector3 pos, Vector3 force) {
+        public async UniTaskVoid Hit(Vector3 pos, float radius, Vector3 force) {
+            
+#if UNITY_EDITOR
             Debug.DrawRay(pos, force, Color.green, 1f);
-            float dmgRadius = force.magnitude / toughness;
-            DrawDebugSphere(pos, dmgRadius, new Color(0f, 1f, 0f, 0.3f), 1f);
-            var fractureData = await RunDamageJob(new BaseDamageData(pos, dmgRadius), Allocator.Persistent, lifeTimeCts.Token);
+            DrawDebugSphere(pos, radius, new Color(0f, 1f, 0f, 0.3f), 1f);
+  #endif
 
+            var fractureData = await RunDamageJob(new ForceDamageData(pos, force, radius), Allocator.Persistent, lifeTimeCts.Token);
             fractureData.Dispose();
         }
 
-        private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IDamageData {
-            int intRad = Mathf.CeilToInt(damageData.Radius / voxelsContainer.transform.lossyScale.x);
+        private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IForceDamageData {
+            int intRad = Mathf.CeilToInt(damageData.Radius / (toughness * voxelsContainer.transform.lossyScale.x));
             var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
