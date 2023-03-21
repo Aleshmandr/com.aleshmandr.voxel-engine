@@ -52,23 +52,26 @@ namespace VoxelEngine.Editor
             useBakeJobProperty.boolValue = EditorGUILayout.Toggle(useBakeJobProperty.displayName, useBakeJobProperty.boolValue);
             isColliderDisabledProperty.boolValue = EditorGUILayout.Toggle(isColliderDisabledProperty.displayName, isColliderDisabledProperty.boolValue);
             serializedObject.ApplyModifiedProperties();
-            GUILayout.BeginHorizontal();
-            if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {
-                AlignCenterWithParent();
+            if(!Application.isPlaying)
+            {
+                GUILayout.BeginHorizontal();
+                if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {
+                    AlignCenterWithParent();
+                }
+                if(GUILayout.Button(EditorGUIUtility.IconContent(TrimIconName), GUILayout.Height(20))) {
+                    TrimAndRecenter().Forget();
+                }
+                if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
+                    voxelsContainer.EditorRefresh();
+                }
+                GUILayout.EndHorizontal();
             }
-            if(GUILayout.Button(EditorGUIUtility.IconContent(TrimIconName), GUILayout.Height(20))) {
-                TrimAndRecenter().Forget();
-            }
-            if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
-                voxelsContainer.EditorRefresh();
-            }
-            GUILayout.EndHorizontal();
         }
 
         private async UniTaskVoid TrimAndRecenter() {
             Utils.Trim(voxelsContainer.Asset);
             var startPos = voxelsContainer.MeshFilter.sharedMesh.bounds.center;
-            await voxelsContainer.EditorRefreshAsync();
+            await voxelsContainer.EditorRefreshAsync(false);
             var refreshedPos = voxelsContainer.MeshFilter.sharedMesh.bounds.center;
             var offset = startPos - refreshedPos;
             Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Recenter");
