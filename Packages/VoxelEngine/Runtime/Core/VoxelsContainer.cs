@@ -270,7 +270,7 @@ namespace VoxelEngine
             EditorRefreshAsync().Forget();
         }
 
-        private async UniTaskVoid EditorRefreshAsync() {
+        public async UniTask EditorRefreshAsync() {
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             await RebuildMesh(true, true);
             Data.Dispose();

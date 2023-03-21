@@ -1,4 +1,4 @@
-using Unity.Mathematics;
+using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -57,7 +57,7 @@ namespace VoxelEngine.Editor
                 AlignCenterWithParent();
             }
             if(GUILayout.Button(EditorGUIUtility.IconContent(TrimIconName), GUILayout.Height(20))) {
-                TrimAndRecenter();
+                TrimAndRecenter().Forget();
             }
             if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
                 voxelsContainer.EditorRefresh();
@@ -65,10 +65,12 @@ namespace VoxelEngine.Editor
             GUILayout.EndHorizontal();
         }
 
-        private void TrimAndRecenter() {
-            Utils.Trim(voxelsContainer.Asset, out int3 offset);
-            voxelsContainer.EditorRefresh();
-            
+        private async UniTaskVoid TrimAndRecenter() {
+            Utils.Trim(voxelsContainer.Asset);
+            var startPos = voxelsContainer.MeshFilter.sharedMesh.bounds.center;
+            await voxelsContainer.EditorRefreshAsync();
+            var refreshedPos = voxelsContainer.MeshFilter.sharedMesh.bounds.center;
+            var offset = startPos - refreshedPos;
             Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Recenter");
             var voxelsCenterWorldPos = voxelsContainer.transform.TransformVector(new Vector3(offset.x, offset.y, offset.z));
             voxelsContainer.transform.position += voxelsCenterWorldPos;

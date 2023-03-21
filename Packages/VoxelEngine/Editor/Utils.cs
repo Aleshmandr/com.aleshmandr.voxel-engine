@@ -2,12 +2,12 @@ using System.IO;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
+
 namespace VoxelEngine.Editor
 {
     public static class Utils
     {
-        public static void Trim(TextAsset voxelsDataAsset, out int3 offset) {
-            offset = 0;
+        public static void Trim(TextAsset voxelsDataAsset) {
             string relativePath = AssetDatabase.GetAssetPath(voxelsDataAsset);
             string absolutePath = Path.Combine(Application.dataPath, "../", relativePath);
             absolutePath = Path.GetFullPath(absolutePath);
@@ -44,7 +44,6 @@ namespace VoxelEngine.Editor
             }
 
             int3 trimSize = max - min + 1;
-            offset = min;
             var trimedData = new NativeArray3d<int>(trimSize.x, trimSize.y, trimSize.z);
             for(int i = 0; i < trimSize.x; i++) {
                 for(int j = 0; j < trimSize.y; j++) {
