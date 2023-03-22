@@ -28,20 +28,8 @@ namespace VoxelEngine.Editor
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
             isColliderDisabledProperty = serializedObject.FindProperty("isColliderDisabled");
-            if(!Application.isPlaying) {
-                voxelsContainer.Data.Dispose();
-                if(voxelsContainer.Asset != null) {
-                    voxelsContainer.Data = NativeArray3dSerializer.Deserialize<int>(voxelsContainer.Asset.bytes);
-                }
-            }
         }
-
-        private void OnDisable() {
-            if(!Application.isPlaying) {
-                voxelsContainer.Data.Dispose();
-            }
-        }
-
+        
         public override void OnInspectorGUI() {
             serializedObject.Update();
             EditorGUILayout.ObjectField(assetProperty);
@@ -80,41 +68,9 @@ namespace VoxelEngine.Editor
         }
 
         private void AlignCenterWithParent() {
-            int minX, minY, minZ, maxX, maxY, maxZ;
-            minX = minY = minZ = int.MaxValue;
-            maxX = maxY = maxZ = int.MinValue;
-            for(int x = 0; x < voxelsContainer.Data.SizeX; x++) {
-                for(int y = 0; y < voxelsContainer.Data.SizeY; y++) {
-                    for(int z = 0; z < voxelsContainer.Data.SizeZ; z++) {
-                        if(voxelsContainer.Data[x, y, z] != 0) {
-                            if(x < minX) {
-                                minX = x;
-                            }
-                            if(x > maxX) {
-                                maxX = x;
-                            }
-
-                            if(y < minY) {
-                                minY = y;
-                            }
-                            if(y > maxY) {
-                                maxY = y;
-                            }
-
-                            if(z < minZ) {
-                                minZ = z;
-                            }
-                            if(z > maxZ) {
-                                maxZ = z;
-                            }
-                        }
-                    }
-                }
-            }
-
             Undo.RegisterFullObjectHierarchyUndo(voxelsContainer.gameObject, "Align Center With Parent");
             var targetWorldPos = voxelsContainer.transform.parent == null ? Vector3.zero : voxelsContainer.transform.parent.position;
-            var voxelsCenterWorldPos = voxelsContainer.transform.TransformPoint(new Vector3(minX + maxX, minY + maxY, minZ + maxZ) * 0.5f);
+            var voxelsCenterWorldPos = voxelsContainer.transform.TransformPoint(voxelsContainer.MeshFilter.sharedMesh.bounds.center);
             var worldMoveVector = targetWorldPos - voxelsCenterWorldPos;
             voxelsContainer.transform.position += worldMoveVector;
         }
