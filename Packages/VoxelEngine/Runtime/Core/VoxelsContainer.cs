@@ -246,7 +246,7 @@ namespace VoxelEngine
         public void OnDrawGizmosSelected() {
             Vector3 size = new Vector3(Data.SizeX, Data.SizeY, Data.SizeZ);
             Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.color = Color.green;
+            Gizmos.color = Color.white;
             Gizmos.DrawWireCube(size * 0.5f, size);
         }
 
