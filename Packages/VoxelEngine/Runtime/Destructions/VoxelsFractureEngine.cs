@@ -10,7 +10,7 @@ namespace VoxelEngine.Destructions
 
     public class DefaultFractureFactory : IFractureFactory
     {
-        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IForceDamageData damageData) {
+        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, int voxelsCount, Vector3 worldPos, IForceDamageData damageData) {
             Transform parentTransform = fractureObject.transform;
             GameObject cluster = new GameObject {
                 transform = {
@@ -19,7 +19,7 @@ namespace VoxelEngine.Destructions
             };
 
             var dynamicVoxelsObject = cluster.AddComponent<DefaultDynamicVoxelsObject>();
-            InitAsync(dynamicVoxelsObject, data, damageData).Forget();
+            InitAsync(dynamicVoxelsObject, data, voxelsCount, damageData).Forget();
             dynamicVoxelsObject.transform.position = worldPos;
             dynamicVoxelsObject.transform.rotation = parentTransform.rotation;
             dynamicVoxelsObject.transform.localScale = parentTransform.localScale;
@@ -29,9 +29,10 @@ namespace VoxelEngine.Destructions
             return dynamicVoxelsObject;
         }
 
-        private async UniTaskVoid InitAsync(DefaultDynamicVoxelsObject dynamicVoxelsObject, NativeArray3d<int> data, IForceDamageData damageData) {
+        private async UniTaskVoid InitAsync(DefaultDynamicVoxelsObject dynamicVoxelsObject, NativeArray3d<int> data, int voxelsCount, IForceDamageData damageData) {
             await dynamicVoxelsObject.InitAsync(data);
             dynamicVoxelsObject.Rigidbody.AddExplosionForce(damageData.Force.magnitude, damageData.WorldPoint, damageData.Radius);
+            dynamicVoxelsObject.Rigidbody.mass = voxelsCount;
         }
     }
 
@@ -42,6 +43,6 @@ namespace VoxelEngine.Destructions
 
     public interface IFractureFactory
     {
-        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, Vector3 worldPos, IForceDamageData damageData);
+        public IVoxelsFractureObject Create(VoxelsFractureObject fractureObject, NativeArray3d<int> data, int voxelsCount, Vector3 worldPos, IForceDamageData damageData);
     }
 }

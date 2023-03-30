@@ -94,7 +94,7 @@ namespace VoxelEngine.Destructions
                 totalSize += currentSize;
 
                 Vector3 worldPos = transform.TransformPoint(minX, minY, minZ);
-                VoxelsFractureEngine.FractureFactory.Create(this, data, worldPos, damageData);
+                VoxelsFractureEngine.FractureFactory.Create(this, data, currentSize, worldPos, damageData);
             }
 
             voxelsContainer.RebuildMesh().Forget();
