@@ -18,7 +18,7 @@ namespace VoxelEngine
     {
         public TextAsset Asset;
         public NativeArray3d<int> Data;
-        [SerializeField] private bool updateMeshOnStart;
+        [SerializeField] private bool updateMeshFilterOnStart;
         [SerializeField] private bool useBakeJob;
         [SerializeField] private bool isColliderDisabled;
         private MeshFilter meshFilter;
@@ -64,7 +64,7 @@ namespace VoxelEngine
             }
 #endif
             lifeTimeCts = new CancellationTokenSource();
-            await Deserialize(Asset.bytes, updateMeshOnStart);
+            await Deserialize(Asset.bytes, updateMeshFilterOnStart);
             IsInitialized = true;
         }
 
@@ -249,7 +249,7 @@ namespace VoxelEngine
         }
 
         public void EditorEnableLoadOnStart() {
-            updateMeshOnStart = true;
+            updateMeshFilterOnStart = true;
             EditorUtility.SetDirty(this);
         }
 
@@ -260,7 +260,7 @@ namespace VoxelEngine
         private void OnEditorStart() {
             lifeTimeCts = new CancellationTokenSource();
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
-            if(MeshFilter.sharedMesh != null || !updateMeshOnStart) {
+            if(MeshFilter.sharedMesh != null || !updateMeshFilterOnStart) {
                 return;
             }
 

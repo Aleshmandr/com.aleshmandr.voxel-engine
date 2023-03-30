@@ -10,7 +10,6 @@ namespace VoxelEngine.Editor
     {
         private VoxelsContainer voxelsContainer;
         private SerializedProperty assetProperty;
-        private SerializedProperty loadOnStartProperty;
         private SerializedProperty updateMeshOnStartProperty;
         private SerializedProperty useBakeJobProperty;
         private SerializedProperty isColliderDisabledProperty;
@@ -24,7 +23,6 @@ namespace VoxelEngine.Editor
                 return;
             }
             assetProperty = serializedObject.FindProperty("Asset");
-            loadOnStartProperty = serializedObject.FindProperty("loadOnStart");
             updateMeshOnStartProperty = serializedObject.FindProperty("updateMeshFilterOnStart");
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
             isColliderDisabledProperty = serializedObject.FindProperty("isColliderDisabled");
@@ -33,10 +31,7 @@ namespace VoxelEngine.Editor
         public override void OnInspectorGUI() {
             serializedObject.Update();
             EditorGUILayout.ObjectField(assetProperty);
-            loadOnStartProperty.boolValue = EditorGUILayout.Toggle(loadOnStartProperty.displayName, loadOnStartProperty.boolValue);
-            if(loadOnStartProperty.boolValue) {
-                updateMeshOnStartProperty.boolValue = EditorGUILayout.Toggle(updateMeshOnStartProperty.displayName, updateMeshOnStartProperty.boolValue);
-            }
+            updateMeshOnStartProperty.boolValue = EditorGUILayout.Toggle(updateMeshOnStartProperty.displayName, updateMeshOnStartProperty.boolValue);
             useBakeJobProperty.boolValue = EditorGUILayout.Toggle(useBakeJobProperty.displayName, useBakeJobProperty.boolValue);
             isColliderDisabledProperty.boolValue = EditorGUILayout.Toggle(isColliderDisabledProperty.displayName, isColliderDisabledProperty.boolValue);
             serializedObject.ApplyModifiedProperties();
