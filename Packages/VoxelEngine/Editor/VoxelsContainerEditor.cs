@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ namespace VoxelEngine.Editor
         private const string CenterToParentIconName = "d_ToolHandleCenter";
         private const string RefreshIconName = "d_Refresh";
         private const string TrimIconName = "d_ContentSizeFitter Icon";
+        private const string MeshIconName = "d_Mesh Icon";
 
         private void OnEnable() {
             voxelsContainer = target as VoxelsContainer;
@@ -27,7 +29,7 @@ namespace VoxelEngine.Editor
             useBakeJobProperty = serializedObject.FindProperty("useBakeJob");
             isColliderDisabledProperty = serializedObject.FindProperty("isColliderDisabled");
         }
-        
+
         public override void OnInspectorGUI() {
             serializedObject.Update();
             EditorGUILayout.ObjectField(assetProperty);
@@ -35,8 +37,7 @@ namespace VoxelEngine.Editor
             useBakeJobProperty.boolValue = EditorGUILayout.Toggle(useBakeJobProperty.displayName, useBakeJobProperty.boolValue);
             isColliderDisabledProperty.boolValue = EditorGUILayout.Toggle(isColliderDisabledProperty.displayName, isColliderDisabledProperty.boolValue);
             serializedObject.ApplyModifiedProperties();
-            if(!Application.isPlaying)
-            {
+            if(!Application.isPlaying) {
                 GUILayout.BeginHorizontal();
                 if(GUILayout.Button(EditorGUIUtility.IconContent(CenterToParentIconName))) {
                     AlignCenterWithParent();
@@ -44,11 +45,33 @@ namespace VoxelEngine.Editor
                 if(GUILayout.Button(EditorGUIUtility.IconContent(TrimIconName), GUILayout.Height(20))) {
                     TrimAndRecenter().Forget();
                 }
+                if(GUILayout.Button(EditorGUIUtility.IconContent(MeshIconName), GUILayout.Height(20))) {
+                    SaveMesh().Forget();
+                }
                 if(GUILayout.Button(EditorGUIUtility.IconContent(RefreshIconName))) {
                     voxelsContainer.EditorRefresh();
                 }
                 GUILayout.EndHorizontal();
             }
+        }
+
+        private async UniTaskVoid SaveMesh() {
+            if(voxelsContainer.Asset == null) {
+                return;
+            }
+            var mesh = voxelsContainer.MeshFilter.sharedMesh;
+            var meshPath = AssetDatabase.GetAssetPath(mesh);
+            await voxelsContainer.EditorRefreshAsync();
+            mesh = voxelsContainer.MeshFilter.sharedMesh;
+
+            if(mesh != null && string.IsNullOrEmpty(meshPath)) {
+                var assetPath = AssetDatabase.GetAssetPath(voxelsContainer.Asset);
+                meshPath = Path.ChangeExtension(assetPath, "asset");
+                AssetDatabase.CreateAsset(mesh, meshPath);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            voxelsContainer.MeshFilter.sharedMesh = mesh;
         }
 
         private async UniTaskVoid TrimAndRecenter() {
