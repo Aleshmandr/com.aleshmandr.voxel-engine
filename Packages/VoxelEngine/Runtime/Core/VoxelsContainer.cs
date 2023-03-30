@@ -4,6 +4,7 @@ using System.Threading;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VoxelEngine.Jobs;
 
 #if UNITY_EDITOR
@@ -17,8 +18,7 @@ namespace VoxelEngine
     {
         public TextAsset Asset;
         public NativeArray3d<int> Data;
-        [SerializeField] private bool loadOnStart;
-        [SerializeField] private bool updateMeshFilterOnStart;
+        [SerializeField] private bool updateMeshOnStart;
         [SerializeField] private bool useBakeJob;
         [SerializeField] private bool isColliderDisabled;
         private MeshFilter meshFilter;
@@ -64,7 +64,7 @@ namespace VoxelEngine
             }
 #endif
             lifeTimeCts = new CancellationTokenSource();
-            await Deserialize(Asset.bytes, loadOnStart, updateMeshFilterOnStart);
+            await Deserialize(Asset.bytes, updateMeshOnStart);
             IsInitialized = true;
         }
 
@@ -89,7 +89,7 @@ namespace VoxelEngine
         }
 
         public async UniTask Reload() {
-            await Deserialize(Asset.bytes, true, true);
+            await Deserialize(Asset.bytes, true);
         }
 
         public void SetMeshColliderActive(bool active) {
@@ -104,7 +104,7 @@ namespace VoxelEngine
             }
         }
 
-        public async UniTask RebuildMesh(bool updateMeshFilter, bool forceUpdateCollider = false) {
+        public async UniTask RebuildMesh(bool forceUpdateCollider = false) {
             if(meshGenerationJobsScheduler == null) {
                 if(VoxelEngineConfig.UseOptimizedMeshGenerationAtRuntime) {
                     meshGenerationJobsScheduler = new OptimizedMeshGenerationJobsScheduler();
@@ -117,9 +117,7 @@ namespace VoxelEngine
             if(isDestroyed) {
                 return;
             }
-            if(updateMeshFilter) {
-                MeshFilter.mesh = dynamicMesh;
-            }
+            MeshFilter.mesh = dynamicMesh;
 
             if(isColliderDisabled) {
                 return;
@@ -226,14 +224,14 @@ namespace VoxelEngine
                 && Data.IsCoordsValid(x, y, z - 1) && Data[x, y, z - 1] != 0;
         }
 
-        public async UniTask Deserialize(byte[] bytes, bool rebuildMesh, bool updateMeshFilter) {
+        public async UniTask Deserialize(byte[] bytes, bool rebuildMesh) {
             if(bytes == null) {
                 return;
             }
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(bytes);
             if(rebuildMesh) {
-                await RebuildMesh(updateMeshFilter, true);
+                await RebuildMesh(true);
             }
         }
 
@@ -251,8 +249,7 @@ namespace VoxelEngine
         }
 
         public void EditorEnableLoadOnStart() {
-            loadOnStart = true;
-            updateMeshFilterOnStart = true;
+            updateMeshOnStart = true;
             EditorUtility.SetDirty(this);
         }
 
@@ -263,7 +260,7 @@ namespace VoxelEngine
         private void OnEditorStart() {
             lifeTimeCts = new CancellationTokenSource();
             //Do not generate mesh in editor if exist to not loose link to the original mesh asset
-            if(MeshFilter.sharedMesh != null || !loadOnStart) {
+            if(MeshFilter.sharedMesh != null || !updateMeshOnStart) {
                 return;
             }
 
@@ -273,7 +270,7 @@ namespace VoxelEngine
         public async UniTask EditorRefreshAsync(bool dispose = true) {
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
-            await RebuildMesh(true, true);
+            await RebuildMesh(true);
             if(dispose)
             {
                 Data.Dispose();

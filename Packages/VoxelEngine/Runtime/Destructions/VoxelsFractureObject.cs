@@ -97,7 +97,7 @@ namespace VoxelEngine.Destructions
                 VoxelsFractureEngine.FractureFactory.Create(this, data, worldPos, damageData);
             }
 
-            voxelsContainer.RebuildMesh(true).Forget();
+            voxelsContainer.RebuildMesh().Forget();
 
             return fractureData;
         }
