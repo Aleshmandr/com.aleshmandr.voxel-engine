@@ -135,10 +135,10 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x + maxX, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z));
 
                                 // Add triangle indices
                                 triangles.Add(idx + 2);
@@ -194,10 +194,10 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x + maxX, y, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y, z - 1));
-                                vertices.Add(new Vector3(x - 1, y, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + 1, z));
+                                vertices.Add(new Vector3(x, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z));
 
                                 // Add triangle indices
                                 triangles.Add(idx);
@@ -253,10 +253,10 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x + maxX, y + maxY, z - 1));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z ));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
@@ -311,10 +311,10 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x + maxX, y + maxY, z));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z));
-                                vertices.Add(new Vector3(x - 1, y - 1, z));
+                                vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z + 1));
+                                vertices.Add(new Vector3(x, y, z + 1));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
@@ -368,15 +368,15 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x - 1, y + maxY, z + maxZ));
+                                vertices.Add(new Vector3(x, y, z ));
+                                vertices.Add(new Vector3(x, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x, y + maxY + 1, z));
 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
                                 triangles.Add(idx + 2);
                                 
-                                vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
                                 
                                 triangles.Add(idx + 3);
                                 triangles.Add(idx);
@@ -426,10 +426,10 @@ namespace VoxelEngine
 
                                 int idx = vertices.Count;
 
-                                vertices.Add(new Vector3(x, y - 1, z - 1));
-                                vertices.Add(new Vector3(x, y + maxY, z + maxZ));
-                                vertices.Add(new Vector3(x, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x, y + maxY, z - 1));
+                                vertices.Add(new Vector3(x + 1, y, z));
+                                vertices.Add(new Vector3(x + 1, y + maxY + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + 1, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + 1, y + maxY + 1, z));
                                 
                                 triangles.Add(idx);
                                 triangles.Add(idx + 1);
@@ -605,10 +605,10 @@ namespace VoxelEngine
                                 v7 = idx + 2;
                                 v3 = idx + 3;
 
-                                vertices.Add(new Vector3(x - 1, y - 1, z - 1));
-                                vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
+                                vertices.Add(new Vector3(x, y, z));
+                                vertices.Add(new Vector3(x, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y, z));
                                 
                                 colors.Add(color);
                                 colors.Add(color);
@@ -665,10 +665,10 @@ namespace VoxelEngine
                                 v5 = idx + 2;
                                 v2 = idx + 3;
 
-                                vertices.Add(new Vector3(x - 1, y, z - 1));
-                                vertices.Add(new Vector3(x - 1, y, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y, z + maxZ));
-                                vertices.Add(new Vector3(x + maxX, y, z - 1));
+                                vertices.Add(new Vector3(x, y + 1, z));
+                                vertices.Add(new Vector3(x, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z + maxZ + 1));
+                                vertices.Add(new Vector3(x + maxX + 1, y + 1, z));
                                 
                                 colors.Add(color);
                                 colors.Add(color);
@@ -734,28 +734,28 @@ namespace VoxelEngine
                                 int idx = vertices.Count;
 
                                 if(v0 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y - 1, z - 1));
+                                    vertices.Add(new Vector3(x, y, z));
                                     colors.Add(color);
                                     v0 = idx;
                                     idx++;
                                 }
 
                                 if(v1 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
+                                    vertices.Add(new Vector3(x, y + maxY + 1, z));
                                     colors.Add(color);
                                     v1 = idx;
                                     idx++;
                                 }
 
                                 if(v2 < 0) {
-                                    vertices.Add(new Vector3(x + maxX, y + maxY, z - 1));
+                                    vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z));
                                     colors.Add(color);
                                     v2 = idx;
                                     idx++;
                                 }
 
                                 if(v3 < 0) {
-                                    vertices.Add(new Vector3(x + maxX, y - 1, z - 1));
+                                    vertices.Add(new Vector3(x + maxX + 1, y, z));
                                     colors.Add(color);
                                     v3 = idx;
                                 }
@@ -817,28 +817,28 @@ namespace VoxelEngine
                                 int idx = vertices.Count;
 
                                 if(v4 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y + maxY, z));
+                                    vertices.Add(new Vector3(x, y + maxY + 1, z + 1));
                                     colors.Add(color);
                                     v4 = idx;
                                     idx++;
                                 }
 
                                 if(v5 < 0) {
-                                    vertices.Add(new Vector3(x + maxX, y + maxY, z));
+                                    vertices.Add(new Vector3(x + maxX + 1, y + maxY + 1, z + 1));
                                     colors.Add(color);
                                     v5 = idx;
                                     idx++;
                                 }
 
                                 if(v7 < 0) {
-                                    vertices.Add(new Vector3(x + maxX, y - 1, z));
+                                    vertices.Add(new Vector3(x + maxX + 1, y, z + 1));
                                     colors.Add(color);
                                     v7 = idx;
                                     idx++;
                                 }
 
                                 if(v6 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y - 1, z));
+                                    vertices.Add(new Vector3(x, y, z + 1));
                                     colors.Add(color);
                                     v6 = idx;
                                 }
@@ -898,28 +898,28 @@ namespace VoxelEngine
                                 int idx = vertices.Count;
 
                                 if(v0 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y - 1, z - 1));
+                                    vertices.Add(new Vector3(x, y, z));
                                     colors.Add(color);
                                     v0 = idx;
                                     idx++;
                                 }
 
                                 if(v1 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y + maxY, z - 1));
+                                    vertices.Add(new Vector3(x, y + maxY + 1, z));
                                     colors.Add(color);
                                     v1 = idx;
                                     idx++;
                                 }
 
                                 if(v4 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y + maxY, z + maxZ));
+                                    vertices.Add(new Vector3(x, y + maxY + 1, z + maxZ + 1));
                                     colors.Add(color);
                                     v4 = idx;
                                     idx++;
                                 }
 
                                 if(v6 < 0) {
-                                    vertices.Add(new Vector3(x - 1, y - 1, z + maxZ));
+                                    vertices.Add(new Vector3(x, y, z + maxZ + 1));
                                     colors.Add(color);
                                     v6 = idx;
                                 }
@@ -979,28 +979,28 @@ namespace VoxelEngine
                                 int idx = vertices.Count;
 
                                 if(v3 < 0) {
-                                    vertices.Add(new Vector3(x, y - 1, z - 1));
+                                    vertices.Add(new Vector3(x + 1, y, z));
                                     colors.Add(color);
                                     v3 = idx;
                                     idx++;
                                 }
 
                                 if(v2 < 0) {
-                                    vertices.Add(new Vector3(x, y + maxY, z - 1));
+                                    vertices.Add(new Vector3(x + 1, y + maxY + 1, z));
                                     colors.Add(color);
                                     v2 = idx;
                                     idx++;
                                 }
 
                                 if(v5 < 0) {
-                                    vertices.Add(new Vector3(x, y + maxY, z + maxZ));
+                                    vertices.Add(new Vector3(x + 1, y + maxY + 1, z + maxZ + 1));
                                     colors.Add(color);
                                     v5 = idx;
                                     idx++;
                                 }
 
                                 if(v7 < 0) {
-                                    vertices.Add(new Vector3(x, y - 1, z + maxZ));
+                                    vertices.Add(new Vector3(x + 1, y, z + maxZ + 1));
                                     colors.Add(color);
                                     v7 = idx;
                                 }
