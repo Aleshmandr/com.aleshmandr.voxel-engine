@@ -54,11 +54,16 @@ namespace VoxelEngine
         }
 
         private void OnDestroy() {
-            data.Dispose();
+            isDestroyed = true;
+        }
+
+        private void Dispose() {
+            if(data.IsCreated) {
+                data.Dispose();
+            }
             if(dynamicMesh != null) {
                 Destroy(dynamicMesh);
             }
-            isDestroyed = true;
         }
         
         public void Init(NativeArray3d<int> voxelsData) {
@@ -81,9 +86,10 @@ namespace VoxelEngine
 
             dynamicMesh = await meshGenerationJobsScheduler.Run(data, CancellationToken.None, dynamicMesh);
             if(isDestroyed) {
+                Dispose();
                 return;
             }
-            MeshFilter.mesh = dynamicMesh;
+            MeshFilter.sharedMesh = dynamicMesh;
             Collider.size = MeshFilter.sharedMesh.bounds.size;
             Rigidbody.mass = 1f;
         }
