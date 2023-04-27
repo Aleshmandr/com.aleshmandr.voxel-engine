@@ -36,6 +36,11 @@ namespace VoxelEngine.Destructions
 
         private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IForceDamageData {
             int intRad = Mathf.CeilToInt(damageData.Radius / (toughness * voxelsContainer.transform.lossyScale.x));
+            if(VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold > 0 && intRad > VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold) {
+                float coef = (float)intRad / VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold;
+                minFractureSize = Mathf.CeilToInt(minFractureSize * coef);
+                maxFractureSize = Mathf.CeilToInt(maxFractureSize * coef);
+            }
             var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
@@ -45,10 +50,21 @@ namespace VoxelEngine.Destructions
                 return FractureData.Empty;
             }
 
+            int every = 1;
+            if(VoxelEngineConfig.MaxFracturesPerObject > 0 && fractureData.ClustersLengths.Length > VoxelEngineConfig.MaxFracturesPerObject)
+            {
+                every = Mathf.CeilToInt((float)fractureData.ClustersLengths.Length / VoxelEngineConfig.MaxFracturesPerObject);
+            }
+
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
-
                 int currentSize = fractureData.ClustersLengths[f];
+                
+                if(f % every != 0)
+                {
+                    totalSize += currentSize;
+                    continue;
+                }
 
                 int maxX = 0;
                 int maxZ = 0;

@@ -6,6 +6,8 @@ namespace VoxelEngine
     {
         public static readonly bool UseOptimizedMeshGenerationAtRuntime;
         public static readonly bool RunJointsCheckTask;
+        public static readonly int MaxFracturesPerObject;
+        public static readonly int IncreaseFractureSizeRadiusThreshold;
         private const string ConfigResourcePath = "VoxelEngineConfig";
 
         static VoxelEngineConfig() {
@@ -13,6 +15,8 @@ namespace VoxelEngine
             if(config != null) {
                 UseOptimizedMeshGenerationAtRuntime = config.UseOptimizedMeshGenerationAtRuntime;
                 RunJointsCheckTask = config.RunJointsCheckTask;
+                MaxFracturesPerObject = config.MaxFracturesPerObject;
+                IncreaseFractureSizeRadiusThreshold = config.IncreaseFractureSizeRadiusThreshold;
             }
         }
     }

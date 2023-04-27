@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace VoxelEngine
 {
@@ -8,9 +7,7 @@ namespace VoxelEngine
     {
         public bool UseOptimizedMeshGenerationAtRuntime;
         public bool RunJointsCheckTask;
-        [FormerlySerializedAs("UseParentLayer")] [Header("Fracture")]
-        public bool FractureUseParentLayer = true;
-        [FormerlySerializedAs("CustomLayer")] [Layer]
-        public int FracturesCustomLayer;
+        public int MaxFracturesPerObject;
+        public int IncreaseFractureSizeRadiusThreshold;
     }
 }
