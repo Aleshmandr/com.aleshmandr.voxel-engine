@@ -178,6 +178,11 @@ namespace VoxelEngine.Destructions
                     isConnectionDirty = false;
                     
                     await UniTask.Yield();
+                    
+                    if(cancellationToken.IsCancellationRequested) {
+                        return;
+                    }
+                    
                     bool hasValidConnection = false;
                     for(int i = 0; i < joints.Length; i++) {
                         var hasConnectedOverlaps = false;
@@ -210,6 +215,10 @@ namespace VoxelEngine.Destructions
                         }
 
                         await UniTask.Yield();
+                        
+                        if(cancellationToken.IsCancellationRequested) {
+                            return;
+                        }
                     }
 
                     if(cancellationToken.IsCancellationRequested) {
