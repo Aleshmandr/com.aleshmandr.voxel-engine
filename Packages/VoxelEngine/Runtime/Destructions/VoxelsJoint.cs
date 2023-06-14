@@ -44,6 +44,14 @@ namespace VoxelEngine.Destructions
             isDirty = true;
         }
 
+        public void ForceUpdateFixation()
+        {
+            UpdateFixations();
+            bool isFixed = fixations.Count > 0;
+            bool fixationHasBroken = IsFixed && !isFixed;
+            IsFixed = isFixed;
+        }
+
         private async UniTaskVoid UpdateFixationsAsync(CancellationToken cancellationToken) {
             while(!cancellationToken.IsCancellationRequested) {
                 UpdateFixations();
