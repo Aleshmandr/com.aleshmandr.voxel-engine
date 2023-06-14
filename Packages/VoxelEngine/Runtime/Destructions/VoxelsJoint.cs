@@ -50,6 +50,7 @@ namespace VoxelEngine.Destructions
             bool isFixed = fixations.Count > 0;
             bool fixationHasBroken = IsFixed && !isFixed;
             IsFixed = isFixed;
+            FixationUpdated?.Invoke();
         }
 
         private async UniTaskVoid UpdateFixationsAsync(CancellationToken cancellationToken) {
