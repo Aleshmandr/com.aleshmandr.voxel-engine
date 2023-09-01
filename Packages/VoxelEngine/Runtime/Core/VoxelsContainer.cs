@@ -144,7 +144,7 @@ namespace VoxelEngine
                 colliderUpdateCts = null;
 
                 if(dynamicMesh.vertexCount > 0) {
-
+                    bool hasModifiableContacts = meshCollider.hasModifiableContacts;
                     if(useBakeJob) {
                         var meshIds = new NativeArray<int>(1, Allocator.TempJob);
                         meshIds[0] = dynamicMesh.GetInstanceID();
@@ -156,6 +156,7 @@ namespace VoxelEngine
 
                     meshCollider.sharedMesh = dynamicMesh;
                     meshCollider.enabled = true;
+                    meshCollider.hasModifiableContacts = hasModifiableContacts;
                 } else {
                     meshCollider.enabled = false;
                 }
@@ -200,8 +201,10 @@ namespace VoxelEngine
                 }
 
                 if(meshCollider != null) {
+                    bool hasModifiableContacts = meshCollider.hasModifiableContacts;
                     meshCollider.sharedMesh = MeshFilter.sharedMesh;
                     meshCollider.enabled = true;
+                    meshCollider.hasModifiableContacts = hasModifiableContacts;
                 }
             } else {
                 if(meshCollider != null) {
