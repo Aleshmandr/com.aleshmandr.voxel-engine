@@ -15,6 +15,7 @@ namespace VoxelEngine
         private BoxCollider boxCollider;
         private Mesh dynamicMesh;
         private IMeshGenerationJobScheduler meshGenerationJobsScheduler;
+        private CancellationTokenSource lifetimeCts;
         private bool isDestroyed;
 
         public MeshRenderer MeshRenderer
@@ -58,6 +59,7 @@ namespace VoxelEngine
         }
 
         private void Dispose() {
+            lifetimeCts?.Cancel();
             if(data.IsCreated) {
                 data.Dispose();
             }
@@ -67,11 +69,11 @@ namespace VoxelEngine
         }
         
         public void Init(NativeArray3d<int> voxelsData) {
-            
             InitAsync(voxelsData).Forget();
         }
 
         public async UniTask InitAsync(NativeArray3d<int> voxelsData) {
+            lifetimeCts = new CancellationTokenSource();
             if(data.IsCreated) {
                 data.Dispose();
             }
@@ -84,7 +86,7 @@ namespace VoxelEngine
                 }
             }
 
-            dynamicMesh = await meshGenerationJobsScheduler.Run(data, CancellationToken.None, dynamicMesh);
+            dynamicMesh = await meshGenerationJobsScheduler.Run(data, lifetimeCts.Token, dynamicMesh);
             if(isDestroyed) {
                 Dispose();
                 return;

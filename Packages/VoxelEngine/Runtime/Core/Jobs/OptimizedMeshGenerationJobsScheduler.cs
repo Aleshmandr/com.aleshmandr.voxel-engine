@@ -29,10 +29,20 @@ namespace VoxelEngine.Jobs
             var jobHandle = lastJobHandle.IsCompleted ? meshGenerationJob.Schedule() : meshGenerationJob.Schedule(lastJobHandle);
             lastJobHandle = jobHandle;
 
-            while(!jobHandle.IsCompleted) {
+            while(true) {
+                if(jobHandle.IsCompleted || cancellationToken.IsCancellationRequested) {
+                    break;
+                }
                 await UniTask.Yield();
             }
 
+            if(cancellationToken.IsCancellationRequested) {
+                jobHandle.Complete();
+                voxelsDataCopy.Dispose();
+                meshDataArray.Dispose();
+                return null;
+            }
+            
             jobHandle.Complete();
             voxelsDataCopy.Dispose();
             
