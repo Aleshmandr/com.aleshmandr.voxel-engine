@@ -120,6 +120,7 @@ namespace VoxelEngine.Editor
         };
 
         private bool generateMeshAssets;
+        private ModelImporterMeshCompression meshCompression = ModelImporterMeshCompression.Low;
         private bool clusterize;
         private int clusterMaxVoxels = 2400;
         private bool optimizeVertices;
@@ -139,6 +140,7 @@ namespace VoxelEngine.Editor
             generateMeshAssets = EditorGUILayout.Toggle("Generate Mesh Assets", generateMeshAssets);
             if(generateMeshAssets) {
                 optimizeVertices = EditorGUILayout.Toggle("Optimize Vertices", optimizeVertices);
+                meshCompression = (ModelImporterMeshCompression) EditorGUILayout.EnumPopup("Compression", meshCompression);
             }
             if(clusterize) {
                 clusterMaxVoxels = EditorGUILayout.IntField("Max Voxels Per Cluster", clusterMaxVoxels);
@@ -387,7 +389,7 @@ namespace VoxelEngine.Editor
             if(generateMeshAssets) {
                 generatedMesh = optimizeVertices ? Utilities.GenerateOptimizedMesh(data) : Utilities.GenerateMesh(data);
                 MeshUtility.Optimize(generatedMesh);
-                MeshUtility.SetMeshCompression(generatedMesh, ModelImporterMeshCompression.High);
+                MeshUtility.SetMeshCompression(generatedMesh, meshCompression);
             }
 
             var bytes = NativeArray3dSerializer.Serialize(data);
