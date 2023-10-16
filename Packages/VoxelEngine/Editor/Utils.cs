@@ -62,5 +62,18 @@ namespace VoxelEngine.Editor
             AssetDatabase.SaveAssetIfDirty(voxelsDataAsset);
             AssetDatabase.Refresh();
         }
+
+        public static void SaveMeshAsset(ref Mesh mesh, string meshAssetPath) {
+            var existingAsset = AssetDatabase.LoadAssetAtPath<Mesh>(meshAssetPath);
+            if(existingAsset != null) {
+                mesh.name = existingAsset.name;
+                EditorUtility.CopySerialized(mesh, existingAsset);
+                mesh = existingAsset;
+            } else {
+                AssetDatabase.CreateAsset(mesh, meshAssetPath);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
     }
 }

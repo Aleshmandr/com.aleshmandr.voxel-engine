@@ -32,6 +32,8 @@ namespace VoxelEngine
         private const float ColliderUpdateCooldown = 0.2f; //TODO: Move to global config
         private JobHandle bakeMeshJobHandle;
 
+        public bool IsColliderDisabled => isColliderDisabled;
+
         public MeshRenderer MeshRenderer
         { get {
             if(meshRenderer == null) {

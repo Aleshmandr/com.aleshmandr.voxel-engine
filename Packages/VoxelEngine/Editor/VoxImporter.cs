@@ -408,20 +408,15 @@ namespace VoxelEngine.Editor
             if(!Directory.Exists(assetDirectoryPath)) {
                 Directory.CreateDirectory(assetDirectoryPath);
             }
+            
             File.WriteAllBytes($"{assetDirectoryPath}/{assetName}.bytes", bytes);
-            if(generatedMesh != null) {
-                var meshAssetPath = $"Assets/{localAssetDirectory}/{assetName}.asset";
-                var existingAsset = AssetDatabase.LoadAssetAtPath<Mesh>(meshAssetPath);
-                if(existingAsset != null) {
-                    generatedMesh.name = existingAsset.name;
-                    EditorUtility.CopySerialized(generatedMesh, existingAsset);
-                    generatedMesh = existingAsset;
-                } else {
-                    AssetDatabase.CreateAsset(generatedMesh, meshAssetPath);
-                }
-            }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            
+            if(generatedMesh != null) {
+                var meshAssetPath = $"Assets/{localAssetDirectory}/{assetName}.asset";
+                Utils.SaveMeshAsset(ref generatedMesh, meshAssetPath);
+            }
 
             var voxelsData = AssetDatabase.LoadAssetAtPath<TextAsset>($"Assets/{localAssetDirectory}/{assetName}.bytes");
 

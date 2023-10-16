@@ -60,18 +60,24 @@ namespace VoxelEngine.Editor
                 return;
             }
             var mesh = voxelsContainer.MeshFilter.sharedMesh;
+            var collider = voxelsContainer.MeshCollider;
+            bool updateMeshCollider = !voxelsContainer.IsColliderDisabled && voxelsContainer.MeshCollider != null;
             var meshPath = AssetDatabase.GetAssetPath(mesh);
             await voxelsContainer.EditorRefreshAsync();
             mesh = voxelsContainer.MeshFilter.sharedMesh;
 
-            if(mesh != null && string.IsNullOrEmpty(meshPath)) {
+            if(mesh != null && !string.IsNullOrEmpty(meshPath)) {
                 var assetPath = AssetDatabase.GetAssetPath(voxelsContainer.Asset);
                 meshPath = Path.ChangeExtension(assetPath, "asset");
-                AssetDatabase.CreateAsset(mesh, meshPath);
+                Utils.SaveMeshAsset(ref mesh, meshPath);
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            
             voxelsContainer.MeshFilter.sharedMesh = mesh;
+            if(updateMeshCollider) {
+                collider.sharedMesh = mesh;
+            }
         }
 
         private async UniTaskVoid TrimAndRecenter() {
