@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using System;
-using System.Threading;
 using Unity.Collections;
 using UnityEngine;
 using VoxelEngine.Destructions.Jobs;
@@ -8,7 +7,7 @@ using Random = UnityEngine.Random;
 
 namespace VoxelEngine.Destructions
 {
-    public class DestructableVoxels : MonoBehaviour
+    public class DestructableVoxels : MonoBehaviour, IDestructibleVoxels
     {
         public event Action<DestructableVoxels> IntegrityChanged;
         public event Action<DamageEventData<IDamageData>> Damaged;
@@ -48,13 +47,7 @@ namespace VoxelEngine.Destructions
         public int VoxelsCount
         { get {
               if(voxelsCount < 0) {
-                  voxelsCount = 0;
-                  for(int i = 0; i < voxelsContainer.Data.NativeArray.Length; i++) {
-                      if(voxelsContainer.Data.NativeArray[i] == 0) {
-                          continue;
-                      }
-                      voxelsCount++;
-                  }
+                  voxelsCount = voxelsContainer.VoxelsCount;
               }
               return voxelsCount;
           }

@@ -7,24 +7,42 @@ using VoxelEngine.Destructions.Jobs;
 
 namespace VoxelEngine.Destructions
 {
-    public class VoxelsFractureObject : MonoBehaviour
+    public class VoxelsFractureObject : MonoBehaviour, IDestructibleVoxels
     {
         [SerializeField] private VoxelsContainer voxelsContainer;
         [SerializeField] [Min(0)] private float toughness = 1f;
         [SerializeField] [Min(1)] private int minFractureSize = 3;
         [SerializeField] [Min(1)] private int maxFractureSize = 10;
         [SerializeField] private bool collapseHangingParts = true;
+        private int voxelsCount = -1;
         private VoxelsFractureJobsScheduler fractureJobsScheduler;
         private CancellationTokenSource lifeTimeCts;
 
-        public VoxelsContainer VoxelsContainer => voxelsContainer;
+        public int VoxelsCount
+        { get {
+              if(voxelsCount < 0) {
+                  voxelsCount = voxelsContainer.VoxelsCount;
+              }
+              return voxelsCount;
+          }
+          private set {
+              voxelsCount = value;
+          } }
 
-        private void Awake() {
+        public int InitialVoxelsCount { get; private set; }
+        
+        public VoxelsContainer VoxelsContainer => voxelsContainer;
+        
+        public bool IsInitialized { get; private set; }
+
+        private void Start() {
             lifeTimeCts = new CancellationTokenSource();
+            InitialVoxelsCount = VoxelsCount;
+            IsInitialized = true;
         }
 
         public async UniTaskVoid Hit(Vector3 pos, float radius, Vector3 force) {
-            
+
 #if UNITY_EDITOR
             Debug.DrawRay(pos, force, Color.green, 1f);
             DrawDebugSphere(pos, radius, new Color(0f, 1f, 0f, 0.3f), 1f);
@@ -51,17 +69,15 @@ namespace VoxelEngine.Destructions
             }
 
             int every = 1;
-            if(VoxelEngineConfig.MaxFracturesPerObject > 0 && fractureData.ClustersLengths.Length > VoxelEngineConfig.MaxFracturesPerObject)
-            {
+            if(VoxelEngineConfig.MaxFracturesPerObject > 0 && fractureData.ClustersLengths.Length > VoxelEngineConfig.MaxFracturesPerObject) {
                 every = Mathf.CeilToInt((float)fractureData.ClustersLengths.Length / VoxelEngineConfig.MaxFracturesPerObject);
             }
 
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
                 int currentSize = fractureData.ClustersLengths[f];
-                
-                if(f % every != 0)
-                {
+
+                if(f % every != 0) {
                     totalSize += currentSize;
                     continue;
                 }
@@ -112,7 +128,8 @@ namespace VoxelEngine.Destructions
                 Vector3 worldPos = transform.TransformPoint(minX, minY, minZ);
                 VoxelsFractureEngine.FractureFactory.Create(this, data, currentSize, worldPos, damageData);
             }
-
+            
+            VoxelsCount -= totalSize;
             voxelsContainer.RebuildMesh().Forget();
 
             return fractureData;

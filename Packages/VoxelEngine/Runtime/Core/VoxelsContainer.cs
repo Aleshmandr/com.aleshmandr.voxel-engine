@@ -54,6 +54,18 @@ namespace VoxelEngine
 
         public bool IsInitialized { get; private set; }
 
+        public int VoxelsCount
+        { get {
+            int voxelsCount = 0;
+            for(int i = 0; i < Data.NativeArray.Length; i++) {
+                if(Data.NativeArray[i] == 0) {
+                    continue;
+                }
+                voxelsCount++;
+            }
+            return voxelsCount;
+        } }
+
         private async void Start() {
 #if UNITY_EDITOR
             if(Application.isPlaying) {
@@ -115,7 +127,7 @@ namespace VoxelEngine
                 }
             }
 
-            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, lifeTimeCts?.Token ?? CancellationToken.None,  dynamicMesh);
+            dynamicMesh = await meshGenerationJobsScheduler.Run(Data, lifeTimeCts?.Token ?? CancellationToken.None, dynamicMesh);
             if(isDestroyed) {
                 return;
             }
@@ -176,7 +188,7 @@ namespace VoxelEngine
                     return;
                 }
             }
-            
+
             if(isColliderDisabled) {
                 return;
             }
@@ -276,8 +288,7 @@ namespace VoxelEngine
             Data.Dispose();
             Data = NativeArray3dSerializer.Deserialize<int>(Asset.bytes);
             await RebuildMesh(true);
-            if(dispose)
-            {
+            if(dispose) {
                 Data.Dispose();
             }
         }
