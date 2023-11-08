@@ -134,6 +134,15 @@ namespace VoxelEngine.Destructions
 
             return fractureData;
         }
+        
+        public void Recover() {
+            MarkDirty();
+            voxelsContainer.Reload().Forget();
+        }
+
+        public void MarkDirty() {
+            VoxelsCount = -1;
+        }
 
         private void OnDestroy() {
             lifeTimeCts?.Cancel(false);
