@@ -73,7 +73,7 @@ namespace VoxelEngine.Destructions
             int minSize = 0;
             int skipCount = 0;
             if(VoxelEngineConfig.MaxFracturesPerObject > 0 && fractureData.ClustersLengths.Length > VoxelEngineConfig.MaxFracturesPerObject) {
-                minSize = Mathf.CeilToInt(VoxelsCount / (float)fractureData.ClustersLengths.Length);
+                minSize = Mathf.Min(minFractureSize, Mathf.CeilToInt(VoxelsCount / (float)fractureData.ClustersLengths.Length));
                 skipCount = fractureData.ClustersLengths.Length - VoxelEngineConfig.MaxFracturesPerObject;
             }
 
