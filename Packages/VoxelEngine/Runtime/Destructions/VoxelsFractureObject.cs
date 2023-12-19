@@ -30,9 +30,9 @@ namespace VoxelEngine.Destructions
           } }
 
         public int InitialVoxelsCount { get; private set; }
-        
+
         public VoxelsContainer VoxelsContainer => voxelsContainer;
-        
+
         public bool IsInitialized { get; private set; }
 
         private void Start() {
@@ -70,17 +70,20 @@ namespace VoxelEngine.Destructions
                 return FractureData.Empty;
             }
 
-            int every = 1;
+            int minSize = 0;
+            int skipCount = 0;
             if(VoxelEngineConfig.MaxFracturesPerObject > 0 && fractureData.ClustersLengths.Length > VoxelEngineConfig.MaxFracturesPerObject) {
-                every = Mathf.CeilToInt((float)fractureData.ClustersLengths.Length / VoxelEngineConfig.MaxFracturesPerObject);
+                minSize = Mathf.CeilToInt(VoxelsCount / (float)fractureData.ClustersLengths.Length);
+                skipCount = fractureData.ClustersLengths.Length - VoxelEngineConfig.MaxFracturesPerObject;
             }
 
             int totalSize = 0;
             for(int f = 0; f < fractureData.ClustersLengths.Length; f++) {
                 int currentSize = fractureData.ClustersLengths[f];
 
-                if(f % every != 0) {
+                if(skipCount > 0 && currentSize <= minSize) {
                     totalSize += currentSize;
+                    skipCount--;
                     continue;
                 }
 
@@ -130,13 +133,13 @@ namespace VoxelEngine.Destructions
                 Vector3 worldPos = transform.TransformPoint(minX, minY, minZ);
                 VoxelsFractureEngine.FractureFactory.Create(this, data, currentSize, worldPos, damageData);
             }
-            
+
             VoxelsCount -= totalSize;
             voxelsContainer.RebuildMesh().Forget();
 
             return fractureData;
         }
-        
+
         public void Recover() {
             MarkDirty();
             voxelsContainer.Reload().Forget();
