@@ -54,16 +54,18 @@ namespace VoxelEngine.Destructions
 
         private async UniTask<FractureData> RunDamageJob<T>(T damageData, Allocator allocator, CancellationToken cancellationToken) where T : IForceDamageData {
             int intRad = Mathf.CeilToInt(damageData.Radius / (toughness * voxelsContainer.transform.lossyScale.x));
+            int minFractureSizeRuntime = minFractureSize;
+            int maxFractureSizeRuntime = maxFractureSize;
             if(VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold > 0 && intRad > VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold) {
                 float coef = (float)intRad / VoxelEngineConfig.IncreaseFractureSizeRadiusThreshold;
-                minFractureSize = Mathf.CeilToInt(minFractureSize * coef);
-                maxFractureSize = Mathf.CeilToInt(maxFractureSize * coef);
+                minFractureSizeRuntime = Mathf.CeilToInt(minFractureSize * coef);
+                maxFractureSizeRuntime = Mathf.CeilToInt(maxFractureSize * coef);
             }
             var localPoint = voxelsContainer.transform.InverseTransformPoint(damageData.WorldPoint);
             var localPointInt = new Vector3Int((int)localPoint.x, (int)localPoint.y, (int)localPoint.z);
 
             fractureJobsScheduler ??= new VoxelsFractureJobsScheduler();
-            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSize, maxFractureSize, collapseHangingParts, localPointInt, allocator);
+            FractureData fractureData = await fractureJobsScheduler.Run(voxelsContainer.Data, intRad, minFractureSizeRuntime, maxFractureSizeRuntime, collapseHangingParts, localPointInt, allocator);
             if(cancellationToken.IsCancellationRequested) {
                 return FractureData.Empty;
             }
