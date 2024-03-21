@@ -7,6 +7,11 @@ namespace VoxelEngine.Editor
 {
     public static class Utils
     {
+        // Convert RGBA to custom format (16 bits, 0RRR RRGG GGGB BBBB)
+        public static int ConvertByteColorToInt(byte r, byte g, byte b) {
+            return ((r & 0xFF) << 24) | ((g & 0xFF) << 16) | (b & 0xFF) << 8;
+        }
+        
         public static void Trim(TextAsset voxelsDataAsset) {
             string relativePath = AssetDatabase.GetAssetPath(voxelsDataAsset);
             string absolutePath = Path.Combine(Application.dataPath, "../", relativePath);

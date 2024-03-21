@@ -8,14 +8,14 @@ namespace VoxelEngine.Editor
         public readonly string AssetName;
         public readonly Mesh MeshAsset;
         public readonly TextAsset DataAsset;
-        public readonly Vector3 Offset;
+        public readonly Vector3 Position;
         
-        public GeneratedAssetsData(string originalAssetName, string assetName, Mesh meshAsset, TextAsset dataAsset, Vector3 offset) {
+        public GeneratedAssetsData(string originalAssetName, string assetName, Mesh meshAsset, TextAsset dataAsset, Vector3 position) {
             OriginalAssetName = originalAssetName;
             AssetName = assetName;
             MeshAsset = meshAsset;
             DataAsset = dataAsset;
-            Offset = offset;
+            Position = position;
         }
     }
 }

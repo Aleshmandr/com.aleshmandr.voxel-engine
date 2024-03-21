@@ -5,8 +5,8 @@ namespace VoxelEngine.Editor
 {
     public class RawVoxelsData
     {
-        public Vector3Int Pivot;
         public readonly List<RawVoxelData> Voxels;
+        public Vector3Int Position;
 
         public Vector3Int Size {
             get {
@@ -30,10 +30,12 @@ namespace VoxelEngine.Editor
 
         public RawVoxelsData() {
             Voxels = new List<RawVoxelData>();
+            Position = Vector3Int.zero;
         }
 
-        public RawVoxelsData(RawVoxelData[] voxels) {
+        public RawVoxelsData(RawVoxelData[] voxels, Vector3Int position) {
             Voxels = new List<RawVoxelData>(voxels);
+            Position = position;
         }
     }
 }
