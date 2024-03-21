@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace VoxelEngine.Jobs
 {
-    [BurstCompile]
+    [BurstCompile(FloatPrecision.Low, FloatMode.Fast)]
     public struct VoxelMeshGenerationJob : IJob
     {
         public int SizeX;
